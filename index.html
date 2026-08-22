@@ -1423,8 +1423,25 @@ function showPersonActivities(nome){
       <td class="mono" data-label="Data">${formatDateBR(e.data)}</td>
       <td data-label="Atividade">${escapeHtml(e.atividade)}</td>
       <td data-label="Executado"><span class="pill ${e.executado==='SIM'?'pill-ok':'pill-no'}">${e.executado==='SIM'?'Sim':'Não'}</span></td>
+      <td data-label="Ação" style="text-align:right;"><button type="button" class="btn btn-ghost btn-small btn-del-escala" data-escala-id="${e.id}" style="color:var(--danger);border-color:var(--danger-soft);">🗑 Excluir</button></td>
     </tr>`).join('');
-  openModal(nome, `${recs.length} registro(s) na escala`, '<th>Data</th><th>Atividade</th><th>Executado</th>', rowsHtml, 'Esse filho ainda não tem registros.');
+  openModal(nome, `${recs.length} registro(s) na escala`, '<th>Data</th><th>Atividade</th><th>Executado</th><th></th>', rowsHtml, 'Esse filho ainda não tem registros.');
+  document.querySelectorAll('.btn-del-escala').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm('Excluir esta atividade atribuída a ' + nome + '?')) return;
+      const idx = state.escalas.findIndex(x=> String(x.id) === btn.dataset.escalaId);
+      if(idx === -1) return;
+      state.escalas.splice(idx, 1);
+      await persist();
+      renderPessoasTable();
+      renderAtividadesTable();
+      renderGirasTable();
+      renderPainel();
+      renderCalendar();
+      if(calSelectedDate) renderCalendarDayDetail(calSelectedDate);
+      showPersonActivities(nome);
+    });
+  });
   renderModalQuickAdd(nome);
 }
 
@@ -1519,9 +1536,10 @@ function renderKPIs(){
 function renderBarList(){
   const sim = simEscalas();
   const counts = {};
-  state.pessoas.forEach(p=> counts[p.nome] = 0);
+  state.pessoas.filter(p=> pessoaStatus(p)==='Ativo').forEach(p=> counts[p.nome] = 0);
   sim.forEach(e=> counts[e.pessoa] = (counts[e.pessoa]||0)+1);
-  const rows = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const activeNames = new Set(state.pessoas.filter(p=> pessoaStatus(p)==='Ativo').map(p=>p.nome));
+  const rows = Object.entries(counts).filter(([nome])=> activeNames.has(nome)).sort((a,b)=>b[1]-a[1]);
   const max = rows.length ? rows[0][1] : 1;
   const container = document.getElementById('bar-list');
   container.innerHTML = rows.map(([nome,count], idx)=>`
@@ -1557,7 +1575,7 @@ function renderDiasSem(){
     if(!last[e.pessoa] || e.data > last[e.pessoa]) last[e.pessoa] = e.data;
   });
   const today = new Date();
-  const rows = state.pessoas.map(p=>{
+  const rows = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo').map(p=>{
     const lastDate = last[p.nome];
     let dias = null;
     if(lastDate){
@@ -1610,9 +1628,10 @@ function buildAtividadeChecklist(){
 function renderAtivPorPessoa(){
   const sim = simEscalas().filter(e=>selectedAtividadesFilter.has(e.atividade));
   const counts = {};
-  state.pessoas.forEach(p=> counts[p.nome]=0);
+  state.pessoas.filter(p=> pessoaStatus(p)==='Ativo').forEach(p=> counts[p.nome]=0);
   sim.forEach(e=> counts[e.pessoa] = (counts[e.pessoa]||0)+1);
-  const rows = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const activeNamesAP = new Set(state.pessoas.filter(p=> pessoaStatus(p)==='Ativo').map(p=>p.nome));
+  const rows = Object.entries(counts).filter(([nome])=> activeNamesAP.has(nome)).sort((a,b)=>b[1]-a[1]);
   const total = rows.reduce((s,[,c])=>s+c,0);
   const tbody = document.getElementById('tbody-ativ-pessoa');
   tbody.innerHTML = rows.map(([nome,count])=>`
