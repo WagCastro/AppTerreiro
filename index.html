@@ -67,7 +67,8 @@
 
   /* Header */
   .topbar{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
-  .header-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
+  .header-actions{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .header-actions #user-badge{white-space:nowrap;}
   .storage-status{margin:0 0 18px;font-size:11.5px;color:var(--ink-soft);text-align:right;}
   .brand-mark{
     width:44px;height:44px;flex:none;border-radius:9px;
@@ -172,6 +173,24 @@
   .td-actions{white-space:nowrap;}
   .scroll-y{max-height:420px;overflow-y:auto;}
   .mono{font-family:var(--mono);font-size:12px;color:var(--ink-soft);}
+  .dias-list{
+    border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface);
+  }
+  .dias-row{
+    display:grid;grid-template-columns:minmax(0,1fr) 125px 110px;align-items:center;
+    gap:12px;padding:10px 12px;border-bottom:1px solid var(--line);
+    font-size:13px;white-space:nowrap;
+  }
+  .dias-row:last-child{border-bottom:none;}
+  .dias-row.header{
+    background:var(--brand-soft);color:var(--brand-dark);
+    font-family:var(--display);font-weight:700;font-size:11.5px;
+    text-transform:uppercase;letter-spacing:.03em;
+  }
+  .dias-row > span{min-width:0;overflow:hidden;text-overflow:ellipsis;}
+  .dias-row .dias-num{text-align:center;}
+  .dias-row .ultima{text-align:right;font-family:var(--mono);font-size:12px;color:var(--ink-soft);}
+  .dias-row .dias-num .pill{font-size:11px;padding:3px 8px;}
   .pill{
     display:inline-block;padding:2px 9px;border-radius:20px;font-size:11.5px;font-weight:600;
   }
@@ -317,8 +336,9 @@
     .topbar .subtitle{font-size:12.5px;}
     .brand-mark{width:40px;height:40px;}
     .brand-mark svg{width:22px;height:22px;}
-    .header-actions{margin-left:0;width:100%;}
-    .header-actions .btn{flex:1;text-align:center;}
+    .header-actions{margin-left:0;width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+    .header-actions #user-badge{grid-column:1/-1;text-align:left;margin-right:0!important;}
+    .header-actions .btn{width:100%;text-align:center;min-width:0;}
     .storage-status{text-align:left;font-size:12px;}
 
     .tabs{gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;}
@@ -458,6 +478,11 @@
     /* tabelas gerais continuam legíveis sem estourar a tela */
     .table-wrap{max-width:100%;}
     .table-cards tr,.modal-body table tr{margin-left:0;margin-right:0;}
+    .dias-list{overflow:hidden;}
+    .dias-row{grid-template-columns:minmax(0,1fr) 88px 78px;gap:5px;padding:9px 7px;font-size:12px;}
+    .dias-row.header{font-size:9.5px;}
+    .dias-row .dias-num .pill{font-size:10px;padding:3px 5px;}
+    .dias-row .ultima{font-size:10px;}
   }
 
   @media (max-width:400px){
@@ -518,8 +543,8 @@
   <p class="storage-status" id="storage-status"></p>
 
   <nav class="tabs">
-    <button class="tab active" data-tab="painel">Painel</button>
-    <button class="tab" data-tab="calendario">Calendário</button>
+    <button class="tab active" data-tab="calendario">Calendário</button>
+    <button class="tab" data-tab="painel">Painel</button>
     <button class="tab" data-tab="gira">Gira</button>
     <button class="tab" data-tab="pessoas">Filhos</button>
     <button class="tab" data-tab="atividades">Atividades</button>
@@ -530,7 +555,7 @@
     <div class="clip"></div>
 
     <!-- CALENDÁRIO -->
-    <section id="view-calendario" class="view">
+    <section id="view-calendario" class="view active">
       <h2 class="section-title">Calendário de giras</h2>
       <p class="section-hint">Dias com gira aparecem destacados. Clique num dia destacado para ver a escala completa.</p>
 
@@ -660,7 +685,7 @@
     </section>
 
     <!-- PAINEL -->
-    <section id="view-painel" class="view active">
+    <section id="view-painel" class="view">
       <h2 class="section-title">Painel de acompanhamento</h2>
       <p class="section-hint">As mesmas análises que você tinha no Power BI, calculadas ao vivo a partir dos seus dados.</p>
 
@@ -671,19 +696,16 @@
         </span>
       </div>
 
-      <div class="kpis" id="kpi-row"></div>
-
       <nav class="subtabs">
-        <button class="subtab active" data-sub="pessoas-chart">Contagem por filho</button>
+        <button class="subtab active" data-sub="pessoas-chart">Atividades dos Filhos</button>
         <button class="subtab" data-sub="dias-sem">Dias sem atividade</button>
-        <button class="subtab" data-sub="ativ-pessoa">Atividade por filho</button>
         <button class="subtab" data-sub="aniversariantes">🎂 Aniversariantes do mês</button>
       </nav>
 
       <div id="sub-pessoas-chart" class="subview active">
         <div class="two-col">
           <div>
-            <h2 class="section-title" style="font-size:14px;">Contagem por filho</h2>
+            <h2 class="section-title" style="font-size:14px;">Atividades dos Filhos</h2>
             <div id="bar-list" class="scroll-y" style="max-height:440px;"></div>
           </div>
           <div>
@@ -700,33 +722,11 @@
 
       <div id="sub-dias-sem" class="subview">
         <p class="section-hint" style="margin-top:-8px;">Ordenado do filho há mais tempo sem registrar atividade para o mais recente.</p>
-        <div class="table-wrap scroll-y table-cards" style="max-height:460px;">
-          <table>
-            <thead><tr><th>Nome</th><th>Última atividade</th><th style="text-align:right;">Dias sem atividade</th></tr></thead>
-            <tbody id="tbody-dias-sem"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="sub-ativ-pessoa" class="subview">
-        <div class="two-col">
-          <div>
-            <h2 class="section-title" style="font-size:14px;">Nome / Contagem</h2>
-            <div class="table-wrap scroll-y" style="max-height:440px;">
-              <table>
-                <thead><tr><th>Nome</th><th style="text-align:right;">Contagem</th></tr></thead>
-                <tbody id="tbody-ativ-pessoa"></tbody>
-              </table>
-            </div>
+        <div class="dias-list scroll-y" style="max-height:460px;">
+          <div class="dias-row header">
+            <span>NOME</span><span class="dias-num">DIAS SEM ATIV</span><span class="ultima">ÚLTIMA</span>
           </div>
-          <div>
-            <h2 class="section-title" style="font-size:14px;">Filtrar atividade</h2>
-            <div class="checklist" id="ativ-checklist"></div>
-            <div class="checklist-actions">
-              <button class="btn btn-ghost btn-small" id="btn-check-all">Marcar todas</button>
-              <button class="btn btn-ghost btn-small" id="btn-uncheck-all">Desmarcar todas</button>
-            </div>
-          </div>
+          <div id="tbody-dias-sem"></div>
         </div>
       </div>
 
@@ -808,7 +808,6 @@ let state = null;
 let editingPessoaCodigo = null;
 let editingAtividadeCodigo = null;
 let editingGiraCodigo = null;
-let selectedAtividadesFilter = new Set();
 let pessoaSearchTerm = '';
 
 let usingFallback = false;
@@ -1312,7 +1311,7 @@ function renderAtividadesTable(){
     if(!a) return;
     if(confirm(`Remover "${a.atividade}" da lista de atividades?`)){
       state.atividades = state.atividades.filter(x=>x.codigo!==cod);
-      persist(); renderAtividadesTable(); buildAtividadeChecklist();
+      persist(); renderAtividadesTable();
     }
   }));
 }
@@ -1333,10 +1332,6 @@ function setupAtividadesForm(){
         a.atividade = desc;
         if(oldDesc !== desc){
           state.escalas.forEach(e=>{ if(e.atividade===oldDesc) e.atividade = desc; });
-          if(selectedAtividadesFilter.has(oldDesc)){
-            selectedAtividadesFilter.delete(oldDesc);
-            selectedAtividadesFilter.add(desc);
-          }
         }
         exitAtividadeEditMode();
       } else {
@@ -1344,10 +1339,9 @@ function setupAtividadesForm(){
           alert('Essa atividade já está cadastrada.'); return;
         }
         state.atividades.push({codigo: nextAtividadeCodigo(), atividade: desc});
-        selectedAtividadesFilter.add(desc);
         input.value = '';
       }
-      persist(); renderAtividadesTable(); buildAtividadeChecklist(); renderPainel();
+      persist(); renderAtividadesTable(); renderPainel();
     }catch(e){
       console.error('Erro ao adicionar/editar atividade', e);
       alert('Não foi possível salvar: ' + e.message);
@@ -1563,35 +1557,6 @@ function showAtividadePessoas(atividade){
 /* ---------- PAINEL ---------- */
 function simEscalas(){ return state.escalas.filter(e=>e.executado==='SIM'); }
 
-function renderKPIs(){
-  const sim = simEscalas();
-  const pessoasAtivas = new Set(sim.map(e=>e.pessoa)).size;
-  const porAtividade = {};
-  sim.forEach(e=> porAtividade[e.atividade] = (porAtividade[e.atividade]||0)+1);
-  let topAtividade = '—', topCount = 0;
-  Object.entries(porAtividade).forEach(([k,v])=>{ if(v>topCount){topCount=v; topAtividade=k;} });
-
-  const kpiRow = document.getElementById('kpi-row');
-  kpiRow.innerHTML = `
-    <div class="kpi">
-      <div class="num">${sim.length}</div>
-      <div class="label">Tarefas registradas</div>
-    </div>
-    <div class="kpi ok">
-      <div class="num">${pessoasAtivas}</div>
-      <div class="label">Filhos com tarefas</div>
-    </div>
-    <div class="kpi accent">
-      <div class="num">${state.atividades.length}</div>
-      <div class="label">Atividades cadastradas</div>
-    </div>
-    <div class="kpi danger" style="border-left-color:var(--brand);">
-      <div class="num" style="font-size:15px;line-height:1.3;">${escapeHtml(topAtividade)}</div>
-      <div class="label">Tarefa mais recorrente (${topCount}x)</div>
-    </div>
-  `;
-}
-
 function renderBarList(){
   const sim = simEscalas();
   const counts = {};
@@ -1648,56 +1613,18 @@ function renderDiasSem(){
     if(b.dias===null) return 1;
     return b.dias - a.dias;
   });
-  const tbody = document.getElementById('tbody-dias-sem');
-  tbody.innerHTML = rows.map(r=>{
+  const container = document.getElementById('tbody-dias-sem');
+  container.innerHTML = rows.map(r=>{
     let pillClass = 'pill-ok';
     if(r.dias===null || r.dias>30) pillClass='pill-no';
-    else if(r.dias>14) pillClass='pill-ok';
-    return `<tr>
-      <td class="clickable" data-label="Nome" data-person="${escapeAttr(r.nome)}" title="Ver atividades de ${escapeAttr(r.nome)}">${escapeHtml(r.nome)}</td>
-      <td class="mono" data-label="Última atividade">${r.lastDate ? formatDateBR(r.lastDate) : 'sem registro'}</td>
-      <td style="text-align:right;" data-label="Dias sem atividade"><span class="pill ${pillClass}">${r.dias===null?'—':r.dias+' dias'}</span></td>
-    </tr>`;
+    return `<div class="dias-row">
+      <span class="clickable" data-person="${escapeAttr(r.nome)}" title="Ver atividades de ${escapeAttr(r.nome)}">${escapeHtml(r.nome)}</span>
+      <span class="dias-num"><span class="pill ${pillClass}">${r.dias===null?'—':r.dias+' dias'}</span></span>
+      <span class="ultima">${r.lastDate ? formatDateBR(r.lastDate) : 'sem registro'}</span>
+    </div>`;
   }).join('');
-  tbody.querySelectorAll('td[data-person]').forEach(td=>{
-    td.addEventListener('click', ()=> showPersonActivities(td.dataset.person));
-  });
-}
-
-function buildAtividadeChecklist(){
-  if(selectedAtividadesFilter.size === 0){
-    state.atividades.forEach(a=>selectedAtividadesFilter.add(a.atividade));
-  }
-  const container = document.getElementById('ativ-checklist');
-  container.innerHTML = state.atividades.slice().sort((a,b)=>a.atividade.localeCompare(b.atividade,'pt-BR')).map(a=>`
-    <label>
-      <input type="checkbox" data-ativ="${escapeAttr(a.atividade)}" ${selectedAtividadesFilter.has(a.atividade)?'checked':''}>
-      <span>${escapeHtml(a.atividade)}</span>
-    </label>
-  `).join('');
-  container.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-    cb.addEventListener('change', ()=>{
-      if(cb.checked) selectedAtividadesFilter.add(cb.dataset.ativ);
-      else selectedAtividadesFilter.delete(cb.dataset.ativ);
-      renderAtivPorPessoa();
-    });
-  });
-}
-
-function renderAtivPorPessoa(){
-  const sim = simEscalas().filter(e=>selectedAtividadesFilter.has(e.atividade));
-  const counts = {};
-  state.pessoas.filter(p=> pessoaStatus(p)==='Ativo').forEach(p=> counts[p.nome]=0);
-  sim.forEach(e=> counts[e.pessoa] = (counts[e.pessoa]||0)+1);
-  const activeNamesAP = new Set(state.pessoas.filter(p=> pessoaStatus(p)==='Ativo').map(p=>p.nome));
-  const rows = Object.entries(counts).filter(([nome])=> activeNamesAP.has(nome)).sort((a,b)=>b[1]-a[1]);
-  const total = rows.reduce((s,[,c])=>s+c,0);
-  const tbody = document.getElementById('tbody-ativ-pessoa');
-  tbody.innerHTML = rows.map(([nome,count])=>`
-    <tr><td class="clickable" data-person="${escapeAttr(nome)}" title="Ver atividades de ${escapeAttr(nome)}">${escapeHtml(nome)}</td><td style="text-align:right;" class="mono">${count}</td></tr>
-  `).join('') + `<tr><td style="font-weight:700;">Total</td><td style="text-align:right;font-weight:700;" class="mono">${total}</td></tr>`;
-  tbody.querySelectorAll('td[data-person]').forEach(td=>{
-    td.addEventListener('click', ()=> showPersonActivities(td.dataset.person));
+  container.querySelectorAll('[data-person]').forEach(el=>{
+    el.addEventListener('click', ()=> showPersonActivities(el.dataset.person));
   });
 }
 
@@ -1733,12 +1660,9 @@ function renderAniversariantesMes(){
 }
 
 function renderPainel(){
-  renderKPIs();
   renderBarList();
   renderAtivCountTable();
   renderDiasSem();
-  buildAtividadeChecklist();
-  renderAtivPorPessoa();
   renderAniversariantesMes();
 }
 
@@ -2022,7 +1946,6 @@ function setupBackupControls(){
         editingPessoaCodigo = null;
         editingAtividadeCodigo = null;
         editingGiraCodigo = null;
-        selectedAtividadesFilter = new Set();
         calSelectedDate = null;
         await persist();
         renderPessoasTable();
@@ -2248,15 +2171,6 @@ async function initApp(){
   setupCalendarGiraModal();
   setupCalendar();
   setupUsuariosForm();
-  document.getElementById('btn-check-all').addEventListener('click', ()=>{
-    state.atividades.forEach(a=>selectedAtividadesFilter.add(a.atividade));
-    buildAtividadeChecklist(); renderAtivPorPessoa();
-  });
-  document.getElementById('btn-uncheck-all').addEventListener('click', ()=>{
-    selectedAtividadesFilter.clear();
-    buildAtividadeChecklist(); renderAtivPorPessoa();
-  });
-
   renderPessoasTable();
   renderAtividadesTable();
   renderGirasTable();
