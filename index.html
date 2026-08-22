@@ -174,7 +174,10 @@
   .scroll-y{max-height:420px;overflow-y:auto;}
   .mono{font-family:var(--mono);font-size:12px;color:var(--ink-soft);}
   .dias-list{
-    border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+    height:460px;max-height:460px;overflow-y:scroll !important;overflow-x:hidden;
+    scrollbar-gutter:stable;
+    -webkit-overflow-scrolling:touch;
   }
   .dias-row{
     display:grid;grid-template-columns:minmax(0,1fr) 125px 110px;align-items:center;
@@ -183,7 +186,7 @@
   }
   .dias-row:last-child{border-bottom:none;}
   .dias-row.header{
-    background:var(--brand-soft);color:var(--brand-dark);
+    position:sticky;top:0;z-index:2;background:var(--brand-soft);color:var(--brand-dark);
     font-family:var(--display);font-weight:700;font-size:11.5px;
     text-transform:uppercase;letter-spacing:.03em;
   }
@@ -231,10 +234,18 @@
   }
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:8px;}
   .cal-day{
-    aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--ink);
-    position:relative;gap:2px;
+    aspect-ratio:1/1.12;min-height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:11.5px;color:var(--ink);
+    position:relative;gap:3px;padding:4px;overflow:hidden;text-align:center;
   }
+  .cal-day > span:first-child{
+    font-size:11.5px;font-weight:700;line-height:1;flex:none;
+  }
+  .cal-day .gira-label{
+    display:block;width:100%;max-width:100%;font-size:9px;line-height:1.05;font-weight:700;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--brand-dark);
+  }
+  .cal-day.selected .gira-label{color:#fff;}
   .cal-day.empty{border:none;background:transparent;}
   .cal-day.has-gira{cursor:pointer;background:var(--accent-soft);border-color:var(--accent);color:var(--brand-dark);font-weight:700;}
   .cal-day.has-gira:hover{filter:brightness(0.96);}
@@ -451,9 +462,10 @@
     .cal-weekdays{gap:3px;margin-bottom:5px;}
     .cal-weekdays span{font-size:10.5px;font-weight:700;}
     .cal-grid{gap:4px;margin-bottom:9px;}
-    .cal-day{min-width:0;aspect-ratio:1/1.05;border-radius:8px;font-size:13px;padding:3px;overflow:hidden;text-align:center;font-weight:600;}
+    .cal-day{min-width:0;min-height:0;aspect-ratio:1/1.16;border-radius:8px;font-size:11px;padding:4px 3px;overflow:hidden;text-align:center;font-weight:600;}
+    .cal-day > span:first-child{font-size:10.5px;}
     .cal-day.has-gira{justify-content:center;}
-    .cal-day.has-gira::after{content:'GIRA';font-size:7.5px;line-height:1;font-weight:800;opacity:.8;}
+    .cal-day .gira-label{font-size:8px;line-height:1.05;}
     .cal-day .dot{width:5px;height:5px;}
     .cal-legend{font-size:11.5px;margin-bottom:14px;}
 
@@ -478,7 +490,7 @@
     /* tabelas gerais continuam legíveis sem estourar a tela */
     .table-wrap{max-width:100%;}
     .table-cards tr,.modal-body table tr{margin-left:0;margin-right:0;}
-    .dias-list{overflow:hidden;}
+    .dias-list{height:65vh;max-height:65vh;min-height:300px;overflow-y:scroll !important;overflow-x:hidden;scrollbar-gutter:stable;-webkit-overflow-scrolling:touch;}
     .dias-row{grid-template-columns:minmax(0,1fr) 88px 78px;gap:5px;padding:9px 7px;font-size:12px;}
     .dias-row.header{font-size:9.5px;}
     .dias-row .dias-num .pill{font-size:10px;padding:3px 5px;}
@@ -490,8 +502,9 @@
     .cal-header{grid-template-columns:40px minmax(0,1fr) 40px;}
     .cal-month-select{grid-template-columns:minmax(0,1fr) 74px;}
     .cal-month-select select{font-size:13px;}
-    .cal-day{font-size:11.5px;border-radius:7px;}
-    .cal-day.has-gira::after{font-size:6.5px;}
+    .cal-day{font-size:10px;border-radius:7px;aspect-ratio:1/1.18;}
+    .cal-day > span:first-child{font-size:10px;}
+    .cal-day .gira-label{font-size:7px;}
     .cal-weekdays span{font-size:9.5px;}
     .tab{padding-left:12px;padding-right:12px;}
   }
@@ -1599,6 +1612,8 @@ function renderDiasSem(){
     if(!last[e.pessoa] || e.data > last[e.pessoa]) last[e.pessoa] = e.data;
   });
   const today = new Date();
+  // Exibe TODOS os filhos cadastrados, inclusive os que ainda não possuem
+  // nenhuma atividade registrada e os que estão inativos.
   const rows = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo').map(p=>{
     const lastDate = last[p.nome];
     let dias = null;
@@ -1637,7 +1652,7 @@ function renderAniversariantesMes(){
   if(label) label.textContent = `Filhos que fazem aniversário em ${MESES_PT[mesAtual-1]}.`;
 
   const rows = state.pessoas
-    .filter(p => p.aniversario)
+    .filter(p => pessoaStatus(p)==='Ativo' && p.aniversario)
     .map(p=>{
       const [, m, d] = p.aniversario.split('-');
       return {nome: p.nome, mes: parseInt(m,10), dia: parseInt(d,10), aniversario: p.aniversario};
