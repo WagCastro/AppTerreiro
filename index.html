@@ -547,10 +547,7 @@
     </div>
     <div class="header-actions">
       <span id="user-badge" style="font-size:12px;color:var(--ink-soft);margin-right:6px;"></span>
-      <button class="btn btn-ghost btn-small" id="btn-logout" title="Sair da conta" style="display:none;">🚪 Sair</button>
-      <button class="btn btn-ghost btn-small" id="btn-export-backup" title="Baixa um arquivo .json com todos os dados">💾 Salvar backup</button>
-      <button class="btn btn-ghost btn-small" id="btn-import-backup" title="Carrega um arquivo .json salvo antes">📂 Carregar backup</button>
-      <input type="file" id="input-import-backup" accept="application/json" style="display:none;">
+      <button class="btn-danger-text" id="btn-logout" title="Sair da conta" style="display:none;font-size:11.5px;color:var(--ink-soft);font-weight:500;">Sair</button>
     </div>
   </header>
   <p class="storage-status" id="storage-status"></p>
@@ -558,10 +555,8 @@
   <nav class="tabs">
     <button class="tab active" data-tab="calendario">Calendário</button>
     <button class="tab" data-tab="painel">Painel</button>
-    <button class="tab" data-tab="gira">Gira</button>
-    <button class="tab" data-tab="pessoas">Filhos</button>
-    <button class="tab" data-tab="atividades">Atividades</button>
-    <button class="tab" data-tab="usuarios" id="tab-usuarios" style="display:none;">Usuários</button>
+    <button class="tab" data-tab="cadastros">Cadastros</button>
+    <button class="tab" data-tab="usuarios" id="tab-usuarios" style="display:none;">Administração</button>
   </nav>
 
   <main class="board">
@@ -600,82 +595,97 @@
       </div>
     </section>
 
-    <!-- GIRA -->
-    <section id="view-gira" class="view">
-      <h2 class="section-title">Giras cadastradas</h2>
-      <p class="section-hint">Lista de giras disponíveis para vincular aos registros da escala.</p>
-      <div class="form-grid cols-2">
-        <div class="field"><label for="f-nome-gira">Nome</label><input type="text" id="f-nome-gira" placeholder="Nome da gira"></div>
-        <div class="field">
-          <button class="btn btn-primary" id="btn-add-gira">+ Adicionar</button>
+    <!-- CADASTROS -->
+    <section id="view-cadastros" class="view">
+      <h2 class="section-title">Cadastros</h2>
+      <p class="section-hint">Giras, filhos e atividades que compõem a escala da casa.</p>
+
+      <nav class="subtabs">
+        <button class="subtab active" data-sub="cad-gira">Gira</button>
+        <button class="subtab" data-sub="cad-pessoas">Filhos</button>
+        <button class="subtab" data-sub="cad-atividades">Atividades</button>
+      </nav>
+
+      <!-- GIRA -->
+      <div id="sub-cad-gira" class="subview active">
+        <h2 class="section-title" style="font-size:15px;">Giras cadastradas</h2>
+        <p class="section-hint">Lista de giras disponíveis para vincular aos registros da escala.</p>
+        <div class="form-grid cols-2">
+          <div class="field"><label for="f-nome-gira">Nome</label><input type="text" id="f-nome-gira" placeholder="Nome da gira"></div>
+          <div class="field">
+            <button class="btn btn-primary" id="btn-add-gira">+ Adicionar</button>
+          </div>
+          <div class="field" style="grid-column:1/-1;">
+            <span id="gira-edit-tag" class="mono" style="display:none;color:var(--accent);">editando "<span id="gira-edit-label"></span>" — <a href="#" id="cancel-edit-gira" style="color:var(--danger);">cancelar</a></span>
+          </div>
         </div>
-        <div class="field" style="grid-column:1/-1;">
-          <span id="gira-edit-tag" class="mono" style="display:none;color:var(--accent);">editando "<span id="gira-edit-label"></span>" — <a href="#" id="cancel-edit-gira" style="color:var(--danger);">cancelar</a></span>
+        <div class="table-wrap scroll-y table-cards">
+          <table>
+            <thead><tr><th style="width:90px;">Código</th><th>Nome</th><th style="width:110px;">Registros</th><th></th></tr></thead>
+            <tbody id="tbody-giras"></tbody>
+          </table>
         </div>
       </div>
-      <div class="table-wrap scroll-y table-cards">
-        <table>
-          <thead><tr><th style="width:90px;">Código</th><th>Nome</th><th style="width:110px;">Registros</th><th></th></tr></thead>
-          <tbody id="tbody-giras"></tbody>
-        </table>
+
+      <!-- FILHOS -->
+      <div id="sub-cad-pessoas" class="subview">
+        <h2 class="section-title" style="font-size:15px;">Filhos cadastrados</h2>
+        <p class="section-hint">Lista de filhos disponíveis para a escala.</p>
+        <div class="toolbar">
+          <div class="filters">
+            <button class="btn btn-primary btn-small" id="btn-incluir-pessoa">+ Incluir</button>
+          </div>
+          <div class="filters">
+            <input type="text" id="filter-pessoa-nome" placeholder="Buscar filho pelo nome…">
+            <button class="btn btn-ghost btn-small" id="btn-search-pessoa">🔍 Buscar</button>
+            <button class="btn btn-ghost btn-small" id="btn-clear-pessoa-search" style="display:none;">✕ Limpar</button>
+          </div>
+        </div>
+        <div class="table-wrap scroll-y table-cards">
+          <table>
+            <thead><tr><th style="width:90px;">Código</th><th>Nome</th><th style="width:130px;">Celular</th><th style="width:110px;">Aniversário</th><th style="width:90px;">Tarefas</th><th style="width:100px;">Status</th><th></th></tr></thead>
+            <tbody id="tbody-pessoas"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ATIVIDADES -->
+      <div id="sub-cad-atividades" class="subview">
+        <h2 class="section-title" style="font-size:15px;">Atividades cadastradas</h2>
+        <p class="section-hint">Tarefas que compõem a escala da casa.</p>
+        <div class="form-grid cols-2">
+          <div class="field"><label for="f-nome-atividade">Descrição</label><input type="text" id="f-nome-atividade" placeholder="Descrição da atividade"></div>
+          <div class="field">
+            <button class="btn btn-primary" id="btn-add-atividade">+ Adicionar</button>
+          </div>
+          <div class="field" style="grid-column:1/-1;">
+            <span id="atividade-edit-tag" class="mono" style="display:none;color:var(--accent);">editando "<span id="atividade-edit-label"></span>" — <a href="#" id="cancel-edit-atividade" style="color:var(--danger);">cancelar</a></span>
+          </div>
+        </div>
+        <div class="table-wrap scroll-y table-cards">
+          <table>
+            <thead><tr><th style="width:90px;">Código</th><th>Atividade</th><th style="width:110px;">Execuções</th><th></th></tr></thead>
+            <tbody id="tbody-atividades"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
-    <!-- FILHOS -->
-    <section id="view-pessoas" class="view">
-      <h2 class="section-title">Filhos cadastrados</h2>
-      <p class="section-hint">Lista de filhos disponíveis para a escala.</p>
-      <div class="form-grid cols-3">
-        <div class="field"><label for="f-nome-pessoa">Nome</label><input type="text" id="f-nome-pessoa" placeholder="Nome do filho"></div>
-        <div class="field"><label for="f-aniversario-pessoa">Aniversário</label><input type="date" id="f-aniversario-pessoa"></div>
-        <div class="field">
-          <button class="btn btn-primary" id="btn-add-pessoa">+ Adicionar</button>
-        </div>
-        <div class="field" style="grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:10px;">
-          <span id="pessoa-edit-tag" class="mono" style="display:none;color:var(--accent);">editando "<span id="pessoa-edit-label"></span>" — <a href="#" id="cancel-edit-pessoa" style="color:var(--danger);">cancelar</a></span>
-          <button type="button" class="btn btn-ghost btn-small" id="btn-toggle-status-pessoa" style="display:none;color:var(--danger);border-color:var(--danger-soft);">🚫 Inativar cadastro</button>
-        </div>
-      </div>
-      <div class="toolbar" style="margin-top:-4px;">
-        <div class="filters">
-          <input type="text" id="filter-pessoa-nome" placeholder="Buscar filho pelo nome…">
-          <button class="btn btn-ghost btn-small" id="btn-search-pessoa">🔍 Buscar</button>
-          <button class="btn btn-ghost btn-small" id="btn-clear-pessoa-search" style="display:none;">✕ Limpar</button>
-        </div>
-      </div>
-      <div class="table-wrap scroll-y table-cards">
-        <table>
-          <thead><tr><th style="width:90px;">Código</th><th>Nome</th><th style="width:110px;">Aniversário</th><th style="width:100px;">Status</th><th style="width:110px;">Tarefas</th><th></th></tr></thead>
-          <tbody id="tbody-pessoas"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ATIVIDADES -->
-    <section id="view-atividades" class="view">
-      <h2 class="section-title">Atividades cadastradas</h2>
-      <p class="section-hint">Tarefas que compõem a escala da casa.</p>
-      <div class="form-grid cols-2">
-        <div class="field"><label for="f-nome-atividade">Descrição</label><input type="text" id="f-nome-atividade" placeholder="Descrição da atividade"></div>
-        <div class="field">
-          <button class="btn btn-primary" id="btn-add-atividade">+ Adicionar</button>
-        </div>
-        <div class="field" style="grid-column:1/-1;">
-          <span id="atividade-edit-tag" class="mono" style="display:none;color:var(--accent);">editando "<span id="atividade-edit-label"></span>" — <a href="#" id="cancel-edit-atividade" style="color:var(--danger);">cancelar</a></span>
-        </div>
-      </div>
-      <div class="table-wrap scroll-y table-cards">
-        <table>
-          <thead><tr><th style="width:90px;">Código</th><th>Atividade</th><th style="width:110px;">Execuções</th><th></th></tr></thead>
-          <tbody id="tbody-atividades"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- USUÁRIOS (somente ADM) -->
+    <!-- ADMINISTRAÇÃO (somente ADM) -->
     <section id="view-usuarios" class="view">
-      <h2 class="section-title">Usuários do sistema</h2>
-      <p class="section-hint">Cadastre e libere o acesso de usuários e administradores. Somente administradores veem esta aba.</p>
+      <h2 class="section-title">Administração</h2>
+      <p class="section-hint">Backup dos dados, além do cadastro e liberação de acesso de usuários e administradores. Somente administradores veem esta aba.</p>
+
+      <div class="toolbar" style="background:var(--brand-soft);padding:14px 16px;border-radius:var(--radius);margin-bottom:22px;">
+        <div class="filters">
+          <button class="btn btn-ghost btn-small" id="btn-export-backup" title="Baixa um arquivo .json com todos os dados">💾 Salvar backup</button>
+          <button class="btn btn-ghost btn-small" id="btn-import-backup" title="Carrega um arquivo .json salvo antes">📂 Carregar backup</button>
+          <input type="file" id="input-import-backup" accept="application/json" style="display:none;">
+        </div>
+      </div>
+
+      <h2 class="section-title" style="font-size:15px;">Usuários do sistema</h2>
+      <p class="section-hint">Cadastre e libere o acesso de usuários e administradores.</p>
       <div class="form-grid cols-2">
         <div class="field"><label for="f-usuario-login">Usuário (login)</label><input type="text" id="f-usuario-login" placeholder="ex: Maria.Silva"></div>
         <div class="field"><label for="f-usuario-senha">Senha</label><input type="text" id="f-usuario-senha" placeholder="Defina uma senha"></div>
@@ -716,21 +726,8 @@
       </nav>
 
       <div id="sub-pessoas-chart" class="subview active">
-        <div class="two-col">
-          <div>
-            <h2 class="section-title" style="font-size:14px;">Atividades dos Filhos</h2>
-            <div id="bar-list" class="scroll-y" style="max-height:440px;"></div>
-          </div>
-          <div>
-            <h2 class="section-title" style="font-size:14px;">Contagem por atividade</h2>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>Atividade</th><th style="text-align:right;">Qtd</th></tr></thead>
-                <tbody id="tbody-ativ-count"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        <h2 class="section-title" style="font-size:14px;">Atividades dos Filhos</h2>
+        <div id="bar-list" class="scroll-y" style="max-height:440px;"></div>
       </div>
 
       <div id="sub-dias-sem" class="subview">
@@ -793,6 +790,88 @@
   </div>
 </div>
 
+<div class="modal-backdrop" id="pessoa-view-modal">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <div><h3 id="pessoa-view-title">—</h3><div class="modal-sub">Dados cadastrais</div></div>
+      <button class="modal-close" id="pessoa-view-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="padding:20px;display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Endereço</div>
+          <div id="pessoa-view-endereco" style="font-size:14px;color:var(--ink);">—</div>
+        </div>
+        <div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Bairro</div>
+          <div id="pessoa-view-bairro" style="font-size:14px;color:var(--ink);">—</div>
+        </div>
+        <div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Cidade / Estado</div>
+          <div id="pessoa-view-cidade" style="font-size:14px;color:var(--ink);">—</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Celular</div>
+            <div id="pessoa-view-celular" style="font-size:14px;color:var(--ink);">—</div>
+          </div>
+          <div>
+            <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Aniversário</div>
+            <div id="pessoa-view-aniversario" style="font-size:14px;color:var(--ink);">—</div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Status</div>
+          <div id="pessoa-view-status" style="font-size:14px;color:var(--ink);">—</div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+          <button type="button" class="btn btn-ghost" id="pessoa-view-fechar">Fechar</button>
+          <button type="button" class="btn btn-primary" id="pessoa-view-editar">✏️ Editar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="pessoa-modal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div><h3 id="pessoa-modal-title">Incluir filho</h3><div class="modal-sub" id="pessoa-modal-subtitle"></div></div>
+      <button class="modal-close" id="pessoa-modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="padding:20px;">
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="field"><label for="f-nome-pessoa">Nome</label><input type="text" id="f-nome-pessoa" placeholder="Nome do filho"></div>
+          <div class="field" style="display:grid;grid-template-columns:1fr 90px;gap:10px;">
+            <div><label for="f-endereco-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Endereço</label><input type="text" id="f-endereco-pessoa" placeholder="Rua, avenida…" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;"></div>
+            <div><label for="f-numero-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Nº</label><input type="text" id="f-numero-pessoa" placeholder="nº" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;"></div>
+          </div>
+          <div class="field"><label for="f-bairro-pessoa">Bairro</label><input type="text" id="f-bairro-pessoa" placeholder="Bairro"></div>
+          <div class="field" style="display:grid;grid-template-columns:1fr 90px;gap:10px;">
+            <div><label for="f-cidade-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Cidade</label><input type="text" id="f-cidade-pessoa" placeholder="Cidade" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;"></div>
+            <div><label for="f-estado-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Estado</label><input type="text" id="f-estado-pessoa" placeholder="UF" maxlength="2" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;text-transform:uppercase;"></div>
+          </div>
+          <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div><label for="f-celular-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Celular</label><input type="text" id="f-celular-pessoa" placeholder="(00) 00000-0000" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;"></div>
+            <div><label for="f-aniversario-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Aniversário</label><input type="date" id="f-aniversario-pessoa" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;"></div>
+          </div>
+        </div>
+        <div id="pessoa-edit-tag" style="display:none;margin-top:12px;">
+          <span class="mono" style="color:var(--accent);font-size:12.5px;">editando "<span id="pessoa-edit-label"></span>"</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:20px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-ghost btn-small" id="btn-toggle-status-pessoa" style="display:none;color:var(--danger);border-color:var(--danger-soft);">🚫 Inativar cadastro</button>
+          <div style="display:flex;gap:8px;margin-left:auto;">
+            <button type="button" class="btn btn-ghost" id="btn-cancel-pessoa">Cancelar</button>
+            <button class="btn btn-primary" id="btn-add-pessoa">+ Adicionar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="modal-backdrop">
   <div class="modal">
     <div class="modal-header">
@@ -803,6 +882,7 @@
       <button class="modal-close" id="modal-close">&times;</button>
     </div>
     <div class="modal-body">
+      <div id="modal-summary"></div>
       <div id="modal-quickadd"></div>
       <table>
         <thead><tr id="modal-thead-row"></tr></thead>
@@ -957,10 +1037,11 @@ function setupTabs(){
   });
   document.querySelectorAll('.subtab').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.subtab').forEach(b=>b.classList.remove('active'));
-      document.querySelectorAll('.subview').forEach(v=>v.classList.remove('active'));
+      const container = btn.closest('.view') || document;
+      container.querySelectorAll('.subtab').forEach(b=>b.classList.remove('active'));
+      container.querySelectorAll('.subview').forEach(v=>v.classList.remove('active'));
       btn.classList.add('active');
-      document.getElementById('sub-'+btn.dataset.sub).classList.add('active');
+      container.querySelector('#sub-'+btn.dataset.sub).classList.add('active');
     });
   });
 }
@@ -1119,14 +1200,16 @@ function pessoaStatus(p){ return p.status === 'Inativo' ? 'Inativo' : 'Ativo'; }
 
 function renderPessoasTable(){
   const tbody = document.getElementById('tbody-pessoas');
+  if(!pessoaSearchTerm){
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">Digite ao menos uma letra e clique em 🔍 Buscar para ver os filhos cadastrados.</div></td></tr>`;
+    return;
+  }
   const counts = {};
   state.escalas.forEach(e=>{ if(e.executado==='SIM') counts[e.pessoa] = (counts[e.pessoa]||0)+1; });
   let rows = state.pessoas.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
-  if(pessoaSearchTerm){
-    rows = rows.filter(p => p.nome.toLowerCase().includes(pessoaSearchTerm));
-  }
+  rows = rows.filter(p => p.nome.toLowerCase().includes(pessoaSearchTerm));
   if(rows.length === 0){
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">${pessoaSearchTerm ? 'Nenhum filho encontrado com esse nome.' : 'Nenhum filho cadastrado.'}</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">Nenhum filho encontrado com esse nome.</div></td></tr>`;
     return;
   }
   tbody.innerHTML = rows.map(p=>{
@@ -1134,18 +1217,18 @@ function renderPessoasTable(){
     return `
     <tr>
       <td class="mono td-code" data-label="Código">${p.codigo}</td>
-      <td data-label="Nome">${escapeHtml(p.nome)}</td>
+      <td data-label="Nome"><a href="#" class="pessoa-nome-link" data-viewp="${p.codigo}" style="color:var(--brand-dark);font-weight:600;text-decoration:none;">${escapeHtml(p.nome)}</a></td>
+      <td class="mono" data-label="Celular">${escapeHtml(p.celular || '—')}</td>
       <td class="mono" data-label="Aniversário">${formatAniversario(p.aniversario)}</td>
+      <td class="mono" data-label="Tarefas">${counts[p.nome]||0}</td>
       <td data-label="Status">
         <select class="status-select ${status==='Ativo'?'status-active':'status-inactive'}" data-statusp="${p.codigo}">
           <option value="Ativo" ${status==='Ativo'?'selected':''}>Ativo</option>
           <option value="Inativo" ${status==='Inativo'?'selected':''}>Inativo</option>
         </select>
       </td>
-      <td class="mono" data-label="Tarefas">${counts[p.nome]||0}</td>
       <td class="td-actions" data-label="Ações">
         <button class="btn-danger-text" data-editp="${p.codigo}" style="color:var(--brand);margin-right:10px;">editar</button>
-        <button class="btn-danger-text" data-bdayp="${p.codigo}" style="color:var(--accent);margin-right:10px;" title="Definir data de aniversário">🎂 aniversário</button>
         <button class="btn-danger-text" data-delp="${p.codigo}">excluir</button>
       </td>
     </tr>
@@ -1161,27 +1244,14 @@ function renderPessoasTable(){
   tbody.querySelectorAll('[data-editp]').forEach(b=>b.addEventListener('click', ()=>{
     const p = state.pessoas.find(x=>x.codigo===b.dataset.editp);
     if(!p) return;
-    editingPessoaCodigo = p.codigo;
-    document.getElementById('f-nome-pessoa').value = p.nome;
-    document.getElementById('f-aniversario-pessoa').value = p.aniversario || '';
-    document.getElementById('pessoa-edit-tag').style.display = 'inline';
-    document.getElementById('pessoa-edit-label').textContent = p.nome;
-    document.getElementById('btn-add-pessoa').textContent = 'Salvar edição';
-    showStatusToggleButton(p);
+    openPessoaModal(p);
     document.getElementById('f-nome-pessoa').focus();
   }));
-  tbody.querySelectorAll('[data-bdayp]').forEach(b=>b.addEventListener('click', ()=>{
-    const p = state.pessoas.find(x=>x.codigo===b.dataset.bdayp);
+  tbody.querySelectorAll('[data-viewp]').forEach(a=>a.addEventListener('click', (ev)=>{
+    ev.preventDefault();
+    const p = state.pessoas.find(x=>x.codigo===a.dataset.viewp);
     if(!p) return;
-    editingPessoaCodigo = p.codigo;
-    document.getElementById('f-nome-pessoa').value = p.nome;
-    document.getElementById('f-aniversario-pessoa').value = p.aniversario || '';
-    document.getElementById('pessoa-edit-tag').style.display = 'inline';
-    document.getElementById('pessoa-edit-label').textContent = p.nome;
-    document.getElementById('btn-add-pessoa').textContent = 'Salvar edição';
-    showStatusToggleButton(p);
-    window.scrollTo({top:0, behavior:'smooth'});
-    document.getElementById('f-aniversario-pessoa').focus();
+    openPessoaViewModal(p);
   }));
   tbody.querySelectorAll('[data-delp]').forEach(b=>b.addEventListener('click', ()=>{
     const cod = b.dataset.delp;
@@ -1194,12 +1264,80 @@ function renderPessoasTable(){
   }));
 }
 
+function openPessoaViewModal(p){
+  document.getElementById('pessoa-view-title').textContent = p.nome;
+  const enderecoTxt = [p.endereco, p.numero ? `nº ${p.numero}` : ''].filter(Boolean).join(', ');
+  document.getElementById('pessoa-view-endereco').textContent = enderecoTxt || '—';
+  document.getElementById('pessoa-view-bairro').textContent = p.bairro || '—';
+  const cidadeTxt = [p.cidade, p.estado].filter(Boolean).join(' / ');
+  document.getElementById('pessoa-view-cidade').textContent = cidadeTxt || '—';
+  document.getElementById('pessoa-view-celular').textContent = p.celular || '—';
+  document.getElementById('pessoa-view-aniversario').textContent = formatAniversario(p.aniversario);
+  document.getElementById('pessoa-view-status').textContent = pessoaStatus(p);
+  document.getElementById('pessoa-view-modal').dataset.codigo = p.codigo;
+  document.getElementById('pessoa-view-modal').classList.add('show');
+}
+
+function closePessoaViewModal(){
+  document.getElementById('pessoa-view-modal').classList.remove('show');
+}
+
+function setupPessoaViewModal(){
+  document.getElementById('pessoa-view-close').addEventListener('click', closePessoaViewModal);
+  document.getElementById('pessoa-view-fechar').addEventListener('click', closePessoaViewModal);
+  document.getElementById('pessoa-view-modal').addEventListener('click', (ev)=>{
+    if(ev.target.id === 'pessoa-view-modal') closePessoaViewModal();
+  });
+  document.getElementById('pessoa-view-editar').addEventListener('click', ()=>{
+    const cod = document.getElementById('pessoa-view-modal').dataset.codigo;
+    const p = state.pessoas.find(x=>x.codigo===cod);
+    if(!p) return;
+    closePessoaViewModal();
+    openPessoaModal(p);
+    document.getElementById('f-nome-pessoa').focus();
+  });
+}
+
+function openPessoaModal(p){
+  editingPessoaCodigo = p ? p.codigo : null;
+  document.getElementById('f-nome-pessoa').value = p ? p.nome : '';
+  document.getElementById('f-endereco-pessoa').value = p ? (p.endereco || '') : '';
+  document.getElementById('f-numero-pessoa').value = p ? (p.numero || '') : '';
+  document.getElementById('f-bairro-pessoa').value = p ? (p.bairro || '') : '';
+  document.getElementById('f-cidade-pessoa').value = p ? (p.cidade || '') : '';
+  document.getElementById('f-estado-pessoa').value = p ? (p.estado || '') : '';
+  document.getElementById('f-celular-pessoa').value = p ? (p.celular || '') : '';
+  document.getElementById('f-aniversario-pessoa').value = p ? (p.aniversario || '') : '';
+  document.getElementById('pessoa-modal-title').textContent = p ? 'Editar filho' : 'Incluir filho';
+  document.getElementById('pessoa-edit-tag').style.display = p ? 'block' : 'none';
+  if(p) document.getElementById('pessoa-edit-label').textContent = p.nome;
+  document.getElementById('btn-add-pessoa').textContent = p ? 'Salvar edição' : '+ Adicionar';
+  if(p) showStatusToggleButton(p); else document.getElementById('btn-toggle-status-pessoa').style.display = 'none';
+  document.getElementById('pessoa-modal').classList.add('show');
+}
+
+function closePessoaModal(){
+  document.getElementById('pessoa-modal').classList.remove('show');
+  exitPessoaEditMode();
+}
+
 function setupPessoasForm(){
+  document.getElementById('btn-incluir-pessoa').addEventListener('click', ()=>{
+    openPessoaModal(null);
+    document.getElementById('f-nome-pessoa').focus();
+  });
+
   document.getElementById('btn-add-pessoa').addEventListener('click', ()=>{
     try{
       const input = document.getElementById('f-nome-pessoa');
       const aniversarioInput = document.getElementById('f-aniversario-pessoa');
       const nome = input.value.trim();
+      const endereco = document.getElementById('f-endereco-pessoa').value.trim();
+      const numero = document.getElementById('f-numero-pessoa').value.trim();
+      const bairro = document.getElementById('f-bairro-pessoa').value.trim();
+      const cidade = document.getElementById('f-cidade-pessoa').value.trim();
+      const estado = document.getElementById('f-estado-pessoa').value.trim().toUpperCase();
+      const celular = document.getElementById('f-celular-pessoa').value.trim();
       const aniversario = aniversarioInput.value || '';
       if(!nome) return;
 
@@ -1210,18 +1348,23 @@ function setupPessoasForm(){
         if(dupe){ alert('Já existe outro filho com esse nome.'); return; }
         const oldNome = p.nome;
         p.nome = nome;
+        p.endereco = endereco;
+        p.numero = numero;
+        p.bairro = bairro;
+        p.cidade = cidade;
+        p.estado = estado;
+        p.celular = celular;
         p.aniversario = aniversario;
         if(oldNome !== nome){
           state.escalas.forEach(e=>{ if(e.pessoa===oldNome) e.pessoa = nome; });
         }
-        exitPessoaEditMode();
+        closePessoaModal();
       } else {
         if(state.pessoas.some(p=>p.nome.toLowerCase()===nome.toLowerCase())){
           alert('Esse filho já está cadastrado.'); return;
         }
-        state.pessoas.push({codigo: nextPessoaCodigo(), nome, aniversario, status:'Ativo'});
-        input.value = '';
-        aniversarioInput.value = '';
+        state.pessoas.push({codigo: nextPessoaCodigo(), nome, endereco, numero, bairro, cidade, estado, celular, aniversario, status:'Ativo'});
+        closePessoaModal();
       }
       persist(); renderPessoasTable(); renderPainel();
     }catch(e){
@@ -1230,9 +1373,14 @@ function setupPessoasForm(){
     }
   });
 
-  document.getElementById('cancel-edit-pessoa').addEventListener('click', (ev)=>{
-    ev.preventDefault();
-    exitPessoaEditMode();
+  document.getElementById('btn-cancel-pessoa').addEventListener('click', ()=>{
+    closePessoaModal();
+  });
+  document.getElementById('pessoa-modal-close').addEventListener('click', ()=>{
+    closePessoaModal();
+  });
+  document.getElementById('pessoa-modal').addEventListener('click', (ev)=>{
+    if(ev.target.id === 'pessoa-modal') closePessoaModal();
   });
 
   document.getElementById('btn-toggle-status-pessoa').addEventListener('click', ()=>{
@@ -1244,7 +1392,7 @@ function setupPessoasForm(){
     if(!confirm(`Deseja ${acao} o cadastro de ${p.nome}?`)) return;
     p.status = novoStatus;
     persist();
-    exitPessoaEditMode();
+    closePessoaModal();
     renderPessoasTable();
     renderPainel();
   });
@@ -1262,10 +1410,17 @@ function showStatusToggleButton(p){
 function exitPessoaEditMode(){
   editingPessoaCodigo = null;
   document.getElementById('f-nome-pessoa').value = '';
+  document.getElementById('f-endereco-pessoa').value = '';
+  document.getElementById('f-numero-pessoa').value = '';
+  document.getElementById('f-bairro-pessoa').value = '';
+  document.getElementById('f-cidade-pessoa').value = '';
+  document.getElementById('f-estado-pessoa').value = '';
+  document.getElementById('f-celular-pessoa').value = '';
   document.getElementById('f-aniversario-pessoa').value = '';
   document.getElementById('pessoa-edit-tag').style.display = 'none';
   document.getElementById('btn-toggle-status-pessoa').style.display = 'none';
   document.getElementById('btn-add-pessoa').textContent = '+ Adicionar';
+  document.getElementById('pessoa-modal-title').textContent = 'Incluir filho';
 }
 
 function setupPessoaSearch(){
@@ -1466,6 +1621,7 @@ function exitGiraEditMode(){
 function openModal(title, subtitle, theadHtml, rowsHtml, emptyMsg){
   document.getElementById('modal-title').textContent = title;
   document.getElementById('modal-subtitle').textContent = subtitle || '';
+  document.getElementById('modal-summary').innerHTML = '';
   document.getElementById('modal-thead-row').innerHTML = theadHtml;
   document.getElementById('modal-tbody').innerHTML = rowsHtml && rowsHtml.length
     ? rowsHtml
@@ -1479,19 +1635,39 @@ function setupModal(){
   document.getElementById('modal-backdrop').addEventListener('click', (ev)=>{
     if(ev.target.id === 'modal-backdrop') closeModal();
   });
-  document.addEventListener('keydown', (ev)=>{ if(ev.key === 'Escape') closeModal(); });
+  document.addEventListener('keydown', (ev)=>{
+    if(ev.key === 'Escape'){
+      closeModal();
+      if(document.getElementById('pessoa-modal').classList.contains('show')) closePessoaModal();
+      if(document.getElementById('pessoa-view-modal').classList.contains('show')) closePessoaViewModal();
+    }
+  });
 }
 
 function showPersonActivities(nome){
   const recs = state.escalas.filter(e=>e.pessoa===nome).sort((a,b)=> b.data.localeCompare(a.data));
+  const atividadeCounts = {};
+  recs.filter(e=>e.executado==='SIM').forEach(e=> atividadeCounts[e.atividade] = (atividadeCounts[e.atividade]||0)+1);
+  const countsRows = Object.entries(atividadeCounts).sort((a,b)=>b[1]-a[1]);
   const rowsHtml = recs.map(e=>`
     <tr>
       <td class="mono" data-label="Data">${formatDateBR(e.data)}</td>
       <td data-label="Atividade">${escapeHtml(e.atividade)}</td>
-      <td data-label="Executado"><span class="pill ${e.executado==='SIM'?'pill-ok':'pill-no'}">${e.executado==='SIM'?'Sim':'Não'}</span></td>
       <td data-label="Ação" style="text-align:right;"><button type="button" class="btn btn-ghost btn-small btn-del-escala" data-escala-id="${e.id}" style="color:var(--danger);border-color:var(--danger-soft);">🗑 Excluir</button></td>
     </tr>`).join('');
-  openModal(nome, `${recs.length} registro(s) na escala`, '<th>Data</th><th>Atividade</th><th>Executado</th><th></th>', rowsHtml, 'Esse filho ainda não tem registros.');
+  openModal(nome, `${recs.length} registro(s) na escala`, '<th>Data</th><th>Atividade</th><th></th>', rowsHtml, 'Esse filho ainda não tem registros.');
+  if(countsRows.length){
+    document.getElementById('modal-summary').innerHTML = `
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">Quantidade por atividade</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Atividade</th><th style="text-align:right;width:70px;">Qtd</th></tr></thead>
+            <tbody>${countsRows.map(([a,c])=>`<tr><td>${escapeHtml(a)}</td><td style="text-align:right;" class="mono">${c}</td></tr>`).join('')}</tbody>
+          </table>
+        </div>
+      </div>`;
+  }
   document.querySelectorAll('.btn-del-escala').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!confirm('Excluir esta atividade atribuída a ' + nome + '?')) return;
@@ -1591,20 +1767,6 @@ function renderBarList(){
   });
 }
 
-function renderAtivCountTable(){
-  const sim = simEscalas();
-  const counts = {};
-  sim.forEach(e=> counts[e.atividade] = (counts[e.atividade]||0)+1);
-  const rows = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
-  const tbody = document.getElementById('tbody-ativ-count');
-  tbody.innerHTML = rows.map(([nome,count])=>`
-    <tr><td class="clickable" data-ativ="${escapeAttr(nome)}" title="Ver quem fez">${escapeHtml(nome)}</td><td style="text-align:right;" class="mono">${count}</td></tr>
-  `).join('') + `<tr><td style="font-weight:700;">Total</td><td style="text-align:right;font-weight:700;" class="mono">${sim.length}</td></tr>`;
-  tbody.querySelectorAll('td[data-ativ]').forEach(td=>{
-    td.addEventListener('click', ()=> showAtividadePessoas(td.dataset.ativ));
-  });
-}
-
 function renderDiasSem(){
   const sim = simEscalas();
   const last = {};
@@ -1676,7 +1838,6 @@ function renderAniversariantesMes(){
 
 function renderPainel(){
   renderBarList();
-  renderAtivCountTable();
   renderDiasSem();
   renderAniversariantesMes();
 }
@@ -2180,6 +2341,7 @@ async function initApp(){
   setupBackupControls();
   setupRelatorioControls();
   setupPessoasForm();
+  setupPessoaViewModal();
   setupPessoaSearch();
   setupAtividadesForm();
   setupGirasForm();
