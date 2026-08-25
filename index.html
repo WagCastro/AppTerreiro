@@ -199,6 +199,7 @@
   }
   .pill-ok{background:var(--ok-soft);color:var(--ok);}
   .pill-no{background:var(--danger-soft);color:var(--danger);}
+  .pill-accent{background:var(--accent-soft);color:var(--accent);}
 
   .status-select{
     font-family:var(--body);font-weight:600;font-size:12px;padding:5px 8px;
@@ -555,6 +556,7 @@
   <nav class="tabs">
     <button class="tab active" data-tab="calendario">Calendário</button>
     <button class="tab" data-tab="painel">Painel</button>
+    <button class="tab" data-tab="atendimento">Atendimento</button>
     <button class="tab" data-tab="cadastros">Cadastros</button>
     <button class="tab" data-tab="usuarios" id="tab-usuarios" style="display:none;">Administração</button>
   </nav>
@@ -751,6 +753,129 @@
       </div>
     </section>
 
+    <!-- ATENDIMENTO -->
+    <section id="view-atendimento" class="view">
+      <h2 class="section-title">Atendimento da gira</h2>
+      <p class="section-hint">Corpo mediúnico do dia, fila de consulentes por ordem de chegada e prioridade, e o histórico do atendimento.</p>
+
+      <div class="toolbar">
+        <div class="filters">
+          <span style="display:flex;align-items:center;gap:6px;">
+            <label for="atend-data" style="font-size:12px;color:var(--ink-soft);">Data da gira</label>
+            <input type="date" id="atend-data" style="padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:12.5px;font-family:var(--body);">
+          </span>
+        </div>
+        <div class="filters">
+          <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink);cursor:pointer;">
+            <input type="checkbox" id="atend-cobranca" style="width:16px;height:16px;">
+            Esta gira tem cobrança
+          </label>
+        </div>
+      </div>
+
+      <nav class="subtabs">
+        <button class="subtab active" data-sub="atend-corpo">Corpo Mediúnico</button>
+        <button class="subtab" data-sub="atend-fila">Recepção &amp; Fila</button>
+        <button class="subtab" data-sub="atend-historico">Atendidos &amp; Estatísticas</button>
+      </nav>
+
+      <!-- CORPO MEDIÚNICO -->
+      <div id="sub-atend-corpo" class="subview active">
+        <p class="section-hint" style="margin-top:-8px;">Antes da gira começar, monte as duplas do dia: um médium de atendimento pode ter mais de um cambone auxiliando.</p>
+        <div class="form-grid cols-2">
+          <div class="field"><label for="atend-select-medium">Médium de atendimento</label>
+            <select id="atend-select-medium"></select>
+          </div>
+          <div class="field">
+            <label for="atend-select-cambone">Cambones auxiliares</label>
+            <div style="display:flex;gap:8px;">
+              <select id="atend-select-cambone" style="flex:1;"></select>
+              <button type="button" class="btn btn-ghost btn-small" id="btn-add-cambone-chip">+ Adicionar</button>
+            </div>
+            <div id="corpo-cambones-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;"></div>
+          </div>
+          <div class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:10px;">
+            <button class="btn btn-primary" id="btn-add-corpo">+ Adicionar dupla</button>
+            <span id="corpo-edit-tag" class="mono" style="display:none;color:var(--accent);">editando "<span id="corpo-edit-label"></span>" — <a href="#" id="cancel-edit-corpo" style="color:var(--danger);">cancelar</a></span>
+          </div>
+        </div>
+        <div class="table-wrap scroll-y" style="max-height:400px;">
+          <table>
+            <thead><tr><th>Médium de atendimento</th><th>Cambones</th><th style="width:150px;">Status</th><th></th></tr></thead>
+            <tbody id="tbody-corpo-mediunico"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RECEPÇÃO / FILA -->
+      <div id="sub-atend-fila" class="subview">
+        <h2 class="section-title" style="font-size:14px;">Registrar chegada de consulente</h2>
+        <div class="form-grid cols-3">
+          <div class="field"><label for="f-consulente-nome">Nome</label><input type="text" id="f-consulente-nome" placeholder="Nome"></div>
+          <div class="field"><label for="f-consulente-sobrenome">Sobrenome</label><input type="text" id="f-consulente-sobrenome" placeholder="Sobrenome"></div>
+          <div class="field"><label for="f-consulente-whatsapp">WhatsApp</label><input type="text" id="f-consulente-whatsapp" placeholder="(00) 00000-0000"></div>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);margin-top:8px;cursor:pointer;">
+              <input type="checkbox" id="f-consulente-associado" style="width:16px;height:16px;"> É associado
+            </label>
+          </div>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);margin-top:8px;cursor:pointer;">
+              <input type="checkbox" id="f-consulente-preferencial" style="width:16px;height:16px;"> Atendimento preferencial
+            </label>
+          </div>
+          <div class="field" id="campo-motivo-preferencial" style="display:none;">
+            <label for="f-consulente-motivo">Motivo (idade / condição física)</label>
+            <input type="text" id="f-consulente-motivo" placeholder="ex: gestante, idoso, mobilidade reduzida…">
+          </div>
+          <div class="field" id="campo-medium-preferido" style="display:none;">
+            <label for="f-consulente-medium-preferido">Médium de preferência (associado escolhe)</label>
+            <select id="f-consulente-medium-preferido">
+              <option value="">Sem preferência — atende quem chamar</option>
+            </select>
+          </div>
+          <div class="field" style="grid-column:1/-1;">
+            <button class="btn btn-primary" id="btn-registrar-consulente">+ Registrar chegada</button>
+          </div>
+        </div>
+
+        <h2 class="section-title" style="font-size:14px;margin-top:6px;">Fila de espera <span id="fila-count" class="mono" style="font-weight:400;color:var(--ink-soft);"></span></h2>
+        <p class="section-hint" style="margin-top:-8px;">Associados são chamados primeiro, depois os preferenciais e por fim os demais. Use o campo "Atribuir médium" em cada linha para escolher quem vai atender — se o médium escolhido já estiver ocupado, o atendimento anterior é encerrado automaticamente.</p>
+        <div class="table-wrap scroll-y" style="max-height:380px;">
+          <table>
+            <thead><tr><th style="width:40px;">#</th><th>Consulente</th><th style="width:120px;">Categoria</th><th style="width:90px;">Chegada</th><th style="width:280px;"></th></tr></thead>
+            <tbody id="tbody-fila"></tbody>
+          </table>
+        </div>
+
+        <h2 class="section-title" style="font-size:14px;margin-top:22px;">Em atendimento</h2>
+        <div class="table-wrap scroll-y" style="max-height:320px;">
+          <table>
+            <thead><tr><th>Consulente</th><th>Médium</th><th>Cambones</th><th style="width:90px;">Chamado às</th><th style="width:150px;"></th></tr></thead>
+            <tbody id="tbody-em-atendimento"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- HISTÓRICO -->
+      <div id="sub-atend-historico" class="subview">
+        <div class="kpis" id="atend-kpis"></div>
+        <h2 class="section-title" style="font-size:14px;">Atendimentos por médium</h2>
+        <div class="table-wrap" style="margin-bottom:22px;">
+          <table>
+            <thead><tr><th>Médium</th><th>Cambones</th><th style="text-align:right;width:100px;">Atendidos</th></tr></thead>
+            <tbody id="tbody-atend-por-medium"></tbody>
+          </table>
+        </div>
+        <h2 class="section-title" style="font-size:14px;">Atendidos</h2>
+        <div class="table-wrap scroll-y" style="max-height:420px;">
+          <table>
+            <thead><tr><th>Consulente</th><th style="width:110px;">Categoria</th><th>Médium</th><th style="width:78px;">Chegada</th><th style="width:78px;">Chamado</th><th style="width:78px;">Fim</th><th style="width:64px;">Pago</th><th></th></tr></thead>
+            <tbody id="tbody-atendidos"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
   </main>
   <p class="footer-note">Os dados ficam salvos neste artefato entre suas sessões.</p>
 </div>
@@ -824,6 +949,14 @@
           <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Status</div>
           <div id="pessoa-view-status" style="font-size:14px;color:var(--ink);">—</div>
         </div>
+        <div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Classificação</div>
+          <div id="pessoa-view-classificacao" style="font-size:14px;color:var(--ink);">—</div>
+        </div>
+        <div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Entidades</div>
+          <div id="pessoa-view-entidades" style="font-size:14px;color:var(--ink);display:flex;flex-wrap:wrap;gap:6px;">—</div>
+        </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
           <button type="button" class="btn btn-ghost" id="pessoa-view-fechar">Fechar</button>
           <button type="button" class="btn btn-primary" id="pessoa-view-editar">✏️ Editar</button>
@@ -855,6 +988,23 @@
           <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <div><label for="f-celular-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Celular</label><input type="text" id="f-celular-pessoa" placeholder="(00) 00000-0000" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;"></div>
             <div><label for="f-aniversario-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Aniversário</label><input type="date" id="f-aniversario-pessoa" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;"></div>
+          </div>
+          <div class="field">
+            <label for="f-classificacao-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Classificação</label>
+            <select id="f-classificacao-pessoa" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;">
+              <option value="">Selecione…</option>
+              <option value="Atendimento">Atendimento</option>
+              <option value="Cambone">Cambone</option>
+              <option value="Organização">Organização</option>
+            </select>
+          </div>
+          <div class="field">
+            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Entidades <span style="font-weight:400;text-transform:none;color:var(--ink-soft);">(até 10)</span></label>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="f-entidade-input" placeholder="Nome da entidade" style="flex:1;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;">
+              <button type="button" class="btn btn-ghost btn-small" id="btn-add-entidade">+ Adicionar</button>
+            </div>
+            <div id="entidades-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;"></div>
           </div>
         </div>
         <div id="pessoa-edit-tag" style="display:none;margin-top:12px;">
@@ -899,6 +1049,9 @@ const SEED_DATA = {"escalas": [{"data": "2026-01-31", "pessoa": "Cézar", "ativi
 const STORAGE_KEY = 'escala-casa-data-v1';
 let state = null;
 let editingPessoaCodigo = null;
+let pessoaEntidadesTemp = [];
+let editingCorpoId = null;
+let corpoCambonesTemp = [];
 let editingAtividadeCodigo = null;
 let editingGiraCodigo = null;
 let pessoaSearchTerm = '';
@@ -957,6 +1110,7 @@ async function startRealtimeSync(){
         const parsed = JSON.parse(data.json);
         if(!Array.isArray(parsed.giras)) parsed.giras = [];
         if(!parsed.girasAgendadas || typeof parsed.girasAgendadas !== 'object') parsed.girasAgendadas = {};
+        if(!parsed.atendimentos || typeof parsed.atendimentos !== 'object') parsed.atendimentos = {};
         state = parsed;
         lastWriteId = data.writeId;
         renderPessoasTable();
@@ -964,6 +1118,7 @@ async function startRealtimeSync(){
         renderGirasTable();
         renderPainel();
         if(typeof renderCalendar === 'function') renderCalendar();
+        if(typeof renderAtendimento === 'function') renderAtendimento();
         flash('Atualizado por outro usuário');
       }catch(e){ console.error('Erro ao aplicar atualização em tempo real', e); }
     }, (err)=>{ console.error('onSnapshot erro', err); });
@@ -987,12 +1142,14 @@ async function loadState(){
       const parsed = JSON.parse(raw);
       if(!Array.isArray(parsed.giras)) parsed.giras = [];
       if(!parsed.girasAgendadas || typeof parsed.girasAgendadas !== 'object') parsed.girasAgendadas = {};
+        if(!parsed.atendimentos || typeof parsed.atendimentos !== 'object') parsed.atendimentos = {};
       return parsed;
     }catch(e){ console.error('Backup corrompido, usando dados originais', e); }
   }
   const seeded = JSON.parse(JSON.stringify(SEED_DATA));
   if(!Array.isArray(seeded.giras)) seeded.giras = [];
   if(!seeded.girasAgendadas) seeded.girasAgendadas = {};
+  if(!seeded.atendimentos) seeded.atendimentos = {};
   await rawSet(STORAGE_KEY, JSON.stringify(seeded));
   return seeded;
 }
@@ -1033,6 +1190,7 @@ function setupTabs(){
       if(btn.dataset.tab === 'painel') renderPainel();
       if(btn.dataset.tab === 'calendario') renderCalendar();
       if(btn.dataset.tab === 'usuarios') renderUsuariosTable();
+      if(btn.dataset.tab === 'atendimento') renderAtendimento();
     });
   });
   document.querySelectorAll('.subtab').forEach(btn=>{
@@ -1274,6 +1432,12 @@ function openPessoaViewModal(p){
   document.getElementById('pessoa-view-celular').textContent = p.celular || '—';
   document.getElementById('pessoa-view-aniversario').textContent = formatAniversario(p.aniversario);
   document.getElementById('pessoa-view-status').textContent = pessoaStatus(p);
+  document.getElementById('pessoa-view-classificacao').textContent = p.classificacao || '—';
+  const entidadesEl = document.getElementById('pessoa-view-entidades');
+  const entidades = Array.isArray(p.entidades) ? p.entidades : [];
+  entidadesEl.innerHTML = entidades.length
+    ? entidades.map(e=>`<span style="display:inline-block;background:var(--brand-soft);color:var(--brand-dark);padding:3px 10px;border-radius:20px;font-size:12.5px;">${escapeHtml(e)}</span>`).join('')
+    : '—';
   document.getElementById('pessoa-view-modal').dataset.codigo = p.codigo;
   document.getElementById('pessoa-view-modal').classList.add('show');
 }
@@ -1308,6 +1472,10 @@ function openPessoaModal(p){
   document.getElementById('f-estado-pessoa').value = p ? (p.estado || '') : '';
   document.getElementById('f-celular-pessoa').value = p ? (p.celular || '') : '';
   document.getElementById('f-aniversario-pessoa').value = p ? (p.aniversario || '') : '';
+  document.getElementById('f-classificacao-pessoa').value = p ? (p.classificacao || '') : '';
+  pessoaEntidadesTemp = p && Array.isArray(p.entidades) ? p.entidades.slice() : [];
+  document.getElementById('f-entidade-input').value = '';
+  renderEntidadesChips();
   document.getElementById('pessoa-modal-title').textContent = p ? 'Editar filho' : 'Incluir filho';
   document.getElementById('pessoa-edit-tag').style.display = p ? 'block' : 'none';
   if(p) document.getElementById('pessoa-edit-label').textContent = p.nome;
@@ -1327,6 +1495,24 @@ function setupPessoasForm(){
     document.getElementById('f-nome-pessoa').focus();
   });
 
+  document.getElementById('btn-add-entidade').addEventListener('click', ()=>{
+    const input = document.getElementById('f-entidade-input');
+    const val = input.value.trim();
+    if(!val) return;
+    if(pessoaEntidadesTemp.length >= 10){ alert('Cada filho pode ter no máximo 10 entidades.'); return; }
+    if(pessoaEntidadesTemp.some(e=>e.toLowerCase()===val.toLowerCase())){ alert('Essa entidade já foi adicionada.'); return; }
+    pessoaEntidadesTemp.push(val);
+    input.value = '';
+    renderEntidadesChips();
+    input.focus();
+  });
+  document.getElementById('f-entidade-input').addEventListener('keydown', (ev)=>{
+    if(ev.key === 'Enter'){
+      ev.preventDefault();
+      document.getElementById('btn-add-entidade').click();
+    }
+  });
+
   document.getElementById('btn-add-pessoa').addEventListener('click', ()=>{
     try{
       const input = document.getElementById('f-nome-pessoa');
@@ -1339,6 +1525,8 @@ function setupPessoasForm(){
       const estado = document.getElementById('f-estado-pessoa').value.trim().toUpperCase();
       const celular = document.getElementById('f-celular-pessoa').value.trim();
       const aniversario = aniversarioInput.value || '';
+      const classificacao = document.getElementById('f-classificacao-pessoa').value;
+      const entidades = pessoaEntidadesTemp.slice();
       if(!nome) return;
 
       if(editingPessoaCodigo){
@@ -1355,6 +1543,8 @@ function setupPessoasForm(){
         p.estado = estado;
         p.celular = celular;
         p.aniversario = aniversario;
+        p.classificacao = classificacao;
+        p.entidades = entidades;
         if(oldNome !== nome){
           state.escalas.forEach(e=>{ if(e.pessoa===oldNome) e.pessoa = nome; });
         }
@@ -1363,7 +1553,7 @@ function setupPessoasForm(){
         if(state.pessoas.some(p=>p.nome.toLowerCase()===nome.toLowerCase())){
           alert('Esse filho já está cadastrado.'); return;
         }
-        state.pessoas.push({codigo: nextPessoaCodigo(), nome, endereco, numero, bairro, cidade, estado, celular, aniversario, status:'Ativo'});
+        state.pessoas.push({codigo: nextPessoaCodigo(), nome, endereco, numero, bairro, cidade, estado, celular, aniversario, classificacao, entidades, status:'Ativo'});
         closePessoaModal();
       }
       persist(); renderPessoasTable(); renderPainel();
@@ -1407,6 +1597,23 @@ function showStatusToggleButton(p){
   btn.style.display = 'inline-block';
 }
 
+function renderEntidadesChips(){
+  const container = document.getElementById('entidades-chips');
+  container.innerHTML = pessoaEntidadesTemp.map((e,i)=>`
+    <span style="display:inline-flex;align-items:center;gap:5px;background:var(--brand-soft);color:var(--brand-dark);padding:3px 6px 3px 10px;border-radius:20px;font-size:12.5px;">
+      ${escapeHtml(e)}
+      <a href="#" data-removeent="${i}" style="color:var(--danger);text-decoration:none;font-weight:700;padding:0 3px;">×</a>
+    </span>
+  `).join('');
+  container.querySelectorAll('[data-removeent]').forEach(a=>{
+    a.addEventListener('click', (ev)=>{
+      ev.preventDefault();
+      pessoaEntidadesTemp.splice(parseInt(a.dataset.removeent, 10), 1);
+      renderEntidadesChips();
+    });
+  });
+}
+
 function exitPessoaEditMode(){
   editingPessoaCodigo = null;
   document.getElementById('f-nome-pessoa').value = '';
@@ -1417,6 +1624,10 @@ function exitPessoaEditMode(){
   document.getElementById('f-estado-pessoa').value = '';
   document.getElementById('f-celular-pessoa').value = '';
   document.getElementById('f-aniversario-pessoa').value = '';
+  document.getElementById('f-classificacao-pessoa').value = '';
+  document.getElementById('f-entidade-input').value = '';
+  pessoaEntidadesTemp = [];
+  renderEntidadesChips();
   document.getElementById('pessoa-edit-tag').style.display = 'none';
   document.getElementById('btn-toggle-status-pessoa').style.display = 'none';
   document.getElementById('btn-add-pessoa').textContent = '+ Adicionar';
@@ -1842,6 +2053,481 @@ function renderPainel(){
   renderAniversariantesMes();
 }
 
+/* ---------- ATENDIMENTO ---------- */
+function atendDateKey(){
+  const el = document.getElementById('atend-data');
+  return (el && el.value) || new Date().toISOString().slice(0,10);
+}
+
+function normalizeCorpoItem(item){
+  if(!Array.isArray(item.cambones)){
+    item.cambones = item.cambone ? [item.cambone] : [];
+    delete item.cambone;
+  }
+  return item;
+}
+
+function ensureAtendDia(dateKey){
+  if(!state.atendimentos) state.atendimentos = {};
+  if(!state.atendimentos[dateKey]){
+    state.atendimentos[dateKey] = { cobranca:false, corpo:[], consulentes:[] };
+  }
+  const dia = state.atendimentos[dateKey];
+  if(!Array.isArray(dia.corpo)) dia.corpo = [];
+  if(!Array.isArray(dia.consulentes)) dia.consulentes = [];
+  dia.corpo.forEach(normalizeCorpoItem);
+  dia.consulentes.forEach(c=>{ if(typeof c.medium_preferido === 'undefined') c.medium_preferido = ''; });
+  return dia;
+}
+
+function nextConsulenteId(dia){
+  const max = dia.consulentes.reduce((m,c)=>Math.max(m, c.id||0), 0);
+  return max+1;
+}
+function nextCorpoId(dia){
+  const max = dia.corpo.reduce((m,c)=>Math.max(m, c.id||0), 0);
+  return max+1;
+}
+
+function nowHMS(){
+  return new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}
+
+function ordemPrioridade(c){
+  if(c.associado) return 0;
+  if(c.preferencial) return 1;
+  return 2;
+}
+function categoriaLabel(c){
+  if(c.associado) return 'Associado';
+  if(c.preferencial) return 'Preferencial';
+  return 'Comum';
+}
+
+function filaOrdenada(dia){
+  return dia.consulentes
+    .filter(c=>c.status==='aguardando')
+    .sort((a,b)=> ordemPrioridade(a)-ordemPrioridade(b) || a.tsChegada-b.tsChegada);
+}
+function consulenteAtualDoMedium(dia, medium){
+  return dia.consulentes.find(c=>c.status==='em_atendimento' && c.medium===medium) || null;
+}
+function consulenteReservadoDoMedium(dia, medium){
+  return filaOrdenada(dia).find(c=>c.medium===medium) || null;
+}
+
+// Atribui um médium livre a um consulente: inicia o atendimento imediatamente.
+function atribuirMedium(dia, consulenteId, medium){
+  const c = dia.consulentes.find(x=>x.id===consulenteId);
+  if(!c || !medium) return;
+  const atual = consulenteAtualDoMedium(dia, medium);
+  if(atual && atual.id !== c.id){
+    atual.status = 'atendido';
+    atual.tsFim = Date.now();
+    atual.horaFim = nowHMS();
+  }
+  c.status = 'em_atendimento';
+  c.medium = medium;
+  c.tsChamada = Date.now();
+  c.horaChamada = nowHMS();
+  persist(); renderAtendimento();
+}
+
+// Reserva um médium ocupado para um consulente: ele continua na fila (lista de cima),
+// aguardando o médium liberar — só desce para "Em atendimento" quando isso acontecer.
+function reservarMedium(dia, consulenteId, medium){
+  const c = dia.consulentes.find(x=>x.id===consulenteId);
+  if(!c || !medium) return;
+  c.medium = medium;
+  persist(); renderAtendimento();
+}
+
+function cancelarReserva(dia, consulenteId){
+  const c = dia.consulentes.find(x=>x.id===consulenteId);
+  if(!c) return;
+  c.medium = '';
+  persist(); renderAtendimento();
+}
+
+// Quando um médium libera (atendimento finalizado), promove automaticamente
+// quem estava reservado e esperando por ele, se houver.
+function promoverReservado(dia, medium){
+  const reservado = consulenteReservadoDoMedium(dia, medium);
+  if(!reservado) return;
+  reservado.status = 'em_atendimento';
+  reservado.tsChamada = Date.now();
+  reservado.horaChamada = nowHMS();
+}
+
+function finalizarAtendimento(dia, consulenteId){
+  const c = dia.consulentes.find(x=>x.id===consulenteId);
+  if(!c) return;
+  const medium = c.medium;
+  c.status = 'atendido';
+  c.tsFim = Date.now();
+  c.horaFim = nowHMS();
+  promoverReservado(dia, medium);
+  persist(); renderAtendimento();
+}
+
+function renderCorpoSelects(){
+  const mediums = state.pessoas.filter(p=>p.classificacao==='Atendimento' && pessoaStatus(p)==='Ativo').sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  const cambones = state.pessoas.filter(p=>p.classificacao==='Cambone' && pessoaStatus(p)==='Ativo').sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  const selMedium = document.getElementById('atend-select-medium');
+  const selCambone = document.getElementById('atend-select-cambone');
+  selMedium.innerHTML = mediums.length
+    ? mediums.map(p=>`<option value="${escapeAttr(p.nome)}">${escapeHtml(p.nome)}</option>`).join('')
+    : `<option value="">Nenhum filho com classificação "Atendimento"</option>`;
+  selCambone.innerHTML = cambones.length
+    ? cambones.map(p=>`<option value="${escapeAttr(p.nome)}">${escapeHtml(p.nome)}</option>`).join('')
+    : `<option value="">Nenhum filho com classificação "Cambone"</option>`;
+
+  const dia = ensureAtendDia(atendDateKey());
+  const selPref = document.getElementById('f-consulente-medium-preferido');
+  const atual = selPref.value;
+  selPref.innerHTML = '<option value="">Sem preferência — atendente escolhe</option>' +
+    dia.corpo.map(p=>`<option value="${escapeAttr(p.medium)}">${escapeHtml(p.medium)}</option>`).join('');
+  selPref.value = dia.corpo.some(p=>p.medium===atual) ? atual : '';
+}
+
+function renderCorpoCambonesChips(){
+  const container = document.getElementById('corpo-cambones-chips');
+  container.innerHTML = corpoCambonesTemp.map((nome,i)=>`
+    <span style="display:inline-flex;align-items:center;gap:5px;background:var(--brand-soft);color:var(--brand-dark);padding:3px 6px 3px 10px;border-radius:20px;font-size:12.5px;">
+      ${escapeHtml(nome)}
+      <a href="#" data-remcambonechip="${i}" style="color:var(--danger);text-decoration:none;font-weight:700;padding:0 3px;">×</a>
+    </span>
+  `).join('');
+  container.querySelectorAll('[data-remcambonechip]').forEach(a=>{
+    a.addEventListener('click', (ev)=>{
+      ev.preventDefault();
+      corpoCambonesTemp.splice(parseInt(a.dataset.remcambonechip,10), 1);
+      renderCorpoCambonesChips();
+    });
+  });
+}
+
+function exitCorpoEditMode(){
+  editingCorpoId = null;
+  corpoCambonesTemp = [];
+  renderCorpoCambonesChips();
+  document.getElementById('corpo-edit-tag').style.display = 'none';
+  document.getElementById('btn-add-corpo').textContent = '+ Adicionar dupla';
+}
+
+function renderCorpoTable(){
+  const dia = ensureAtendDia(atendDateKey());
+  const tbody = document.getElementById('tbody-corpo-mediunico');
+  if(dia.corpo.length === 0){
+    tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state">Nenhuma dupla cadastrada para este dia ainda.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = dia.corpo.map(p=>{
+    const atual = consulenteAtualDoMedium(dia, p.medium);
+    return `
+    <tr>
+      <td data-label="Médium">${escapeHtml(p.medium)}</td>
+      <td data-label="Cambones">${p.cambones.map(escapeHtml).join(', ') || '—'}</td>
+      <td data-label="Status"><span class="pill ${atual?'pill-no':'pill-ok'}">${atual?'Atendendo':'Livre'}</span></td>
+      <td class="td-actions" data-label="Ações">
+        <button class="btn-danger-text" data-editcorpo="${p.id}" style="color:var(--brand);margin-right:10px;">editar</button>
+        <button class="btn-danger-text" data-remcorpo="${p.id}">remover</button>
+      </td>
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('[data-editcorpo]').forEach(b=>b.addEventListener('click', ()=>{
+    const id = parseInt(b.dataset.editcorpo,10);
+    const item = dia.corpo.find(x=>x.id===id);
+    if(!item) return;
+    editingCorpoId = id;
+    document.getElementById('atend-select-medium').value = item.medium;
+    corpoCambonesTemp = item.cambones.slice();
+    renderCorpoCambonesChips();
+    document.getElementById('corpo-edit-tag').style.display = 'inline';
+    document.getElementById('corpo-edit-label').textContent = item.medium;
+    document.getElementById('btn-add-corpo').textContent = 'Salvar edição';
+  }));
+  tbody.querySelectorAll('[data-remcorpo]').forEach(b=>b.addEventListener('click', ()=>{
+    const id = parseInt(b.dataset.remcorpo,10);
+    const item = dia.corpo.find(x=>x.id===id);
+    if(item && consulenteAtualDoMedium(dia, item.medium)){
+      if(!confirm(`${item.medium} está atendendo agora. Remover mesmo assim?`)) return;
+    }
+    dia.corpo = dia.corpo.filter(x=>x.id!==id);
+    if(editingCorpoId === id) exitCorpoEditMode();
+    persist(); renderAtendimento();
+  }));
+}
+
+function renderFila(){
+  const dia = ensureAtendDia(atendDateKey());
+  const fila = filaOrdenada(dia);
+  document.getElementById('fila-count').textContent = fila.length ? `(${fila.length} aguardando)` : '';
+  const mediumsAlfabetico = dia.corpo.slice().sort((a,b)=>a.medium.localeCompare(b.medium,'pt-BR'));
+  const tbody = document.getElementById('tbody-fila');
+  if(fila.length === 0){
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">Nenhum consulente aguardando.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = fila.map((c,idx)=>{
+    const prefTag = c.associado && c.medium_preferido && c.medium !== c.medium_preferido ? ` <span style="color:var(--ink-soft);font-size:12px;">· escolheu ${escapeHtml(c.medium_preferido)}</span>` : '';
+    let acaoHtml;
+    if(c.medium){
+      // Reservado: aguardando esse médium específico. "Liberar" inicia o atendimento com ele agora.
+      acaoHtml = `<span style="font-size:12px;color:var(--ink-soft);">aguardando <strong>${escapeHtml(c.medium)}</strong></span>
+        <button class="btn btn-primary btn-small" data-liberar="${c.id}" style="margin-left:6px;">▶ Liberar</button>
+        <a href="#" data-cancelreserva="${c.id}" style="font-size:12px;color:var(--danger);margin-left:6px;">trocar</a>`;
+    } else if(mediumsAlfabetico.length){
+      acaoHtml = `<select data-medium-select="${c.id}" style="padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;font-family:var(--body);">
+          <option value="" selected disabled>Atribuir médium…</option>
+          ${mediumsAlfabetico.map(p=>{
+            const ocupado = consulenteAtualDoMedium(dia, p.medium);
+            const label = `${p.medium}${ocupado ? ' — ocupado agora' : ''}`;
+            return `<option value="${escapeAttr(p.medium)}">${escapeHtml(label)}</option>`;
+          }).join('')}
+        </select>`;
+    } else {
+      acaoHtml = `<span style="font-size:12px;color:var(--ink-soft);">monte o corpo mediúnico primeiro</span>`;
+    }
+    return `
+    <tr>
+      <td class="mono" data-label="#">${idx+1}</td>
+      <td data-label="Consulente">${escapeHtml(c.nome)} ${escapeHtml(c.sobrenome||'')}${c.preferencial && c.motivo ? ` <span style="color:var(--ink-soft);font-size:12px;">(${escapeHtml(c.motivo)})</span>` : ''}${prefTag}</td>
+      <td data-label="Categoria"><span class="pill ${c.associado?'pill-ok':(c.preferencial?'pill-accent':'')}" style="${!c.associado && !c.preferencial ? 'background:var(--brand-soft);color:var(--brand-dark);' : ''}">${categoriaLabel(c)}</span></td>
+      <td class="mono" data-label="Chegada">${c.horaChegada}</td>
+      <td class="td-actions" data-label="Ações">${acaoHtml} <button class="btn-danger-text" data-remconsulente="${c.id}" style="margin-left:8px;">remover</button></td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('[data-medium-select]').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const id = parseInt(sel.dataset.mediumSelect,10);
+      const medium = sel.value;
+      if(!medium) return;
+      const ocupado = consulenteAtualDoMedium(dia, medium);
+      if(ocupado){
+        // Médium ocupado: reserva o consulente, que continua na fila até liberar.
+        reservarMedium(dia, id, medium);
+      } else {
+        // Médium livre: inicia o atendimento imediatamente.
+        atribuirMedium(dia, id, medium);
+      }
+    });
+  });
+  tbody.querySelectorAll('[data-liberar]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = parseInt(btn.dataset.liberar,10);
+      const c = dia.consulentes.find(x=>x.id===id);
+      if(!c || !c.medium) return;
+      const ocupado = consulenteAtualDoMedium(dia, c.medium);
+      if(ocupado && ocupado.id !== c.id){
+        if(!confirm(`${c.medium} está atendendo ${ocupado.nome} agora. Encerrar esse atendimento e liberar ${c.nome} agora?`)) return;
+      }
+      atribuirMedium(dia, id, c.medium);
+    });
+  });
+  tbody.querySelectorAll('[data-cancelreserva]').forEach(a=>{
+    a.addEventListener('click', (ev)=>{
+      ev.preventDefault();
+      cancelarReserva(dia, parseInt(a.dataset.cancelreserva,10));
+    });
+  });
+  tbody.querySelectorAll('[data-remconsulente]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = parseInt(btn.dataset.remconsulente,10);
+      const c = dia.consulentes.find(x=>x.id===id);
+      if(!c) return;
+      if(!confirm(`Remover ${c.nome} da fila (ele sai sem ser atendido)?`)) return;
+      dia.consulentes = dia.consulentes.filter(x=>x.id!==id);
+      persist(); renderAtendimento();
+    });
+  });
+}
+
+function renderEmAtendimento(){
+  const dia = ensureAtendDia(atendDateKey());
+  const lista = dia.consulentes.filter(c=>c.status==='em_atendimento').sort((a,b)=>a.tsChamada-b.tsChamada);
+  const tbody = document.getElementById('tbody-em-atendimento');
+  if(lista.length === 0){
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">Nenhum consulente em atendimento no momento.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = lista.map(c=>{
+    const dupla = dia.corpo.find(p=>p.medium===c.medium);
+    const cambones = dupla ? dupla.cambones.map(escapeHtml).join(', ') : '—';
+    return `
+    <tr>
+      <td data-label="Consulente">${escapeHtml(c.nome)} ${escapeHtml(c.sobrenome||'')}</td>
+      <td data-label="Médium">${escapeHtml(c.medium)}</td>
+      <td data-label="Cambones">${cambones}</td>
+      <td class="mono" data-label="Chamado às">${c.horaChamada}</td>
+      <td class="td-actions" data-label="Ações"><button class="btn btn-primary btn-small" data-finalizar="${c.id}">✔ Finalizar</button></td>
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('[data-finalizar]').forEach(btn=>{
+    btn.addEventListener('click', ()=> finalizarAtendimento(dia, parseInt(btn.dataset.finalizar,10)));
+  });
+}
+
+function renderHistoricoAtendimento(){
+  const dia = ensureAtendDia(atendDateKey());
+  const atendidos = dia.consulentes.filter(c=>c.status==='atendido').sort((a,b)=> (b.tsFim||0)-(a.tsFim||0));
+  const associados = atendidos.filter(c=>c.associado).length;
+  const preferenciais = atendidos.filter(c=>!c.associado && c.preferencial).length;
+  const demais = atendidos.length - associados - preferenciais;
+
+  document.getElementById('atend-kpis').innerHTML = `
+    <div class="kpi"><div class="num">${atendidos.length}</div><div class="label">Total atendidos</div></div>
+    <div class="kpi ok"><div class="num">${associados}</div><div class="label">Associados</div></div>
+    <div class="kpi accent"><div class="num">${preferenciais}</div><div class="label">Preferenciais</div></div>
+    <div class="kpi"><div class="num">${demais}</div><div class="label">Demais consulentes</div></div>
+  `;
+
+  const porMedium = {};
+  atendidos.forEach(c=>{ porMedium[c.medium] = (porMedium[c.medium]||0)+1; });
+  const tbodyMedium = document.getElementById('tbody-atend-por-medium');
+  tbodyMedium.innerHTML = dia.corpo.length
+    ? dia.corpo.map(p=>`
+      <tr><td>${escapeHtml(p.medium)}</td><td>${p.cambones.map(escapeHtml).join(', ') || '—'}</td><td style="text-align:right;" class="mono">${porMedium[p.medium]||0}</td></tr>
+    `).join('')
+    : `<tr><td colspan="3"><div class="empty-state">Nenhuma dupla cadastrada para este dia.</div></td></tr>`;
+
+  const tbody = document.getElementById('tbody-atendidos');
+  if(atendidos.length === 0){
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">Nenhum consulente atendido ainda neste dia.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = atendidos.map(c=>{
+    const pagoCell = dia.cobranca
+      ? `<input type="checkbox" data-pago="${c.id}" ${c.pago?'checked':''} style="width:16px;height:16px;cursor:pointer;">`
+      : `<span style="color:var(--ink-soft);">—</span>`;
+    return `
+    <tr>
+      <td data-label="Consulente">${escapeHtml(c.nome)} ${escapeHtml(c.sobrenome||'')}</td>
+      <td data-label="Categoria"><span class="pill ${c.associado?'pill-ok':(c.preferencial?'pill-accent':'')}" style="${!c.associado && !c.preferencial ? 'background:var(--brand-soft);color:var(--brand-dark);' : ''}">${categoriaLabel(c)}</span></td>
+      <td data-label="Médium">${escapeHtml(c.medium)}</td>
+      <td class="mono" data-label="Chegada">${c.horaChegada}</td>
+      <td class="mono" data-label="Chamado">${c.horaChamada}</td>
+      <td class="mono" data-label="Fim">${c.horaFim}</td>
+      <td data-label="Pago">${pagoCell}</td>
+      <td class="td-actions" data-label="Ações"><button class="btn-danger-text" data-remconsulente2="${c.id}">excluir</button></td>
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('[data-pago]').forEach(chk=>{
+    chk.addEventListener('change', ()=>{
+      const c = dia.consulentes.find(x=>x.id===parseInt(chk.dataset.pago,10));
+      if(!c) return;
+      c.pago = chk.checked;
+      persist();
+    });
+  });
+  tbody.querySelectorAll('[data-remconsulente2]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = parseInt(btn.dataset.remconsulente2,10);
+      const c = dia.consulentes.find(x=>x.id===id);
+      if(!c) return;
+      if(!confirm(`Excluir o registro de atendimento de ${c.nome}?`)) return;
+      dia.consulentes = dia.consulentes.filter(x=>x.id!==id);
+      persist(); renderAtendimento();
+    });
+  });
+}
+
+function renderAtendimento(){
+  const dia = ensureAtendDia(atendDateKey());
+  document.getElementById('atend-cobranca').checked = !!dia.cobranca;
+  renderCorpoSelects();
+  renderCorpoTable();
+  renderFila();
+  renderEmAtendimento();
+  renderHistoricoAtendimento();
+}
+
+function setupAtendimento(){
+  const dataInput = document.getElementById('atend-data');
+  dataInput.value = new Date().toISOString().slice(0,10);
+  dataInput.addEventListener('change', ()=>{ exitCorpoEditMode(); renderAtendimento(); });
+
+  document.getElementById('atend-cobranca').addEventListener('change', (ev)=>{
+    const dia = ensureAtendDia(atendDateKey());
+    dia.cobranca = ev.target.checked;
+    persist(); renderHistoricoAtendimento();
+  });
+
+  document.getElementById('btn-add-cambone-chip').addEventListener('click', ()=>{
+    const sel = document.getElementById('atend-select-cambone');
+    const nome = sel.value;
+    if(!nome) return;
+    if(corpoCambonesTemp.includes(nome)){ alert('Esse cambone já foi adicionado a esta dupla.'); return; }
+    corpoCambonesTemp.push(nome);
+    renderCorpoCambonesChips();
+  });
+
+  document.getElementById('btn-add-corpo').addEventListener('click', ()=>{
+    const medium = document.getElementById('atend-select-medium').value;
+    if(!medium){ alert('Cadastre filhos com classificação "Atendimento" antes de montar o corpo mediúnico.'); return; }
+    if(corpoCambonesTemp.length === 0){ alert('Adicione ao menos um cambone para essa dupla.'); return; }
+    const dia = ensureAtendDia(atendDateKey());
+    if(editingCorpoId){
+      const item = dia.corpo.find(x=>x.id===editingCorpoId);
+      if(!item){ exitCorpoEditMode(); return; }
+      if(dia.corpo.some(x=>x.id!==editingCorpoId && x.medium===medium)){ alert(`${medium} já está na lista de hoje.`); return; }
+      item.medium = medium;
+      item.cambones = corpoCambonesTemp.slice();
+      exitCorpoEditMode();
+    } else {
+      if(dia.corpo.some(p=>p.medium===medium)){ alert(`${medium} já está na lista de hoje.`); return; }
+      dia.corpo.push({id: nextCorpoId(dia), medium, cambones: corpoCambonesTemp.slice()});
+      corpoCambonesTemp = [];
+      renderCorpoCambonesChips();
+    }
+    persist(); renderAtendimento();
+  });
+
+  document.getElementById('cancel-edit-corpo').addEventListener('click', (ev)=>{
+    ev.preventDefault();
+    exitCorpoEditMode();
+  });
+
+  document.getElementById('f-consulente-preferencial').addEventListener('change', (ev)=>{
+    document.getElementById('campo-motivo-preferencial').style.display = ev.target.checked ? 'block' : 'none';
+  });
+  document.getElementById('f-consulente-associado').addEventListener('change', (ev)=>{
+    document.getElementById('campo-medium-preferido').style.display = ev.target.checked ? 'block' : 'none';
+  });
+
+  document.getElementById('btn-registrar-consulente').addEventListener('click', ()=>{
+    const nome = document.getElementById('f-consulente-nome').value.trim();
+    const sobrenome = document.getElementById('f-consulente-sobrenome').value.trim();
+    const whatsapp = document.getElementById('f-consulente-whatsapp').value.trim();
+    const associado = document.getElementById('f-consulente-associado').checked;
+    const preferencial = document.getElementById('f-consulente-preferencial').checked;
+    const motivo = document.getElementById('f-consulente-motivo').value.trim();
+    const medium_preferido = associado ? document.getElementById('f-consulente-medium-preferido').value : '';
+    if(!nome){ alert('Informe ao menos o nome do consulente.'); return; }
+    const dia = ensureAtendDia(atendDateKey());
+    dia.consulentes.push({
+      id: nextConsulenteId(dia), nome, sobrenome, whatsapp, associado, preferencial, motivo, medium_preferido,
+      status: 'aguardando',
+      tsChegada: Date.now(), horaChegada: nowHMS(),
+      medium: medium_preferido || '', tsChamada: null, horaChamada: '',
+      tsFim: null, horaFim: '',
+      pago: false
+    });
+    document.getElementById('f-consulente-nome').value = '';
+    document.getElementById('f-consulente-sobrenome').value = '';
+    document.getElementById('f-consulente-whatsapp').value = '';
+    document.getElementById('f-consulente-associado').checked = false;
+    document.getElementById('f-consulente-preferencial').checked = false;
+    document.getElementById('f-consulente-motivo').value = '';
+    document.getElementById('f-consulente-medium-preferido').value = '';
+    document.getElementById('campo-motivo-preferencial').style.display = 'none';
+    document.getElementById('campo-medium-preferido').style.display = 'none';
+    persist(); renderAtendimento();
+    document.getElementById('f-consulente-nome').focus();
+  });
+}
+
 /* ---------- CALENDÁRIO ---------- */
 let calYear = null;
 let calMonth = null;
@@ -1980,6 +2666,7 @@ async function saveCalendarGira(){
   });
   // Se o dia ainda não tem escala, guarda o agendamento no calendário.
   if(!state.girasAgendadas) state.girasAgendadas = {};
+  if(!state.atendimentos) state.atendimentos = {};
   state.girasAgendadas[dateStr] = gira;
   await persist();
   closeCalendarGiraModal();
@@ -2118,6 +2805,7 @@ function setupBackupControls(){
         if(!confirm('Isso vai substituir todos os dados atuais pelos dados desse backup. Continuar?')) return;
         if(!Array.isArray(parsed.giras)) parsed.giras = [];
       if(!parsed.girasAgendadas || typeof parsed.girasAgendadas !== 'object') parsed.girasAgendadas = {};
+        if(!parsed.atendimentos || typeof parsed.atendimentos !== 'object') parsed.atendimentos = {};
         state = parsed;
         editingPessoaCodigo = null;
         editingAtividadeCodigo = null;
@@ -2348,10 +3036,12 @@ async function initApp(){
   setupCalendarGiraModal();
   setupCalendar();
   setupUsuariosForm();
+  setupAtendimento();
   renderPessoasTable();
   renderAtividadesTable();
   renderGirasTable();
   renderPainel();
+  renderAtendimento();
 
   startRealtimeSync();
 }
