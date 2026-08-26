@@ -49,6 +49,11 @@
     --danger-soft:#F5DFD8;
     --ok:#3E7A5C;
     --ok-soft:#DEEBE3;
+    --info:#3B6E91;
+    --info-soft:#E4EFF6;
+    --info-line:#C7DDEC;
+    --special:#7A5AA8;
+    --special-soft:#EBE4F3;
     --radius:12px;
     --shadow:0 2px 10px rgba(27,43,35,0.08);
     --mono:'JetBrains Mono', monospace;
@@ -139,6 +144,7 @@
     font-family:var(--body);font-size:13.5px;background:var(--surface);color:var(--ink);
   }
   .field select:focus, .field input:focus{outline:2px solid var(--brand);outline-offset:1px;}
+  .atend-form{background:var(--info-soft);border:1px solid var(--info-line);}
   .btn{
     font-family:var(--display);font-weight:600;font-size:13.5px;
     padding:10px 16px;border-radius:7px;border:none;cursor:pointer;
@@ -200,6 +206,8 @@
   .pill-ok{background:var(--ok-soft);color:var(--ok);}
   .pill-no{background:var(--danger-soft);color:var(--danger);}
   .pill-accent{background:var(--accent-soft);color:var(--accent);}
+  .pill-info{background:var(--info-soft);color:var(--info);border:1px solid var(--info-line);}
+  .pill-special{background:var(--special-soft);color:var(--special);}
 
   .status-select{
     font-family:var(--body);font-weight:600;font-size:12px;padding:5px 8px;
@@ -207,6 +215,18 @@
   }
   .status-select.status-active{background:var(--ok-soft);color:var(--ok);border-color:var(--ok-soft);}
   .status-select.status-inactive{background:var(--danger-soft);color:var(--danger);border-color:var(--danger-soft);}
+
+  /* Atendimento — cartões compactos, fundo azul claro */
+  .fila-wrap, .atend-card-list{border:1px solid var(--line);border-radius:var(--radius);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px;background:var(--surface);}
+  .fila-item, .atend-card{background:var(--info-soft);border:1px solid var(--info-line);border-radius:10px;padding:13px 15px;margin-bottom:9px;}
+  .fila-item:last-child, .atend-card:last-child{margin-bottom:0;}
+  .fila-row1, .atend-row1{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px;}
+  .fila-who{display:flex;align-items:baseline;gap:10px;min-width:0;}
+  .fila-num{font-family:var(--display);font-weight:700;font-size:19px;color:var(--brand);flex-shrink:0;}
+  .fila-name, .atend-title{font-size:16.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .fila-row2, .atend-row2{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 12px;font-size:13px;color:var(--ink-soft);}
+  .fila-row2 .fila-actions, .atend-row2 .atend-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-left:auto;}
+  .fila-note{font-size:13px;color:var(--ink-soft);}
 
   /* KPI cards */
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
@@ -362,6 +382,19 @@
     .btn{padding:13px 16px;font-size:14.5px;}
     .btn-small{padding:11px 15px;font-size:13px;}
     #btn-add-pessoa, #btn-add-atividade, #btn-add-gira, #btn-add-usuario{width:100%;}
+
+    /* Atendimento: subabas e botões empilhados, um embaixo do outro */
+    .subtabs{flex-direction:column;}
+    .subtab{width:100%;text-align:center;}
+    #btn-registrar-consulente, #btn-add-corpo, #btn-add-cambone-chip{width:100%;}
+    #corpo-cambones-row{flex-direction:column;align-items:stretch!important;}
+    #busca-consulente-row{flex-direction:column;align-items:stretch!important;}
+    .atend-row1{flex-wrap:wrap;}
+    .atend-row2{flex-direction:column;align-items:stretch;}
+    .atend-row2 .atend-actions{margin-left:0;width:100%;justify-content:flex-start;}
+    .fila-row2{flex-direction:column;align-items:stretch;}
+    .fila-row2 .fila-actions{margin-left:0;width:100%;}
+    .fila-row2 .fila-actions select{width:100%;}
 
     .toolbar{flex-direction:column;align-items:stretch;gap:8px;}
     .filters{flex-direction:column;}
@@ -744,7 +777,7 @@
 
       <div id="sub-aniversariantes" class="subview">
         <p class="section-hint" style="margin-top:-8px;" id="aniversariantes-mes-label"></p>
-        <div class="table-wrap scroll-y" style="max-height:460px;">
+        <div class="table-wrap scroll-y table-cards" style="max-height:460px;">
           <table>
             <thead><tr><th>Nome</th><th style="text-align:right;">Aniversário</th></tr></thead>
             <tbody id="tbody-aniversariantes"></tbody>
@@ -756,7 +789,7 @@
     <!-- ATENDIMENTO -->
     <section id="view-atendimento" class="view">
       <h2 class="section-title">Atendimento da gira</h2>
-      <p class="section-hint">Corpo mediúnico do dia, fila de consulentes por ordem de chegada e prioridade, e o histórico do atendimento.</p>
+      <p class="section-hint">Monte o corpo mediúnico, lance os consulentes conforme chegam, acompanhe a lista de espera e quem está em atendimento — tudo com registro de horário.</p>
 
       <div class="toolbar">
         <div class="filters">
@@ -773,22 +806,35 @@
         </div>
       </div>
 
+      <div class="form-grid atend-form" style="margin-bottom:18px;">
+        <div class="field" style="grid-column:1/-1;">
+          <label for="busca-consulente">Buscar consulente pelo nome</label>
+          <div id="busca-consulente-row" style="display:flex;gap:8px;">
+            <input type="text" id="busca-consulente" placeholder="Digite o nome do consulente…" style="flex:1;">
+            <button class="btn btn-ghost btn-small" id="btn-buscar-consulente">🔍 Buscar</button>
+          </div>
+          <div id="resultado-busca-consulente" style="margin-top:12px;"></div>
+        </div>
+      </div>
+
       <nav class="subtabs">
         <button class="subtab active" data-sub="atend-corpo">Corpo Mediúnico</button>
-        <button class="subtab" data-sub="atend-fila">Recepção &amp; Fila</button>
+        <button class="subtab" data-sub="atend-lancamento">Lançamento</button>
+        <button class="subtab" data-sub="atend-espera">Lista de Espera</button>
+        <button class="subtab" data-sub="atend-em-atendimento">Em Atendimento</button>
         <button class="subtab" data-sub="atend-historico">Atendidos &amp; Estatísticas</button>
       </nav>
 
       <!-- CORPO MEDIÚNICO -->
       <div id="sub-atend-corpo" class="subview active">
         <p class="section-hint" style="margin-top:-8px;">Antes da gira começar, monte as duplas do dia: um médium de atendimento pode ter mais de um cambone auxiliando.</p>
-        <div class="form-grid cols-2">
+        <div class="form-grid cols-2 atend-form">
           <div class="field"><label for="atend-select-medium">Médium de atendimento</label>
             <select id="atend-select-medium"></select>
           </div>
           <div class="field">
             <label for="atend-select-cambone">Cambones auxiliares</label>
-            <div style="display:flex;gap:8px;">
+            <div id="corpo-cambones-row" style="display:flex;gap:8px;">
               <select id="atend-select-cambone" style="flex:1;"></select>
               <button type="button" class="btn btn-ghost btn-small" id="btn-add-cambone-chip">+ Adicionar</button>
             </div>
@@ -799,18 +845,14 @@
             <span id="corpo-edit-tag" class="mono" style="display:none;color:var(--accent);">editando "<span id="corpo-edit-label"></span>" — <a href="#" id="cancel-edit-corpo" style="color:var(--danger);">cancelar</a></span>
           </div>
         </div>
-        <div class="table-wrap scroll-y" style="max-height:400px;">
-          <table>
-            <thead><tr><th>Médium de atendimento</th><th>Cambones</th><th style="width:150px;">Status</th><th></th></tr></thead>
-            <tbody id="tbody-corpo-mediunico"></tbody>
-          </table>
-        </div>
+        <div class="atend-card-list" id="tbody-corpo-mediunico"></div>
       </div>
 
-      <!-- RECEPÇÃO / FILA -->
-      <div id="sub-atend-fila" class="subview">
+      <!-- LANÇAMENTO -->
+      <div id="sub-atend-lancamento" class="subview">
         <h2 class="section-title" style="font-size:14px;">Registrar chegada de consulente</h2>
-        <div class="form-grid cols-3">
+        <p class="section-hint" style="margin-top:-8px;">Lance aqui cada consulente conforme ele chega. Depois de registrado, ele aparece automaticamente na aba "Lista de Espera".</p>
+        <div class="form-grid cols-3 atend-form">
           <div class="field"><label for="f-consulente-nome">Nome</label><input type="text" id="f-consulente-nome" placeholder="Nome"></div>
           <div class="field"><label for="f-consulente-sobrenome">Sobrenome</label><input type="text" id="f-consulente-sobrenome" placeholder="Sobrenome"></div>
           <div class="field"><label for="f-consulente-whatsapp">WhatsApp</label><input type="text" id="f-consulente-whatsapp" placeholder="(00) 00000-0000"></div>
@@ -822,6 +864,11 @@
           <div class="field">
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);margin-top:8px;cursor:pointer;">
               <input type="checkbox" id="f-consulente-preferencial" style="width:16px;height:16px;"> Atendimento preferencial
+            </label>
+          </div>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);margin-top:8px;cursor:pointer;">
+              <input type="checkbox" id="f-consulente-primeira-vez" style="width:16px;height:16px;"> 1ª Vez
             </label>
           </div>
           <div class="field" id="campo-motivo-preferencial" style="display:none;">
@@ -838,42 +885,29 @@
             <button class="btn btn-primary" id="btn-registrar-consulente">+ Registrar chegada</button>
           </div>
         </div>
+      </div>
 
-        <h2 class="section-title" style="font-size:14px;margin-top:6px;">Fila de espera <span id="fila-count" class="mono" style="font-weight:400;color:var(--ink-soft);"></span></h2>
+      <!-- LISTA DE ESPERA -->
+      <div id="sub-atend-espera" class="subview">
+        <h2 class="section-title" style="font-size:14px;">Fila de espera <span id="fila-count" class="mono" style="font-weight:400;color:var(--ink-soft);"></span></h2>
         <p class="section-hint" style="margin-top:-8px;">Associados são chamados primeiro, depois os preferenciais e por fim os demais. Use o campo "Atribuir médium" em cada linha para escolher quem vai atender — se o médium escolhido já estiver ocupado, o atendimento anterior é encerrado automaticamente.</p>
-        <div class="table-wrap scroll-y" style="max-height:380px;">
-          <table>
-            <thead><tr><th style="width:40px;">#</th><th>Consulente</th><th style="width:120px;">Categoria</th><th style="width:90px;">Chegada</th><th style="width:280px;"></th></tr></thead>
-            <tbody id="tbody-fila"></tbody>
-          </table>
-        </div>
+        <div class="fila-wrap scroll-y" style="max-height:560px;" id="tbody-fila"></div>
+      </div>
 
-        <h2 class="section-title" style="font-size:14px;margin-top:22px;">Em atendimento</h2>
-        <div class="table-wrap scroll-y" style="max-height:320px;">
-          <table>
-            <thead><tr><th>Consulente</th><th>Médium</th><th>Cambones</th><th style="width:90px;">Chamado às</th><th style="width:150px;"></th></tr></thead>
-            <tbody id="tbody-em-atendimento"></tbody>
-          </table>
-        </div>
+      <!-- EM ATENDIMENTO -->
+      <div id="sub-atend-em-atendimento" class="subview">
+        <h2 class="section-title" style="font-size:14px;">Em atendimento</h2>
+        <p class="section-hint" style="margin-top:-8px;">Quem está com cada médium agora. Finalize quando o atendimento acabar.</p>
+        <div class="atend-card-list scroll-y" style="max-height:560px;" id="tbody-em-atendimento"></div>
       </div>
 
       <!-- HISTÓRICO -->
       <div id="sub-atend-historico" class="subview">
         <div class="kpis" id="atend-kpis"></div>
         <h2 class="section-title" style="font-size:14px;">Atendimentos por médium</h2>
-        <div class="table-wrap" style="margin-bottom:22px;">
-          <table>
-            <thead><tr><th>Médium</th><th>Cambones</th><th style="text-align:right;width:100px;">Atendidos</th></tr></thead>
-            <tbody id="tbody-atend-por-medium"></tbody>
-          </table>
-        </div>
+        <div class="atend-card-list" style="margin-bottom:22px;" id="tbody-atend-por-medium"></div>
         <h2 class="section-title" style="font-size:14px;">Atendidos</h2>
-        <div class="table-wrap scroll-y" style="max-height:420px;">
-          <table>
-            <thead><tr><th>Consulente</th><th style="width:110px;">Categoria</th><th>Médium</th><th style="width:78px;">Chegada</th><th style="width:78px;">Chamado</th><th style="width:78px;">Fim</th><th style="width:64px;">Pago</th><th></th></tr></thead>
-            <tbody id="tbody-atendidos"></tbody>
-          </table>
-        </div>
+        <div class="atend-card-list scroll-y" style="max-height:440px;" id="tbody-atendidos"></div>
       </div>
     </section>
   </main>
@@ -1111,6 +1145,7 @@ async function startRealtimeSync(){
         if(!Array.isArray(parsed.giras)) parsed.giras = [];
         if(!parsed.girasAgendadas || typeof parsed.girasAgendadas !== 'object') parsed.girasAgendadas = {};
         if(!parsed.atendimentos || typeof parsed.atendimentos !== 'object') parsed.atendimentos = {};
+        if(!Array.isArray(parsed.logs)) parsed.logs = [];
         state = parsed;
         lastWriteId = data.writeId;
         renderPessoasTable();
@@ -1143,6 +1178,7 @@ async function loadState(){
       if(!Array.isArray(parsed.giras)) parsed.giras = [];
       if(!parsed.girasAgendadas || typeof parsed.girasAgendadas !== 'object') parsed.girasAgendadas = {};
         if(!parsed.atendimentos || typeof parsed.atendimentos !== 'object') parsed.atendimentos = {};
+        if(!Array.isArray(parsed.logs)) parsed.logs = [];
       return parsed;
     }catch(e){ console.error('Backup corrompido, usando dados originais', e); }
   }
@@ -1150,6 +1186,7 @@ async function loadState(){
   if(!Array.isArray(seeded.giras)) seeded.giras = [];
   if(!seeded.girasAgendadas) seeded.girasAgendadas = {};
   if(!seeded.atendimentos) seeded.atendimentos = {};
+  if(!Array.isArray(seeded.logs)) seeded.logs = [];
   await rawSet(STORAGE_KEY, JSON.stringify(seeded));
   return seeded;
 }
@@ -2076,7 +2113,10 @@ function ensureAtendDia(dateKey){
   if(!Array.isArray(dia.corpo)) dia.corpo = [];
   if(!Array.isArray(dia.consulentes)) dia.consulentes = [];
   dia.corpo.forEach(normalizeCorpoItem);
-  dia.consulentes.forEach(c=>{ if(typeof c.medium_preferido === 'undefined') c.medium_preferido = ''; });
+  dia.consulentes.forEach(c=>{
+    if(typeof c.medium_preferido === 'undefined') c.medium_preferido = '';
+    if(typeof c.primeiraVez === 'undefined') c.primeiraVez = false;
+  });
   return dia;
 }
 
@@ -2093,6 +2133,9 @@ function nowHMS(){
   return new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
 }
 
+// 1ª Vez tem a mesma prioridade de fila que o consulente comum — enfileira junto,
+// por ordem de chegada; a diferença é só a marcação para o atendente direcionar
+// ao Pai ou à Mãe da casa.
 function ordemPrioridade(c){
   if(c.associado) return 0;
   if(c.preferencial) return 1;
@@ -2101,7 +2144,17 @@ function ordemPrioridade(c){
 function categoriaLabel(c){
   if(c.associado) return 'Associado';
   if(c.preferencial) return 'Preferencial';
+  if(c.primeiraVez) return '1ª Vez';
   return 'Comum';
+}
+function categoriaPillClass(c){
+  if(c.associado) return 'pill-ok';
+  if(c.preferencial) return 'pill-accent';
+  if(c.primeiraVez) return 'pill-special';
+  return '';
+}
+function categoriaPillStyle(c){
+  return (!c.associado && !c.preferencial && !c.primeiraVez) ? 'background:var(--brand-soft);color:var(--brand-dark);' : '';
 }
 
 function filaOrdenada(dia){
@@ -2219,21 +2272,25 @@ function renderCorpoTable(){
   const dia = ensureAtendDia(atendDateKey());
   const tbody = document.getElementById('tbody-corpo-mediunico');
   if(dia.corpo.length === 0){
-    tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state">Nenhuma dupla cadastrada para este dia ainda.</div></td></tr>`;
+    tbody.innerHTML = `<div class="empty-state">Nenhuma dupla cadastrada para este dia ainda.</div>`;
     return;
   }
   tbody.innerHTML = dia.corpo.map(p=>{
     const atual = consulenteAtualDoMedium(dia, p.medium);
     return `
-    <tr>
-      <td data-label="Médium">${escapeHtml(p.medium)}</td>
-      <td data-label="Cambones">${p.cambones.map(escapeHtml).join(', ') || '—'}</td>
-      <td data-label="Status"><span class="pill ${atual?'pill-no':'pill-ok'}">${atual?'Atendendo':'Livre'}</span></td>
-      <td class="td-actions" data-label="Ações">
-        <button class="btn-danger-text" data-editcorpo="${p.id}" style="color:var(--brand);margin-right:10px;">editar</button>
-        <button class="btn-danger-text" data-remcorpo="${p.id}">remover</button>
-      </td>
-    </tr>`;
+    <div class="atend-card">
+      <div class="atend-row1">
+        <span class="atend-title">${escapeHtml(p.medium)}</span>
+        <span class="pill ${atual?'pill-no':'pill-ok'}">${atual?'Atendendo':'Livre'}</span>
+      </div>
+      <div class="atend-row2">
+        <span>${p.cambones.map(escapeHtml).join(', ') || '—'}</span>
+        <span class="atend-actions">
+          <button class="btn-danger-text" data-editcorpo="${p.id}" style="color:var(--brand);">editar</button>
+          <button class="btn-danger-text" data-remcorpo="${p.id}">remover</button>
+        </span>
+      </div>
+    </div>`;
   }).join('');
   tbody.querySelectorAll('[data-editcorpo]').forEach(b=>b.addEventListener('click', ()=>{
     const id = parseInt(b.dataset.editcorpo,10);
@@ -2266,17 +2323,19 @@ function renderFila(){
   const mediumsAlfabetico = dia.corpo.slice().sort((a,b)=>a.medium.localeCompare(b.medium,'pt-BR'));
   const tbody = document.getElementById('tbody-fila');
   if(fila.length === 0){
-    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">Nenhum consulente aguardando.</div></td></tr>`;
+    tbody.innerHTML = `<div class="empty-state">Nenhum consulente aguardando.</div>`;
     return;
   }
   tbody.innerHTML = fila.map((c,idx)=>{
-    const prefTag = c.associado && c.medium_preferido && c.medium !== c.medium_preferido ? ` <span style="color:var(--ink-soft);font-size:12px;">· escolheu ${escapeHtml(c.medium_preferido)}</span>` : '';
+    const prefTag = c.associado && c.medium_preferido && c.medium !== c.medium_preferido ? ` · escolheu ${escapeHtml(c.medium_preferido)}` : '';
+    const motivoTag = c.preferencial && c.motivo ? ` (${escapeHtml(c.motivo)})` : '';
+    const primeiraVezTag = c.primeiraVez ? ` <span style="color:var(--special);font-weight:600;">→ direcionar ao Pai/Mãe da casa</span>` : '';
     let acaoHtml;
     if(c.medium){
       // Reservado: aguardando esse médium específico. "Liberar" inicia o atendimento com ele agora.
-      acaoHtml = `<span style="font-size:12px;color:var(--ink-soft);">aguardando <strong>${escapeHtml(c.medium)}</strong></span>
-        <button class="btn btn-primary btn-small" data-liberar="${c.id}" style="margin-left:6px;">▶ Liberar</button>
-        <a href="#" data-cancelreserva="${c.id}" style="font-size:12px;color:var(--danger);margin-left:6px;">trocar</a>`;
+      acaoHtml = `aguardando <strong>${escapeHtml(c.medium)}</strong>
+        <button class="btn btn-primary btn-small" data-liberar="${c.id}">▶ Liberar</button>
+        <a href="#" data-cancelreserva="${c.id}" style="color:var(--danger);">trocar</a>`;
     } else if(mediumsAlfabetico.length){
       acaoHtml = `<select data-medium-select="${c.id}" style="padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;font-family:var(--body);">
           <option value="" selected disabled>Atribuir médium…</option>
@@ -2287,16 +2346,22 @@ function renderFila(){
           }).join('')}
         </select>`;
     } else {
-      acaoHtml = `<span style="font-size:12px;color:var(--ink-soft);">monte o corpo mediúnico primeiro</span>`;
+      acaoHtml = `monte o corpo mediúnico primeiro`;
     }
     return `
-    <tr>
-      <td class="mono" data-label="#">${idx+1}</td>
-      <td data-label="Consulente">${escapeHtml(c.nome)} ${escapeHtml(c.sobrenome||'')}${c.preferencial && c.motivo ? ` <span style="color:var(--ink-soft);font-size:12px;">(${escapeHtml(c.motivo)})</span>` : ''}${prefTag}</td>
-      <td data-label="Categoria"><span class="pill ${c.associado?'pill-ok':(c.preferencial?'pill-accent':'')}" style="${!c.associado && !c.preferencial ? 'background:var(--brand-soft);color:var(--brand-dark);' : ''}">${categoriaLabel(c)}</span></td>
-      <td class="mono" data-label="Chegada">${c.horaChegada}</td>
-      <td class="td-actions" data-label="Ações">${acaoHtml} <button class="btn-danger-text" data-remconsulente="${c.id}" style="margin-left:8px;">remover</button></td>
-    </tr>`;
+    <div class="fila-item">
+      <div class="fila-row1">
+        <div class="fila-who">
+          <span class="fila-num">#${idx+1}</span>
+          <span class="fila-name">${escapeHtml(c.nome)} ${escapeHtml(c.sobrenome||'')}</span>
+        </div>
+        <span class="pill ${categoriaPillClass(c)}" style="${categoriaPillStyle(c)}">${categoriaLabel(c)}</span>
+      </div>
+      <div class="fila-row2">
+        <span class="mono">${c.horaChegada}${motivoTag}${prefTag}</span>${primeiraVezTag}
+        <span class="fila-actions">${acaoHtml} <button class="btn-danger-text" data-remconsulente="${c.id}">remover</button></span>
+      </div>
+    </div>`;
   }).join('');
 
   tbody.querySelectorAll('[data-medium-select]').forEach(sel=>{
@@ -2349,20 +2414,23 @@ function renderEmAtendimento(){
   const lista = dia.consulentes.filter(c=>c.status==='em_atendimento').sort((a,b)=>a.tsChamada-b.tsChamada);
   const tbody = document.getElementById('tbody-em-atendimento');
   if(lista.length === 0){
-    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">Nenhum consulente em atendimento no momento.</div></td></tr>`;
+    tbody.innerHTML = `<div class="empty-state">Nenhum consulente em atendimento no momento.</div>`;
     return;
   }
   tbody.innerHTML = lista.map(c=>{
     const dupla = dia.corpo.find(p=>p.medium===c.medium);
     const cambones = dupla ? dupla.cambones.map(escapeHtml).join(', ') : '—';
     return `
-    <tr>
-      <td data-label="Consulente">${escapeHtml(c.nome)} ${escapeHtml(c.sobrenome||'')}</td>
-      <td data-label="Médium">${escapeHtml(c.medium)}</td>
-      <td data-label="Cambones">${cambones}</td>
-      <td class="mono" data-label="Chamado às">${c.horaChamada}</td>
-      <td class="td-actions" data-label="Ações"><button class="btn btn-primary btn-small" data-finalizar="${c.id}">✔ Finalizar</button></td>
-    </tr>`;
+    <div class="atend-card">
+      <div class="atend-row1">
+        <span class="atend-title">${escapeHtml(c.nome)} ${escapeHtml(c.sobrenome||'')}</span>
+        <span class="pill pill-no">${escapeHtml(c.medium)}</span>
+      </div>
+      <div class="atend-row2">
+        <span class="mono">desde ${c.horaChamada} · cambone: ${cambones}</span>
+        <span class="atend-actions"><button class="btn btn-primary btn-small" data-finalizar="${c.id}">✔ Finalizar</button></span>
+      </div>
+    </div>`;
   }).join('');
   tbody.querySelectorAll('[data-finalizar]').forEach(btn=>{
     btn.addEventListener('click', ()=> finalizarAtendimento(dia, parseInt(btn.dataset.finalizar,10)));
@@ -2388,30 +2456,36 @@ function renderHistoricoAtendimento(){
   const tbodyMedium = document.getElementById('tbody-atend-por-medium');
   tbodyMedium.innerHTML = dia.corpo.length
     ? dia.corpo.map(p=>`
-      <tr><td>${escapeHtml(p.medium)}</td><td>${p.cambones.map(escapeHtml).join(', ') || '—'}</td><td style="text-align:right;" class="mono">${porMedium[p.medium]||0}</td></tr>
+      <div class="atend-card">
+        <div class="atend-row1">
+          <span class="atend-title">${escapeHtml(p.medium)}</span>
+          <span class="mono" style="font-size:19px;font-weight:700;color:var(--brand-dark);">${porMedium[p.medium]||0}</span>
+        </div>
+        <div class="atend-row2"><span>${p.cambones.map(escapeHtml).join(', ') || '—'}</span></div>
+      </div>
     `).join('')
-    : `<tr><td colspan="3"><div class="empty-state">Nenhuma dupla cadastrada para este dia.</div></td></tr>`;
+    : `<div class="empty-state">Nenhuma dupla cadastrada para este dia.</div>`;
 
   const tbody = document.getElementById('tbody-atendidos');
   if(atendidos.length === 0){
-    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">Nenhum consulente atendido ainda neste dia.</div></td></tr>`;
+    tbody.innerHTML = `<div class="empty-state">Nenhum consulente atendido ainda neste dia.</div>`;
     return;
   }
   tbody.innerHTML = atendidos.map(c=>{
     const pagoCell = dia.cobranca
-      ? `<input type="checkbox" data-pago="${c.id}" ${c.pago?'checked':''} style="width:16px;height:16px;cursor:pointer;">`
-      : `<span style="color:var(--ink-soft);">—</span>`;
+      ? `<label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" data-pago="${c.id}" ${c.pago?'checked':''} style="width:15px;height:15px;cursor:pointer;"> pago</label>`
+      : '';
     return `
-    <tr>
-      <td data-label="Consulente">${escapeHtml(c.nome)} ${escapeHtml(c.sobrenome||'')}</td>
-      <td data-label="Categoria"><span class="pill ${c.associado?'pill-ok':(c.preferencial?'pill-accent':'')}" style="${!c.associado && !c.preferencial ? 'background:var(--brand-soft);color:var(--brand-dark);' : ''}">${categoriaLabel(c)}</span></td>
-      <td data-label="Médium">${escapeHtml(c.medium)}</td>
-      <td class="mono" data-label="Chegada">${c.horaChegada}</td>
-      <td class="mono" data-label="Chamado">${c.horaChamada}</td>
-      <td class="mono" data-label="Fim">${c.horaFim}</td>
-      <td data-label="Pago">${pagoCell}</td>
-      <td class="td-actions" data-label="Ações"><button class="btn-danger-text" data-remconsulente2="${c.id}">excluir</button></td>
-    </tr>`;
+    <div class="atend-card">
+      <div class="atend-row1">
+        <span class="atend-title">${escapeHtml(c.nome)} ${escapeHtml(c.sobrenome||'')}</span>
+        <span class="pill ${categoriaPillClass(c)}" style="${categoriaPillStyle(c)}">${categoriaLabel(c)}</span>
+      </div>
+      <div class="atend-row2">
+        <span class="mono">${escapeHtml(c.medium)} · chegada ${c.horaChegada} · chamado ${c.horaChamada} · fim ${c.horaFim}</span>
+        <span class="atend-actions">${pagoCell}<button class="btn-danger-text" data-remconsulente2="${c.id}">excluir</button></span>
+      </div>
+    </div>`;
   }).join('');
   tbody.querySelectorAll('[data-pago]').forEach(chk=>{
     chk.addEventListener('change', ()=>{
@@ -2441,12 +2515,55 @@ function renderAtendimento(){
   renderFila();
   renderEmAtendimento();
   renderHistoricoAtendimento();
+  renderBuscaConsulente();
+}
+
+function statusConsulenteHtml(dia, c){
+  if(c.status === 'atendido'){
+    return `<span class="pill pill-ok">Atendido</span> <span class="mono" style="color:var(--ink-soft);">por ${escapeHtml(c.medium)} · ${c.horaChamada}–${c.horaFim}</span>`;
+  }
+  if(c.status === 'em_atendimento'){
+    return `<span class="pill pill-accent">Em atendimento</span> <span class="mono" style="color:var(--ink-soft);">com ${escapeHtml(c.medium)} desde ${c.horaChamada}</span>`;
+  }
+  const pos = filaOrdenada(dia).findIndex(x=>x.id===c.id) + 1;
+  return c.medium
+    ? `<span class="pill pill-info">Aguardando</span> <span class="mono" style="color:var(--ink-soft);">reservado para ${escapeHtml(c.medium)} · posição ${pos} na fila</span>`
+    : `<span class="pill pill-info">Aguardando</span> <span class="mono" style="color:var(--ink-soft);">posição ${pos} na fila</span>`;
+}
+
+function renderBuscaConsulente(){
+  const input = document.getElementById('busca-consulente');
+  const resultado = document.getElementById('resultado-busca-consulente');
+  const termo = input.value.trim().toLowerCase();
+  if(!termo){ resultado.innerHTML = ''; return; }
+  const dia = ensureAtendDia(atendDateKey());
+  const encontrados = dia.consulentes.filter(c=>
+    `${c.nome} ${c.sobrenome||''}`.toLowerCase().includes(termo)
+  );
+  if(encontrados.length === 0){
+    resultado.innerHTML = `<div class="empty-state">Nenhum consulente encontrado com esse nome hoje.</div>`;
+    return;
+  }
+  resultado.innerHTML = encontrados.map(c=>`
+    <div class="atend-card">
+      <div class="atend-row1"><span class="atend-title">${escapeHtml(c.nome)} ${escapeHtml(c.sobrenome||'')}</span></div>
+      <div class="atend-row2">${statusConsulenteHtml(dia, c)}</div>
+    </div>
+  `).join('');
 }
 
 function setupAtendimento(){
   const dataInput = document.getElementById('atend-data');
   dataInput.value = new Date().toISOString().slice(0,10);
   dataInput.addEventListener('change', ()=>{ exitCorpoEditMode(); renderAtendimento(); });
+
+  document.getElementById('btn-buscar-consulente').addEventListener('click', renderBuscaConsulente);
+  document.getElementById('busca-consulente').addEventListener('keydown', (ev)=>{
+    if(ev.key === 'Enter'){ ev.preventDefault(); renderBuscaConsulente(); }
+  });
+  document.getElementById('busca-consulente').addEventListener('input', ()=>{
+    if(document.getElementById('busca-consulente').value.trim() === '') renderBuscaConsulente();
+  });
 
   document.getElementById('atend-cobranca').addEventListener('change', (ev)=>{
     const dia = ensureAtendDia(atendDateKey());
@@ -2502,12 +2619,13 @@ function setupAtendimento(){
     const whatsapp = document.getElementById('f-consulente-whatsapp').value.trim();
     const associado = document.getElementById('f-consulente-associado').checked;
     const preferencial = document.getElementById('f-consulente-preferencial').checked;
+    const primeiraVez = document.getElementById('f-consulente-primeira-vez').checked;
     const motivo = document.getElementById('f-consulente-motivo').value.trim();
     const medium_preferido = associado ? document.getElementById('f-consulente-medium-preferido').value : '';
     if(!nome){ alert('Informe ao menos o nome do consulente.'); return; }
     const dia = ensureAtendDia(atendDateKey());
     dia.consulentes.push({
-      id: nextConsulenteId(dia), nome, sobrenome, whatsapp, associado, preferencial, motivo, medium_preferido,
+      id: nextConsulenteId(dia), nome, sobrenome, whatsapp, associado, preferencial, primeiraVez, motivo, medium_preferido,
       status: 'aguardando',
       tsChegada: Date.now(), horaChegada: nowHMS(),
       medium: medium_preferido || '', tsChamada: null, horaChamada: '',
@@ -2519,6 +2637,7 @@ function setupAtendimento(){
     document.getElementById('f-consulente-whatsapp').value = '';
     document.getElementById('f-consulente-associado').checked = false;
     document.getElementById('f-consulente-preferencial').checked = false;
+    document.getElementById('f-consulente-primeira-vez').checked = false;
     document.getElementById('f-consulente-motivo').value = '';
     document.getElementById('f-consulente-medium-preferido').value = '';
     document.getElementById('campo-motivo-preferencial').style.display = 'none';
@@ -2806,6 +2925,7 @@ function setupBackupControls(){
         if(!Array.isArray(parsed.giras)) parsed.giras = [];
       if(!parsed.girasAgendadas || typeof parsed.girasAgendadas !== 'object') parsed.girasAgendadas = {};
         if(!parsed.atendimentos || typeof parsed.atendimentos !== 'object') parsed.atendimentos = {};
+        if(!Array.isArray(parsed.logs)) parsed.logs = [];
         state = parsed;
         editingPessoaCodigo = null;
         editingAtividadeCodigo = null;
