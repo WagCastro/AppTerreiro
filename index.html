@@ -592,10 +592,10 @@
   <p class="storage-status" id="storage-status"></p>
 
   <nav class="tabs">
-    <button class="tab active" data-tab="calendario">Calendário</button>
-    <button class="tab" data-tab="painel">Painel</button>
-    <button class="tab" data-tab="atendimento">Atendimento</button>
-    <button class="tab" data-tab="cadastros">Cadastros</button>
+    <button class="tab active" data-tab="calendario" id="tab-calendario">Calendário</button>
+    <button class="tab" data-tab="painel" id="tab-painel">Painel</button>
+    <button class="tab" data-tab="atendimento" id="tab-atendimento">Atendimento</button>
+    <button class="tab" data-tab="cadastros" id="tab-cadastros">Cadastros</button>
     <button class="tab" data-tab="usuarios" id="tab-usuarios" style="display:none;">Administração</button>
   </nav>
 
@@ -732,6 +732,7 @@
         <div class="field"><label for="f-usuario-papel">Perfil</label>
           <select id="f-usuario-papel">
             <option value="usuario">Usuário</option>
+            <option value="atendente">Atendente</option>
             <option value="admin">Administrador</option>
           </select>
         </div>
@@ -985,6 +986,22 @@
           </div>
         </div>
         <div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">CPF</div>
+          <div id="pessoa-view-cpf" style="font-size:14px;color:var(--ink);">—</div>
+        </div>
+        <div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Convênio médico</div>
+          <div id="pessoa-view-convenio" style="font-size:14px;color:var(--ink);">—</div>
+        </div>
+        <div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Hospital em caso de emergência</div>
+          <div id="pessoa-view-hospital" style="font-size:14px;color:var(--ink);">—</div>
+        </div>
+        <div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Avisar em emergência</div>
+          <div id="pessoa-view-emergencia" style="font-size:14px;color:var(--ink);">—</div>
+        </div>
+        <div>
           <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Status</div>
           <div id="pessoa-view-status" style="font-size:14px;color:var(--ink);">—</div>
         </div>
@@ -1027,6 +1044,30 @@
           <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <div><label for="f-celular-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Celular</label><input type="text" id="f-celular-pessoa" placeholder="(00) 00000-0000" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;"></div>
             <div><label for="f-aniversario-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Aniversário</label><input type="date" id="f-aniversario-pessoa" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;"></div>
+          </div>
+          <div class="field">
+            <label for="f-cpf-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">CPF</label>
+            <input type="text" id="f-cpf-pessoa" placeholder="000.000.000-00" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;">
+          </div>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);cursor:pointer;">
+              <input type="checkbox" id="f-convenio-pessoa" style="width:16px;height:16px;"> Possui convênio médico?
+            </label>
+          </div>
+          <div class="field" id="campo-convenio-nome" style="display:none;">
+            <label for="f-convenio-nome-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Informe o convênio</label>
+            <input type="text" id="f-convenio-nome-pessoa" placeholder="Nome do convênio" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;">
+          </div>
+          <div class="field">
+            <label for="f-hospital-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Em caso de emergência, qual hospital deve ser encaminhado?</label>
+            <input type="text" id="f-hospital-pessoa" placeholder="Nome do hospital" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;">
+          </div>
+          <div class="field">
+            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Quem deve ser avisado em caso de emergência?</label>
+            <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:10px;">
+              <input type="text" id="f-emergencia-nome-pessoa" placeholder="Nome" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;">
+              <input type="text" id="f-emergencia-telefone-pessoa" placeholder="Telefone" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;">
+            </div>
           </div>
           <div class="field">
             <label for="f-classificacao-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Classificação</label>
@@ -1225,6 +1266,7 @@ function setupTabs(){
   document.querySelectorAll('.tab').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       if(btn.dataset.tab === 'usuarios' && (!currentUser || currentUser.papel !== 'admin')) return;
+      if(currentUser && currentUser.papel === 'atendente' && btn.dataset.tab !== 'atendimento') return;
       document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
       document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
       btn.classList.add('active');
@@ -1473,6 +1515,13 @@ function openPessoaViewModal(p){
   document.getElementById('pessoa-view-cidade').textContent = cidadeTxt || '—';
   document.getElementById('pessoa-view-celular').textContent = p.celular || '—';
   document.getElementById('pessoa-view-aniversario').textContent = formatAniversario(p.aniversario);
+  document.getElementById('pessoa-view-cpf').textContent = p.cpf || '—';
+  document.getElementById('pessoa-view-convenio').textContent = p.convenioMedico
+    ? `Sim${p.convenioNome ? ' — ' + p.convenioNome : ''}`
+    : 'Não';
+  document.getElementById('pessoa-view-hospital').textContent = p.hospitalEmergencia || '—';
+  const emergenciaTxt = [p.emergenciaNome, p.emergenciaTelefone].filter(Boolean).join(' — ');
+  document.getElementById('pessoa-view-emergencia').textContent = emergenciaTxt || '—';
   document.getElementById('pessoa-view-status').textContent = pessoaStatus(p);
   document.getElementById('pessoa-view-classificacao').textContent = p.classificacao || '—';
   const entidadesEl = document.getElementById('pessoa-view-entidades');
@@ -1514,6 +1563,13 @@ function openPessoaModal(p){
   document.getElementById('f-estado-pessoa').value = p ? (p.estado || '') : '';
   document.getElementById('f-celular-pessoa').value = p ? (p.celular || '') : '';
   document.getElementById('f-aniversario-pessoa').value = p ? (p.aniversario || '') : '';
+  document.getElementById('f-cpf-pessoa').value = p ? (p.cpf || '') : '';
+  document.getElementById('f-convenio-pessoa').checked = p ? !!p.convenioMedico : false;
+  document.getElementById('f-convenio-nome-pessoa').value = p ? (p.convenioNome || '') : '';
+  document.getElementById('campo-convenio-nome').style.display = (p && p.convenioMedico) ? 'block' : 'none';
+  document.getElementById('f-hospital-pessoa').value = p ? (p.hospitalEmergencia || '') : '';
+  document.getElementById('f-emergencia-nome-pessoa').value = p ? (p.emergenciaNome || '') : '';
+  document.getElementById('f-emergencia-telefone-pessoa').value = p ? (p.emergenciaTelefone || '') : '';
   document.getElementById('f-classificacao-pessoa').value = p ? (p.classificacao || '') : '';
   pessoaEntidadesTemp = p && Array.isArray(p.entidades) ? p.entidades.slice() : [];
   document.getElementById('f-entidade-input').value = '';
@@ -1555,6 +1611,10 @@ function setupPessoasForm(){
     }
   });
 
+  document.getElementById('f-convenio-pessoa').addEventListener('change', (ev)=>{
+    document.getElementById('campo-convenio-nome').style.display = ev.target.checked ? 'block' : 'none';
+  });
+
   document.getElementById('btn-add-pessoa').addEventListener('click', ()=>{
     try{
       const input = document.getElementById('f-nome-pessoa');
@@ -1567,6 +1627,12 @@ function setupPessoasForm(){
       const estado = document.getElementById('f-estado-pessoa').value.trim().toUpperCase();
       const celular = document.getElementById('f-celular-pessoa').value.trim();
       const aniversario = aniversarioInput.value || '';
+      const cpf = document.getElementById('f-cpf-pessoa').value.trim();
+      const convenioMedico = document.getElementById('f-convenio-pessoa').checked;
+      const convenioNome = convenioMedico ? document.getElementById('f-convenio-nome-pessoa').value.trim() : '';
+      const hospitalEmergencia = document.getElementById('f-hospital-pessoa').value.trim();
+      const emergenciaNome = document.getElementById('f-emergencia-nome-pessoa').value.trim();
+      const emergenciaTelefone = document.getElementById('f-emergencia-telefone-pessoa').value.trim();
       const classificacao = document.getElementById('f-classificacao-pessoa').value;
       const entidades = pessoaEntidadesTemp.slice();
       if(!nome) return;
@@ -1585,6 +1651,12 @@ function setupPessoasForm(){
         p.estado = estado;
         p.celular = celular;
         p.aniversario = aniversario;
+        p.cpf = cpf;
+        p.convenioMedico = convenioMedico;
+        p.convenioNome = convenioNome;
+        p.hospitalEmergencia = hospitalEmergencia;
+        p.emergenciaNome = emergenciaNome;
+        p.emergenciaTelefone = emergenciaTelefone;
         p.classificacao = classificacao;
         p.entidades = entidades;
         if(oldNome !== nome){
@@ -1595,7 +1667,7 @@ function setupPessoasForm(){
         if(state.pessoas.some(p=>p.nome.toLowerCase()===nome.toLowerCase())){
           alert('Esse filho já está cadastrado.'); return;
         }
-        state.pessoas.push({codigo: nextPessoaCodigo(), nome, endereco, numero, bairro, cidade, estado, celular, aniversario, classificacao, entidades, status:'Ativo'});
+        state.pessoas.push({codigo: nextPessoaCodigo(), nome, endereco, numero, bairro, cidade, estado, celular, aniversario, cpf, convenioMedico, convenioNome, hospitalEmergencia, emergenciaNome, emergenciaTelefone, classificacao, entidades, status:'Ativo'});
         closePessoaModal();
       }
       persist(); renderPessoasTable(); renderPainel();
@@ -1666,6 +1738,13 @@ function exitPessoaEditMode(){
   document.getElementById('f-estado-pessoa').value = '';
   document.getElementById('f-celular-pessoa').value = '';
   document.getElementById('f-aniversario-pessoa').value = '';
+  document.getElementById('f-cpf-pessoa').value = '';
+  document.getElementById('f-convenio-pessoa').checked = false;
+  document.getElementById('f-convenio-nome-pessoa').value = '';
+  document.getElementById('campo-convenio-nome').style.display = 'none';
+  document.getElementById('f-hospital-pessoa').value = '';
+  document.getElementById('f-emergencia-nome-pessoa').value = '';
+  document.getElementById('f-emergencia-telefone-pessoa').value = '';
   document.getElementById('f-classificacao-pessoa').value = '';
   document.getElementById('f-entidade-input').value = '';
   pessoaEntidadesTemp = [];
@@ -3017,11 +3096,27 @@ function clearSession(){
 function applyUserUI(user){
   currentUser = user;
   const badge = document.getElementById('user-badge');
-  if(badge) badge.textContent = `${user.usuario} (${user.papel==='admin'?'Administrador':'Usuário'})`;
+  const papelLabel = user.papel === 'admin' ? 'Administrador' : (user.papel === 'atendente' ? 'Atendente' : 'Usuário');
+  if(badge) badge.textContent = `${user.usuario} (${papelLabel})`;
   const btnLogout = document.getElementById('btn-logout');
   if(btnLogout) btnLogout.style.display = 'inline-block';
   const tabUsuarios = document.getElementById('tab-usuarios');
   if(tabUsuarios) tabUsuarios.style.display = user.papel === 'admin' ? '' : 'none';
+
+  const isAtendente = user.papel === 'atendente';
+  ['tab-calendario','tab-painel','tab-cadastros'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display = isAtendente ? 'none' : '';
+  });
+  if(isAtendente){
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    const tabAtendimento = document.getElementById('tab-atendimento');
+    const viewAtendimento = document.getElementById('view-atendimento');
+    if(tabAtendimento) tabAtendimento.classList.add('active');
+    if(viewAtendimento) viewAtendimento.classList.add('active');
+    if(typeof renderAtendimento === 'function' && window.__appInitialized) renderAtendimento();
+  }
 }
 
 async function showApp(user){
@@ -3085,7 +3180,7 @@ async function renderUsuariosTable(){
   tbody.innerHTML = lista.map(u=>`
     <tr>
       <td data-label="Usuário">${escapeHtml(u.usuario)}</td>
-      <td data-label="Perfil">${u.papel==='admin'?'Administrador':'Usuário'}</td>
+      <td data-label="Perfil">${u.papel==='admin'?'Administrador':(u.papel==='atendente'?'Atendente':'Usuário')}</td>
       <td data-label="Status"><span class="pill ${u.ativo!==false?'pill-ok':'pill-no'}">${u.ativo!==false?'Ativo':'Inativo'}</span></td>
       <td style="text-align:right;white-space:nowrap;">
         <button type="button" class="btn btn-ghost btn-small btn-toggle-usuario" data-usuario="${escapeAttr(u.usuario)}">${u.ativo!==false?'🚫 Inativar':'✅ Liberar acesso'}</button>
