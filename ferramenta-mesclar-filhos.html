@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ferramenta única — Mesclar cadastros duplicados (Templo Iemanjá e Cabocla Jurema)</title>
+<style>
+  :root{ --bg:#EAF2FB; --surface:#fff; --ink:#141414; --ink-soft:#55606B; --line:#CFE0F2; --brand:#2E6DA4; --danger:#B5533C; --ok:#1E7A9C; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;padding:24px;}
+  .app{max-width:760px;margin:0 auto;}
+  h1{font-size:20px;margin:0 0 4px;}
+  p.hint{color:var(--ink-soft);font-size:13.5px;margin:0 0 20px;}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px;box-shadow:0 2px 10px rgba(27,58,87,.08);}
+  .panel h2{font-size:15px;margin:0 0 10px;}
+  label{display:block;font-size:12px;font-weight:600;color:var(--brand);text-transform:uppercase;letter-spacing:.03em;margin:0 0 5px;}
+  select, button{font-family:inherit;font-size:13.5px;}
+  select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:#fff;margin-bottom:14px;}
+  .btn{padding:10px 16px;border-radius:7px;border:none;cursor:pointer;font-weight:600;}
+  .btn-primary{background:var(--brand);color:#fff;}
+  .btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-danger{background:var(--danger);color:#fff;}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:600px){.grid2{grid-template-columns:1fr;}}
+  .sugestoes{margin-top:6px;}
+  .sugestao{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;font-size:13px;background:#F3F8FD;}
+  .sugestao button{padding:5px 10px;font-size:12px;}
+  .resumo{font-size:13.5px;line-height:1.7;}
+  .resumo strong{color:var(--brand);}
+  .status{margin-top:10px;font-size:13.5px;font-weight:600;}
+  .status.ok{color:var(--ok);}
+  .status.err{color:var(--danger);}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px;}
+  th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Ferramenta única: mesclar cadastros duplicados</h1>
+  <p class="hint">
+    Uso pontual — não faz parte do sistema normal. Corrige o caso de alguém ter sido cadastrado
+    primeiro só com o primeiro nome (com atividades já escaladas/executadas) e depois recadastrado
+    com o nome completo (registro sem histórico). Depois de conferir que deu tudo certo, pode apagar este arquivo.
+  </p>
+
+  <div class="panel">
+    <h2>1. Sugestões automáticas (prováveis duplicados)</h2>
+    <p class="hint" style="margin:0 0 4px;">Baseado em nomes onde um é o início do outro. Confira sempre antes de usar — clique em "Usar esse par" só preenche os campos abaixo, não mescla sozinho.</p>
+    <div id="sugestoes" class="sugestoes">Carregando...</div>
+  </div>
+
+  <div class="panel">
+    <h2>2. Escolha manual do par</h2>
+    <div class="grid2">
+      <div>
+        <label>Registro com nome curto (será apagado)</label>
+        <select id="selCurto"></select>
+      </div>
+      <div>
+        <label>Registro com nome completo (vai ficar com o histórico)</label>
+        <select id="selCompleto"></select>
+      </div>
+    </div>
+    <button class="btn btn-ghost" id="btnPreview">Ver o que será alterado</button>
+    <div id="preview" class="resumo" style="margin-top:14px;"></div>
+  </div>
+
+  <div class="panel" id="panelConfirmar" style="display:none;">
+    <h2>3. Confirmar mesclagem</h2>
+    <p class="hint" style="margin:0 0 10px;">
+      Isso não pode ser desfeito por aqui. Se tiver dúvida, use antes "Salvar backup" no sistema normal.
+    </p>
+    <button class="btn btn-primary" id="btnMesclar">Mesclar agora</button>
+    <div id="statusMesclar" class="status"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBWpGwY5bqeqTKfWiw1fF3X4I7E4S9KM6M",
+    authDomain: "appterreiro-6c438.firebaseapp.com",
+    projectId: "appterreiro-6c438",
+    storageBucket: "appterreiro-6c438.firebasestorage.app",
+    messagingSenderId: "614997721260",
+    appId: "1:614997721260:web:79e7799116a189e0591f09",
+    measurementId: "G-L2VSJVP8NE"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const docRef = doc(db, "escalaCasa", "dados");
+
+  let state = null;
+
+  function normaliza(s){ return (s||"").trim().toLowerCase(); }
+
+  async function carregar(){
+    const snap = await getDoc(docRef);
+    if(!snap.exists()) { alert("Documento de dados não encontrado."); return; }
+    const data = snap.data();
+    state = JSON.parse(data.json);
+    if(!Array.isArray(state.pessoas)) state.pessoas = [];
+    if(!Array.isArray(state.escalas)) state.escalas = [];
+    if(!state.atendimentos) state.atendimentos = {};
+    montarSelects();
+    montarSugestoes();
+  }
+
+  function montarSelects(){
+    const opts = state.pessoas.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'))
+      .map(p=>`<option value="${p.codigo}">${p.nome} (código ${p.codigo})</option>`).join('');
+    document.getElementById('selCurto').innerHTML = `<option value="">Selecione...</option>` + opts;
+    document.getElementById('selCompleto').innerHTML = `<option value="">Selecione...</option>` + opts;
+  }
+
+  function montarSugestoes(){
+    const el = document.getElementById('sugestoes');
+    const pares = [];
+    const pessoas = state.pessoas;
+    for(let i=0;i<pessoas.length;i++){
+      for(let j=0;j<pessoas.length;j++){
+        if(i===j) continue;
+        const curto = normaliza(pessoas[i].nome);
+        const completo = normaliza(pessoas[j].nome);
+        if(!curto || !completo || curto===completo) continue;
+        // "curto" é o primeiro nome (ou primeiros nomes) de "completo"
+        if(completo.startsWith(curto + " ") && !curto.includes(" ")){
+          pares.push({ curto: pessoas[i], completo: pessoas[j] });
+        }
+      }
+    }
+    if(!pares.length){
+      el.innerHTML = `<p class="hint" style="margin:0;">Nenhuma sugestão óbvia encontrada — use a escolha manual abaixo.</p>`;
+      return;
+    }
+    el.innerHTML = pares.map((p,idx)=>`
+      <div class="sugestao">
+        <span><strong>${p.curto.nome}</strong> → ${p.completo.nome}</span>
+        <button class="btn btn-ghost" data-idx="${idx}">Usar esse par</button>
+      </div>
+    `).join('');
+    el.querySelectorAll('[data-idx]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const p = pares[Number(btn.dataset.idx)];
+        document.getElementById('selCurto').value = p.curto.codigo;
+        document.getElementById('selCompleto').value = p.completo.codigo;
+        window.scrollTo({top: document.getElementById('selCurto').offsetTop - 20, behavior:'smooth'});
+      });
+    });
+  }
+
+  function contarReferencias(nome){
+    const escalas = state.escalas.filter(e=>e.pessoa===nome);
+    let atend = 0;
+    Object.values(state.atendimentos||{}).forEach(dia=>{
+      (dia.corpo||[]).forEach(c=>{
+        if(c.medium===nome) atend++;
+        if(Array.isArray(c.cambones) && c.cambones.includes(nome)) atend++;
+      });
+      (dia.consulentes||[]).forEach(c=>{
+        if(c.medium===nome) atend++;
+        if(c.medium_preferido===nome) atend++;
+      });
+    });
+    return { escalas: escalas.length, atend };
+  }
+
+  let paraMesclar = null;
+
+  document.getElementById('btnPreview').addEventListener('click', ()=>{
+    const codCurto = document.getElementById('selCurto').value;
+    const codCompleto = document.getElementById('selCompleto').value;
+    const preview = document.getElementById('preview');
+    document.getElementById('panelConfirmar').style.display = 'none';
+    paraMesclar = null;
+
+    if(!codCurto || !codCompleto) { preview.innerHTML = `<span style="color:var(--danger);">Selecione os dois registros.</span>`; return; }
+    if(codCurto === codCompleto) { preview.innerHTML = `<span style="color:var(--danger);">Selecione dois registros diferentes.</span>`; return; }
+
+    const pCurto = state.pessoas.find(p=>p.codigo===codCurto);
+    const pCompleto = state.pessoas.find(p=>p.codigo===codCompleto);
+    const refsCurto = contarReferencias(pCurto.nome);
+
+    const camposParaCopiar = ['endereco','numero','bairro','cidade','estado','celular','aniversario','cpf','convenioMedico','convenioNome','hospitalEmergencia','emergenciaNome','emergenciaTelefone'];
+    const camposQueVaoPreencher = camposParaCopiar.filter(c => !pCompleto[c] && pCurto[c]);
+
+    preview.innerHTML = `
+      <p><strong>${pCurto.nome}</strong> (código ${pCurto.codigo}) será apagado.<br>
+      <strong>${pCompleto.nome}</strong> (código ${pCompleto.codigo}) vai ficar com tudo.</p>
+      <ul>
+        <li><strong>${refsCurto.escalas}</strong> atividade(s) escalada(s)/executada(s) serão movidas.</li>
+        <li><strong>${refsCurto.atend}</strong> referência(s) em atendimentos (corpo mediúnico) serão atualizadas.</li>
+        ${camposQueVaoPreencher.length
+          ? `<li>Campos que serão copiados do registro curto (porque estão vazios no completo): <strong>${camposQueVaoPreencher.join(', ')}</strong></li>`
+          : `<li>Nenhum campo de cadastro precisa ser copiado — o registro completo já tem tudo preenchido.</li>`}
+      </ul>
+    `;
+
+    paraMesclar = { pCurto, pCompleto, camposQueVaoPreencher };
+    document.getElementById('panelConfirmar').style.display = 'block';
+    document.getElementById('statusMesclar').textContent = '';
+  });
+
+  document.getElementById('btnMesclar').addEventListener('click', async ()=>{
+    if(!paraMesclar) return;
+    const { pCurto, pCompleto, camposQueVaoPreencher } = paraMesclar;
+    if(!confirm(`Confirma mesclar "${pCurto.nome}" dentro de "${pCompleto.nome}"? Isso apaga o registro de "${pCurto.nome}".`)) return;
+
+    const btn = document.getElementById('btnMesclar');
+    btn.disabled = true;
+    const statusEl = document.getElementById('statusMesclar');
+    statusEl.className = 'status';
+    statusEl.textContent = 'Aplicando...';
+
+    try{
+      const nomeCurto = pCurto.nome, nomeCompleto = pCompleto.nome;
+
+      // 1) Move as escalas (atividades cadastradas e executadas)
+      state.escalas.forEach(e=>{ if(e.pessoa===nomeCurto) e.pessoa = nomeCompleto; });
+
+      // 2) Move referências dentro dos atendimentos (corpo mediúnico do dia)
+      Object.values(state.atendimentos||{}).forEach(dia=>{
+        (dia.corpo||[]).forEach(c=>{
+          if(c.medium===nomeCurto) c.medium = nomeCompleto;
+          if(Array.isArray(c.cambones)) c.cambones = c.cambones.map(x=> x===nomeCurto ? nomeCompleto : x);
+        });
+        (dia.consulentes||[]).forEach(c=>{
+          if(c.medium===nomeCurto) c.medium = nomeCompleto;
+          if(c.medium_preferido===nomeCurto) c.medium_preferido = nomeCompleto;
+        });
+      });
+
+      // 3) Copia pro registro completo os campos que estavam vazios nele
+      const pCompletoReal = state.pessoas.find(p=>p.codigo===pCompleto.codigo);
+      camposQueVaoPreencher.forEach(c=>{ pCompletoReal[c] = pCurto[c]; });
+
+      // 4) Remove o registro curto (duplicado)
+      state.pessoas = state.pessoas.filter(p=>p.codigo!==pCurto.codigo);
+
+      await setDoc(docRef, { json: JSON.stringify(state), writeId: Date.now() + Math.random() });
+
+      statusEl.className = 'status ok';
+      statusEl.textContent = `✅ Mesclado! "${nomeCurto}" foi apagado, e o histórico agora está em "${nomeCompleto}". Recarregue o sistema normal pra conferir.`;
+
+      // recarrega o estado local pra permitir mais uma mesclagem sem reabrir a página
+      await carregar();
+      document.getElementById('preview').innerHTML = '';
+      document.getElementById('panelConfirmar').style.display = 'none';
+    }catch(e){
+      statusEl.className = 'status err';
+      statusEl.textContent = 'Erro ao mesclar: ' + e.message;
+    }finally{
+      btn.disabled = false;
+    }
+  });
+
+  carregar();
+</script>
+</body>
+</html>
