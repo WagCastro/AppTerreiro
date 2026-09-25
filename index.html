@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
   // Promessa resolvida quando o Firebase (módulo abaixo) terminar de carregar.
   window.__fbReady = new Promise((resolve)=>{ window.__fbResolve = resolve; });
@@ -632,6 +633,26 @@
             <tbody id="cal-detail-tbody"></tbody>
           </table>
         </div>
+
+        <div id="cal-confirmados-block" style="margin-top:22px;padding-top:16px;border-top:1px solid var(--line);">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px;">
+            <div>
+              <h3 class="section-title" style="font-size:14px;margin-bottom:2px;">Confirmados na gira (formulário)</h3>
+              <p class="section-hint" id="cal-confirmados-hint" style="margin:0;">Importe o CSV de confirmação de presença desse dia para ver a lista de quem confirmou "Sim".</p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="file" id="cal-confirmacoes-file" accept=".csv,.zip" style="display:none;">
+              <button type="button" class="btn btn-ghost btn-small" id="btn-importar-confirmacoes">📥 Importar confirmações (CSV)</button>
+            </div>
+          </div>
+          <div class="table-wrap table-cards" style="margin-top:10px;">
+            <table>
+              <thead><tr><th>Filho</th><th style="width:140px;">Dias sem atividade</th><th style="width:120px;">Última atividade</th><th style="min-width:220px;">Atribuir atividade</th></tr></thead>
+              <tbody id="tbody-cal-confirmados"></tbody>
+            </table>
+          </div>
+          <div id="cal-confirmados-naoencontrados" style="margin-top:8px;font-size:12px;color:var(--ink-soft);"></div>
+        </div>
       </div>
     </section>
 
@@ -683,7 +704,7 @@
         </div>
         <div class="table-wrap scroll-y table-cards">
           <table>
-            <thead><tr><th style="width:90px;">Código</th><th>Nome</th><th style="width:130px;">Celular</th><th style="width:110px;">Aniversário</th><th style="width:90px;">Tarefas</th><th style="width:100px;">Status</th><th></th></tr></thead>
+            <thead><tr><th style="width:90px;">Código</th><th>Nome</th><th style="width:120px;">Apelido</th><th style="width:130px;">Celular</th><th style="width:110px;">Aniversário</th><th style="width:90px;">Tarefas</th><th style="width:100px;">Status</th><th></th></tr></thead>
             <tbody id="tbody-pessoas"></tbody>
           </table>
         </div>
@@ -964,6 +985,10 @@
     <div class="modal-body">
       <div style="padding:20px;display:flex;flex-direction:column;gap:12px;">
         <div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Apelido</div>
+          <div id="pessoa-view-apelido" style="font-size:14px;color:var(--ink);">—</div>
+        </div>
+        <div>
           <div style="font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Endereço</div>
           <div id="pessoa-view-endereco" style="font-size:14px;color:var(--ink);">—</div>
         </div>
@@ -1032,6 +1057,7 @@
       <div style="padding:20px;">
         <div style="display:flex;flex-direction:column;gap:14px;">
           <div class="field"><label for="f-nome-pessoa">Nome</label><input type="text" id="f-nome-pessoa" placeholder="Nome do filho"></div>
+          <div class="field"><label for="f-apelido-pessoa">Apelido</label><input type="text" id="f-apelido-pessoa" placeholder="Apelido (usado na escala)"></div>
           <div class="field" style="display:grid;grid-template-columns:1fr 90px;gap:10px;">
             <div><label for="f-endereco-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Endereço</label><input type="text" id="f-endereco-pessoa" placeholder="Rua, avenida…" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;"></div>
             <div><label for="f-numero-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Nº</label><input type="text" id="f-numero-pessoa" placeholder="nº" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;"></div>
@@ -1191,6 +1217,7 @@ async function startRealtimeSync(){
         if(!Array.isArray(parsed.giras)) parsed.giras = [];
         if(!parsed.girasAgendadas || typeof parsed.girasAgendadas !== 'object') parsed.girasAgendadas = {};
         if(!parsed.atendimentos || typeof parsed.atendimentos !== 'object') parsed.atendimentos = {};
+        if(!parsed.confirmacoes || typeof parsed.confirmacoes !== 'object') parsed.confirmacoes = {};
         if(!Array.isArray(parsed.logs)) parsed.logs = [];
         state = parsed;
         lastWriteId = data.writeId;
@@ -1224,6 +1251,7 @@ async function loadState(){
       if(!Array.isArray(parsed.giras)) parsed.giras = [];
       if(!parsed.girasAgendadas || typeof parsed.girasAgendadas !== 'object') parsed.girasAgendadas = {};
         if(!parsed.atendimentos || typeof parsed.atendimentos !== 'object') parsed.atendimentos = {};
+        if(!parsed.confirmacoes || typeof parsed.confirmacoes !== 'object') parsed.confirmacoes = {};
         if(!Array.isArray(parsed.logs)) parsed.logs = [];
       return parsed;
     }catch(e){ console.error('Backup corrompido, usando dados originais', e); }
@@ -1232,6 +1260,7 @@ async function loadState(){
   if(!Array.isArray(seeded.giras)) seeded.giras = [];
   if(!seeded.girasAgendadas) seeded.girasAgendadas = {};
   if(!seeded.atendimentos) seeded.atendimentos = {};
+  if(!seeded.confirmacoes) seeded.confirmacoes = {};
   if(!Array.isArray(seeded.logs)) seeded.logs = [];
   await rawSet(STORAGE_KEY, JSON.stringify(seeded));
   return seeded;
@@ -1439,11 +1468,22 @@ function gerarRelatorioPDF(){
 
 /* ---------- PESSOAS VIEW ---------- */
 function pessoaStatus(p){ return p.status === 'Inativo' ? 'Inativo' : 'Ativo'; }
+function primeiroNome(nome){ return (nome || '').trim().split(/\s+/)[0] || ''; }
+function migrarApelidosPessoas(){
+  let alterou = false;
+  (state.pessoas || []).forEach(p=>{
+    if(!p.apelido || !p.apelido.trim()){
+      p.apelido = primeiroNome(p.nome);
+      alterou = true;
+    }
+  });
+  return alterou;
+}
 
 function renderPessoasTable(){
   const tbody = document.getElementById('tbody-pessoas');
   if(!pessoaSearchTerm){
-    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">Digite ao menos uma letra e clique em 🔍 Buscar para ver os filhos cadastrados.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">Digite ao menos uma letra e clique em 🔍 Buscar para ver os filhos cadastrados.</div></td></tr>`;
     return;
   }
   const counts = {};
@@ -1451,7 +1491,7 @@ function renderPessoasTable(){
   let rows = state.pessoas.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   rows = rows.filter(p => p.nome.toLowerCase().includes(pessoaSearchTerm));
   if(rows.length === 0){
-    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">Nenhum filho encontrado com esse nome.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">Nenhum filho encontrado com esse nome.</div></td></tr>`;
     return;
   }
   tbody.innerHTML = rows.map(p=>{
@@ -1460,6 +1500,7 @@ function renderPessoasTable(){
     <tr>
       <td class="mono td-code" data-label="Código">${p.codigo}</td>
       <td data-label="Nome"><a href="#" class="pessoa-nome-link" data-viewp="${p.codigo}" style="color:var(--brand-dark);font-weight:600;text-decoration:none;">${escapeHtml(p.nome)}</a></td>
+      <td data-label="Apelido">${escapeHtml(p.apelido || primeiroNome(p.nome))}</td>
       <td class="mono" data-label="Celular">${escapeHtml(p.celular || '—')}</td>
       <td class="mono" data-label="Aniversário">${formatAniversario(p.aniversario)}</td>
       <td class="mono" data-label="Tarefas">${counts[p.nome]||0}</td>
@@ -1508,6 +1549,7 @@ function renderPessoasTable(){
 
 function openPessoaViewModal(p){
   document.getElementById('pessoa-view-title').textContent = p.nome;
+  document.getElementById('pessoa-view-apelido').textContent = p.apelido || primeiroNome(p.nome);
   const enderecoTxt = [p.endereco, p.numero ? `nº ${p.numero}` : ''].filter(Boolean).join(', ');
   document.getElementById('pessoa-view-endereco').textContent = enderecoTxt || '—';
   document.getElementById('pessoa-view-bairro').textContent = p.bairro || '—';
@@ -1556,6 +1598,7 @@ function setupPessoaViewModal(){
 function openPessoaModal(p){
   editingPessoaCodigo = p ? p.codigo : null;
   document.getElementById('f-nome-pessoa').value = p ? p.nome : '';
+  document.getElementById('f-apelido-pessoa').value = p ? (p.apelido || primeiroNome(p.nome)) : '';
   document.getElementById('f-endereco-pessoa').value = p ? (p.endereco || '') : '';
   document.getElementById('f-numero-pessoa').value = p ? (p.numero || '') : '';
   document.getElementById('f-bairro-pessoa').value = p ? (p.bairro || '') : '';
@@ -1620,6 +1663,7 @@ function setupPessoasForm(){
       const input = document.getElementById('f-nome-pessoa');
       const aniversarioInput = document.getElementById('f-aniversario-pessoa');
       const nome = input.value.trim();
+      const apelido = document.getElementById('f-apelido-pessoa').value.trim() || primeiroNome(nome);
       const endereco = document.getElementById('f-endereco-pessoa').value.trim();
       const numero = document.getElementById('f-numero-pessoa').value.trim();
       const bairro = document.getElementById('f-bairro-pessoa').value.trim();
@@ -1644,6 +1688,7 @@ function setupPessoasForm(){
         if(dupe){ alert('Já existe outro filho com esse nome.'); return; }
         const oldNome = p.nome;
         p.nome = nome;
+        p.apelido = apelido;
         p.endereco = endereco;
         p.numero = numero;
         p.bairro = bairro;
@@ -1667,7 +1712,7 @@ function setupPessoasForm(){
         if(state.pessoas.some(p=>p.nome.toLowerCase()===nome.toLowerCase())){
           alert('Esse filho já está cadastrado.'); return;
         }
-        state.pessoas.push({codigo: nextPessoaCodigo(), nome, endereco, numero, bairro, cidade, estado, celular, aniversario, cpf, convenioMedico, convenioNome, hospitalEmergencia, emergenciaNome, emergenciaTelefone, classificacao, entidades, status:'Ativo'});
+        state.pessoas.push({codigo: nextPessoaCodigo(), nome, apelido, endereco, numero, bairro, cidade, estado, celular, aniversario, cpf, convenioMedico, convenioNome, hospitalEmergencia, emergenciaNome, emergenciaTelefone, classificacao, entidades, status:'Ativo'});
         closePessoaModal();
       }
       persist(); renderPessoasTable(); renderPainel();
@@ -2926,6 +2971,227 @@ function renderCalendarDayDetail(dateStr){
     `).join('');
   }
   document.getElementById('cal-day-detail').style.display = 'block';
+  renderConfirmados(dateStr);
+}
+
+/* ---------- CONFIRMAÇÕES DE PRESENÇA (CSV do formulário) ---------- */
+function normalizeNomeComp(s){
+  return (s || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .trim().toLowerCase().replace(/\s+/g,' ');
+}
+
+function parseCSVText(text){
+  text = text.replace(/^\uFEFF/, '');
+  const lines = text.split(/\r\n|\n|\r/).filter(l=>l.length>0);
+  if(lines.length === 0) return [];
+  const parseLine = (line)=>{
+    const cols = [];
+    let cur = '';
+    let inQuotes = false;
+    for(let i=0;i<line.length;i++){
+      const ch = line[i];
+      if(inQuotes){
+        if(ch === '"'){
+          if(line[i+1] === '"'){ cur += '"'; i++; }
+          else { inQuotes = false; }
+        } else { cur += ch; }
+      } else {
+        if(ch === '"'){ inQuotes = true; }
+        else if(ch === ','){ cols.push(cur); cur = ''; }
+        else { cur += ch; }
+      }
+    }
+    cols.push(cur);
+    return cols;
+  };
+  const header = parseLine(lines[0]).map(h=>h.trim());
+  const rows = [];
+  for(let i=1;i<lines.length;i++){
+    const cols = parseLine(lines[i]);
+    const obj = {};
+    header.forEach((h,idx)=> obj[h] = (cols[idx]!==undefined ? cols[idx] : '').trim());
+    rows.push(obj);
+  }
+  return rows;
+}
+
+function findCsvColumn(row, candidates){
+  const keys = Object.keys(row);
+  for(const cand of candidates){
+    const found = keys.find(k=> normalizeNomeComp(k) === normalizeNomeComp(cand));
+    if(found) return found;
+  }
+  for(const cand of candidates){
+    const found = keys.find(k=> normalizeNomeComp(k).includes(normalizeNomeComp(cand)));
+    if(found) return found;
+  }
+  return null;
+}
+
+async function importarConfirmacoesArquivo(file, dateStr){
+  let csvText = null;
+  const nomeArq = (file.name||'').toLowerCase();
+  try{
+    if(nomeArq.endsWith('.zip')){
+      if(typeof JSZip === 'undefined'){
+        alert('Não foi possível ler o .zip (biblioteca indisponível). Envie o .csv diretamente.');
+        return;
+      }
+      const zip = await JSZip.loadAsync(file);
+      const csvEntry = Object.values(zip.files).find(f=> !f.dir && f.name.toLowerCase().endsWith('.csv'));
+      if(!csvEntry){ alert('Não encontrei nenhum arquivo .csv dentro do .zip.'); return; }
+      csvText = await csvEntry.async('string');
+    } else {
+      csvText = await file.text();
+    }
+    const rows = parseCSVText(csvText);
+    if(rows.length === 0){ alert('O arquivo não tem registros.'); return; }
+
+    const colNome = findCsvColumn(rows[0], ['Nome']);
+    const colPresenca = findCsvColumn(rows[0], ['Comparecerá à gira ?','Comparecerá à gira','Comparecera a gira']);
+    const colEntidade = findCsvColumn(rows[0], ['Nome da entidade (se médium de atendimento)','Nome da entidade']);
+    if(!colNome || !colPresenca){
+      alert('Não reconheci as colunas do formulário. Confira se o CSV tem as colunas "Nome" e "Comparecerá à gira ?".');
+      return;
+    }
+
+    const lista = rows.map(r=>({
+      nome: (r[colNome]||'').trim(),
+      comparecera: (r[colPresenca]||'').trim(),
+      entidade: colEntidade ? (r[colEntidade]||'').trim() : ''
+    })).filter(r=>r.nome);
+
+    if(!state.confirmacoes) state.confirmacoes = {};
+    state.confirmacoes[dateStr] = lista;
+    await persist();
+    renderConfirmados(dateStr);
+    flash('Confirmações importadas');
+  }catch(e){
+    console.error('Erro ao importar confirmações', e);
+    alert('Não foi possível ler esse arquivo: ' + e.message);
+  }
+}
+
+function ultimaAtividadeInfo(nome){
+  const sim = state.escalas.filter(e=>e.executado==='SIM' && e.pessoa===nome);
+  let lastDate = null;
+  sim.forEach(e=>{ if(!lastDate || e.data > lastDate) lastDate = e.data; });
+  let dias = null;
+  if(lastDate){
+    const dt = new Date(lastDate+'T00:00:00');
+    dias = Math.floor((new Date() - dt) / 86400000);
+  }
+  return {lastDate, dias};
+}
+
+function renderConfirmados(dateStr){
+  const tbody = document.getElementById('tbody-cal-confirmados');
+  const naoEl = document.getElementById('cal-confirmados-naoencontrados');
+  const hintEl = document.getElementById('cal-confirmados-hint');
+  if(!tbody) return;
+  const lista = (state.confirmacoes && state.confirmacoes[dateStr]) || [];
+
+  if(lista.length === 0){
+    tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state">Nenhuma confirmação importada para esse dia ainda.</div></td></tr>`;
+    naoEl.textContent = '';
+    hintEl.textContent = 'Importe o CSV de confirmação de presença desse dia para ver a lista de quem confirmou "Sim".';
+    return;
+  }
+
+  const sim = lista.filter(r=> normalizeNomeComp(r.comparecera) === 'sim');
+  const naoEncontrados = [];
+  const pessoasAtivas = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo');
+
+  const linhas = sim.map(r=>{
+    const p = pessoasAtivas.find(x=> normalizeNomeComp(x.nome) === normalizeNomeComp(r.nome));
+    if(!p){ naoEncontrados.push(r.nome); return null; }
+    const info = ultimaAtividadeInfo(p.nome);
+    return {p, entidade: r.entidade, ...info};
+  }).filter(Boolean);
+
+  linhas.sort((a,b)=>{
+    if(a.dias===null && b.dias===null) return a.p.nome.localeCompare(b.p.nome,'pt-BR');
+    if(a.dias===null) return -1;
+    if(b.dias===null) return 1;
+    return b.dias - a.dias;
+  });
+
+  hintEl.textContent = `${linhas.length} filho(s) confirmado(s) para esse dia.`;
+
+  if(linhas.length === 0){
+    tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state">Nenhum confirmado localizado no cadastro.</div></td></tr>`;
+  } else {
+    const atividadeOptions = state.atividades.slice().sort((a,b)=>a.atividade.localeCompare(b.atividade,'pt-BR'))
+      .map(a=>`<option value="${escapeAttr(a.atividade)}">${escapeHtml(a.atividade)}</option>`).join('');
+    tbody.innerHTML = linhas.map(({p,entidade,lastDate,dias})=>{
+      let pillClass = 'pill-ok';
+      if(dias===null || dias>30) pillClass = 'pill-no';
+      const jaAtribuidas = state.escalas.filter(e=>e.data===dateStr && e.pessoa===p.nome);
+      const chips = jaAtribuidas.length
+        ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px;">${jaAtribuidas.map(e=>`<span style="display:inline-block;background:var(--brand-soft);color:var(--brand-dark);padding:2px 8px;border-radius:20px;font-size:11.5px;">${escapeHtml(e.atividade)}</span>`).join('')}</div>`
+        : '';
+      const entidadeTxt = entidade ? `<div style="font-size:11.5px;color:var(--ink-soft);margin-top:2px;">Entidade: ${escapeHtml(entidade)}</div>` : '';
+      return `
+      <tr>
+        <td data-label="Filho">
+          <span class="clickable" data-person="${escapeAttr(p.nome)}" style="font-weight:600;color:var(--brand-dark);">${escapeHtml(p.apelido || p.nome)}</span>
+          ${entidadeTxt}
+        </td>
+        <td data-label="Dias sem atividade"><span class="pill ${pillClass}">${dias===null?'—':dias+' dias'}</span></td>
+        <td class="mono" data-label="Última atividade">${lastDate ? formatDateBR(lastDate) : 'sem registro'}</td>
+        <td data-label="Atribuir atividade">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <select class="cal-confirm-atividade" data-pessoa="${escapeAttr(p.nome)}" style="padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:12.5px;">
+              <option value="">Atividade…</option>
+              ${atividadeOptions}
+            </select>
+            <button type="button" class="btn btn-primary btn-small btn-atribuir-confirmado" data-pessoa="${escapeAttr(p.nome)}">+ Atribuir</button>
+          </div>
+          ${chips}
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  naoEl.textContent = naoEncontrados.length
+    ? `Não localizados no cadastro de filhos: ${naoEncontrados.join(', ')}.`
+    : '';
+
+  tbody.querySelectorAll('[data-person]').forEach(el=>{
+    el.addEventListener('click', ()=> showPersonActivities(el.dataset.person));
+  });
+  tbody.querySelectorAll('.btn-atribuir-confirmado').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const nome = btn.dataset.pessoa;
+      const select = tbody.querySelector(`.cal-confirm-atividade[data-pessoa="${CSS.escape(nome)}"]`);
+      const atividade = select ? select.value : '';
+      if(!atividade){ alert('Escolha uma atividade.'); return; }
+      const girasDia = Array.from(giraDatesMap()[dateStr] || []);
+      const gira = girasDia[0] || '';
+      state.escalas.push({id: nextEscalaId(), data: dateStr, gira, pessoa: nome, atividade, executado:'SIM'});
+      await persist();
+      renderPessoasTable();
+      renderAtividadesTable();
+      renderGirasTable();
+      renderPainel();
+      renderCalendarDayDetail(dateStr);
+    });
+  });
+}
+
+function setupConfirmacoesImport(){
+  const fileInput = document.getElementById('cal-confirmacoes-file');
+  document.getElementById('btn-importar-confirmacoes').addEventListener('click', ()=>{
+    if(!calSelectedDate){ alert('Selecione um dia no calendário primeiro.'); return; }
+    fileInput.click();
+  });
+  fileInput.addEventListener('change', async (ev)=>{
+    const file = ev.target.files[0];
+    fileInput.value = '';
+    if(!file || !calSelectedDate) return;
+    await importarConfirmacoesArquivo(file, calSelectedDate);
+  });
 }
 
 function setupCalendarGiraModal(){
@@ -3009,6 +3275,7 @@ function setupBackupControls(){
         if(!Array.isArray(parsed.giras)) parsed.giras = [];
       if(!parsed.girasAgendadas || typeof parsed.girasAgendadas !== 'object') parsed.girasAgendadas = {};
         if(!parsed.atendimentos || typeof parsed.atendimentos !== 'object') parsed.atendimentos = {};
+        if(!parsed.confirmacoes || typeof parsed.confirmacoes !== 'object') parsed.confirmacoes = {};
         if(!Array.isArray(parsed.logs)) parsed.logs = [];
         state = parsed;
         editingPessoaCodigo = null;
@@ -3243,6 +3510,7 @@ function setupUsuariosForm(){
 
 async function initApp(){
   state = await loadState();
+  if(migrarApelidosPessoas()){ await persist(); }
   updateStorageStatusLabel();
   setupTabs();
   setupModal();
@@ -3255,6 +3523,7 @@ async function initApp(){
   setupGirasForm();
   setupCalendarGiraModal();
   setupCalendar();
+  setupConfirmacoesImport();
   setupUsuariosForm();
   setupAtendimento();
   renderPessoasTable();
