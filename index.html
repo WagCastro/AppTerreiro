@@ -3101,11 +3101,15 @@ function renderConfirmados(dateStr){
 
   const sim = lista.filter(r=> normalizeNomeComp(r.comparecera) === 'sim');
   const naoEncontrados = [];
+  const ambiguos = [];
   const pessoasAtivas = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo');
 
   const linhas = sim.map(r=>{
-    const p = pessoasAtivas.find(x=> normalizeNomeComp(x.nome) === normalizeNomeComp(r.nome));
-    if(!p){ naoEncontrados.push(r.nome); return null; }
+    const alvo = normalizeNomeComp(r.nome);
+    const matches = pessoasAtivas.filter(x=> normalizeNomeComp(x.apelido || primeiroNome(x.nome)) === alvo);
+    if(matches.length === 0){ naoEncontrados.push(r.nome); return null; }
+    if(matches.length > 1){ ambiguos.push(r.nome); return null; }
+    const p = matches[0];
     const info = ultimaAtividadeInfo(p.nome);
     return {p, entidade: r.entidade, ...info};
   }).filter(Boolean);
@@ -3154,9 +3158,10 @@ function renderConfirmados(dateStr){
     }).join('');
   }
 
-  naoEl.textContent = naoEncontrados.length
-    ? `Não localizados no cadastro de filhos: ${naoEncontrados.join(', ')}.`
-    : '';
+  naoEl.innerHTML = [
+    naoEncontrados.length ? `Não localizados no cadastro (apelido): ${escapeHtml(naoEncontrados.join(', '))}.` : '',
+    ambiguos.length ? `<br>Apelido duplicado, edite o cadastro para deixar único: ${escapeHtml(ambiguos.join(', '))}.` : ''
+  ].filter(Boolean).join('');
 
   tbody.querySelectorAll('[data-person]').forEach(el=>{
     el.addEventListener('click', ()=> showPersonActivities(el.dataset.person));
