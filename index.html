@@ -1482,16 +1482,12 @@ function migrarApelidosPessoas(){
 
 function renderPessoasTable(){
   const tbody = document.getElementById('tbody-pessoas');
-  if(!pessoaSearchTerm){
-    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">Digite ao menos uma letra e clique em 🔍 Buscar para ver os filhos cadastrados.</div></td></tr>`;
-    return;
-  }
   const counts = {};
   state.escalas.forEach(e=>{ if(e.executado==='SIM') counts[e.pessoa] = (counts[e.pessoa]||0)+1; });
   let rows = state.pessoas.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
-  rows = rows.filter(p => p.nome.toLowerCase().includes(pessoaSearchTerm));
+  if(pessoaSearchTerm) rows = rows.filter(p => p.nome.toLowerCase().includes(pessoaSearchTerm));
   if(rows.length === 0){
-    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">Nenhum filho encontrado com esse nome.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">${pessoaSearchTerm ? 'Nenhum filho encontrado com esse nome.' : 'Nenhum filho cadastrado ainda.'}</div></td></tr>`;
     return;
   }
   tbody.innerHTML = rows.map(p=>{
