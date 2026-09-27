@@ -697,6 +697,11 @@
             <button class="btn btn-primary btn-small" id="btn-incluir-pessoa">+ Incluir</button>
           </div>
           <div class="filters">
+            <select id="filter-pessoa-status" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:var(--body);font-size:13px;">
+              <option value="Ativo" selected>Ativos</option>
+              <option value="Inativo">Inativos</option>
+              <option value="Todos">Todos</option>
+            </select>
             <input type="text" id="filter-pessoa-nome" placeholder="Buscar filho pelo nome…">
             <button class="btn btn-ghost btn-small" id="btn-search-pessoa">🔍 Buscar</button>
             <button class="btn btn-ghost btn-small" id="btn-clear-pessoa-search" style="display:none;">✕ Limpar</button>
@@ -1161,6 +1166,7 @@ let corpoCambonesTemp = [];
 let editingAtividadeCodigo = null;
 let editingGiraCodigo = null;
 let pessoaSearchTerm = '';
+let pessoaStatusFilter = 'Ativo';
 
 let usingFallback = false;
 let lastWriteId = 0;
@@ -1485,9 +1491,10 @@ function renderPessoasTable(){
   const counts = {};
   state.escalas.forEach(e=>{ if(e.executado==='SIM') counts[e.pessoa] = (counts[e.pessoa]||0)+1; });
   let rows = state.pessoas.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  if(pessoaStatusFilter !== 'Todos') rows = rows.filter(p => pessoaStatus(p) === pessoaStatusFilter);
   if(pessoaSearchTerm) rows = rows.filter(p => p.nome.toLowerCase().includes(pessoaSearchTerm));
   if(rows.length === 0){
-    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">${pessoaSearchTerm ? 'Nenhum filho encontrado com esse nome.' : 'Nenhum filho cadastrado ainda.'}</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">${pessoaSearchTerm ? 'Nenhum filho encontrado com esse nome.' : (pessoaStatusFilter==='Inativo' ? 'Nenhum filho inativo.' : 'Nenhum filho cadastrado ainda.')}</div></td></tr>`;
     return;
   }
   tbody.innerHTML = rows.map(p=>{
@@ -1799,12 +1806,18 @@ function exitPessoaEditMode(){
 function setupPessoaSearch(){
   const input = document.getElementById('filter-pessoa-nome');
   const clearBtn = document.getElementById('btn-clear-pessoa-search');
+  const statusSelect = document.getElementById('filter-pessoa-status');
 
   function runSearch(){
     pessoaSearchTerm = input.value.trim().toLowerCase();
     clearBtn.style.display = pessoaSearchTerm ? 'inline-block' : 'none';
     renderPessoasTable();
   }
+
+  statusSelect.addEventListener('change', ()=>{
+    pessoaStatusFilter = statusSelect.value;
+    renderPessoasTable();
+  });
 
   document.getElementById('btn-search-pessoa').addEventListener('click', runSearch);
   input.addEventListener('keydown', (ev)=>{
