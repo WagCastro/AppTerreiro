@@ -664,6 +664,7 @@
       <nav class="subtabs">
         <button class="subtab active" data-sub="cad-gira">Gira</button>
         <button class="subtab" data-sub="cad-pessoas">Filhos</button>
+        <button class="subtab" data-sub="cad-pais-maes">Pais/Mãe</button>
         <button class="subtab" data-sub="cad-atividades">Atividades</button>
       </nav>
 
@@ -711,6 +712,18 @@
           <table>
             <thead><tr><th style="width:90px;">Código</th><th style="width:140px;">Apelido</th><th>Nome</th><th style="width:130px;">Celular</th><th style="width:110px;">Aniversário</th><th style="width:90px;">Tarefas</th><th style="width:100px;">Status</th><th></th></tr></thead>
             <tbody id="tbody-pessoas"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PAIS/MÃE -->
+      <div id="sub-cad-pais-maes" class="subview">
+        <h2 class="section-title" style="font-size:15px;">Pais e Mães</h2>
+        <p class="section-hint">Filhos com classificação de Pai de Santo, Mãe de Santo, Pai Pequeno ou Mãe Pequena. Para incluir alguém aqui, marque essa classificação no cadastro em "Filhos".</p>
+        <div class="table-wrap scroll-y table-cards">
+          <table>
+            <thead><tr><th style="width:140px;">Apelido</th><th>Nome</th><th style="width:160px;">Classificação</th><th style="width:100px;">Status</th><th></th></tr></thead>
+            <tbody id="tbody-pais-maes"></tbody>
           </table>
         </div>
       </div>
@@ -1112,6 +1125,10 @@
               <option value="Atendimento">Atendimento</option>
               <option value="Cambone">Cambone</option>
               <option value="Organização">Organização</option>
+              <option value="Pai de Santo">Pai de Santo</option>
+              <option value="Mãe de Santo">Mãe de Santo</option>
+              <option value="Pai Pequeno">Pai Pequeno</option>
+              <option value="Mãe Pequena">Mãe Pequena</option>
             </select>
           </div>
           <div class="field">
@@ -1561,6 +1578,43 @@ function renderPessoasTable(){
       state.pessoas = state.pessoas.filter(x=>x.codigo!==cod);
       persist(); renderPessoasTable(); renderPainel();
     }
+  }));
+  renderPaisMaesTable();
+}
+
+const PAIS_MAES_CLASSIFICACOES = ['Pai de Santo','Mãe de Santo','Pai Pequeno','Mãe Pequena'];
+
+function renderPaisMaesTable(){
+  const tbody = document.getElementById('tbody-pais-maes');
+  if(!tbody) return;
+  const rows = state.pessoas
+    .filter(p => PAIS_MAES_CLASSIFICACOES.includes(p.classificacao))
+    .sort((a,b)=> a.nome.localeCompare(b.nome,'pt-BR'));
+  if(rows.length === 0){
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">Nenhum Pai ou Mãe cadastrado ainda. Marque a classificação no cadastro de filhos.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(p=>{
+    const status = pessoaStatus(p);
+    return `
+    <tr>
+      <td data-label="Apelido" style="font-weight:600;">${escapeHtml(p.apelido || primeiroNome(p.nome))}</td>
+      <td data-label="Nome"><a href="#" class="pessoa-nome-link" data-viewp="${p.codigo}" style="color:var(--brand-dark);text-decoration:none;">${escapeHtml(p.nome)}</a></td>
+      <td data-label="Classificação"><span class="pill pill-special">${escapeHtml(p.classificacao)}</span></td>
+      <td data-label="Status"><span class="pill ${status==='Ativo'?'pill-ok':'pill-no'}">${status}</span></td>
+      <td class="td-actions" data-label="Ações"><button class="btn-danger-text" data-editp="${p.codigo}" style="color:var(--brand);">editar</button></td>
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('[data-viewp]').forEach(a=>a.addEventListener('click', (ev)=>{
+    ev.preventDefault();
+    const p = state.pessoas.find(x=>x.codigo===a.dataset.viewp);
+    if(p) openPessoaViewModal(p);
+  }));
+  tbody.querySelectorAll('[data-editp]').forEach(b=>b.addEventListener('click', ()=>{
+    const p = state.pessoas.find(x=>x.codigo===b.dataset.editp);
+    if(!p) return;
+    openPessoaModal(p);
+    document.getElementById('f-nome-pessoa').focus();
   }));
 }
 
