@@ -779,7 +779,12 @@
       <h2 class="section-title">Painel de acompanhamento</h2>
       <p class="section-hint">As mesmas análises que você tinha no Power BI, calculadas ao vivo a partir dos seus dados.</p>
 
-      <div class="toolbar" style="justify-content:flex-end;">
+      <div class="toolbar" style="justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <span style="display:flex;align-items:center;gap:6px;">
+          <input type="text" id="filter-painel-nome" placeholder="Buscar filho por nome ou apelido…" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:var(--body);font-size:13px;min-width:220px;">
+          <button type="button" class="btn btn-ghost btn-small" id="btn-search-painel">🔍 Buscar</button>
+          <button type="button" class="btn btn-ghost btn-small" id="btn-clear-painel-search" style="display:none;">✕ Limpar</button>
+        </span>
         <span style="display:flex;align-items:center;gap:6px;">
           <input type="date" id="f-data-relatorio" title="Data do relatório" style="padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:12.5px;font-family:var(--body);">
           <button class="btn btn-primary btn-small" id="btn-gerar-relatorio">📄 Relatório PDF</button>
@@ -811,7 +816,7 @@
         <p class="section-hint" style="margin-top:-8px;" id="aniversariantes-mes-label"></p>
         <div class="table-wrap scroll-y table-cards" style="max-height:460px;">
           <table>
-            <thead><tr><th>Nome</th><th style="text-align:right;">Aniversário</th></tr></thead>
+            <thead><tr><th style="width:110px;">Apelido</th><th>Nome</th><th style="text-align:right;">Aniversário</th></tr></thead>
             <tbody id="tbody-aniversariantes"></tbody>
           </table>
         </div>
@@ -1415,7 +1420,7 @@ function gerarRelatorioPDF(){
     doc.autoTable({
       startY: y,
       head: [['Filhos', 'Atividade']],
-      body: principais.map(e=>[e.pessoa, e.atividade]),
+      body: principais.map(e=>[nomeComApelido(e.pessoa), e.atividade]),
       theme: 'grid',
       margin: {left: margin, right: margin},
       styles: {
@@ -1445,7 +1450,7 @@ function gerarRelatorioPDF(){
     doc.autoTable({
       startY: y,
       head: [['Filhos', 'Atividade']],
-      body: standBy.map(e=>[e.pessoa, e.atividade]),
+      body: standBy.map(e=>[nomeComApelido(e.pessoa), e.atividade]),
       theme: 'grid',
       margin: {left: margin, right: margin},
       styles: {
@@ -1475,6 +1480,15 @@ function gerarRelatorioPDF(){
 /* ---------- PESSOAS VIEW ---------- */
 function pessoaStatus(p){ return p.status === 'Inativo' ? 'Inativo' : 'Ativo'; }
 function primeiroNome(nome){ return (nome || '').trim().split(/\s+/)[0] || ''; }
+function apelidoDe(nome){
+  const p = state.pessoas.find(x=>x.nome===nome);
+  return p ? (p.apelido || primeiroNome(p.nome)) : primeiroNome(nome);
+}
+function nomeComApelido(nome){
+  const ap = apelidoDe(nome);
+  if(!ap || ap.trim().toLowerCase() === (nome||'').trim().toLowerCase()) return nome;
+  return `${nome} (${ap})`;
+}
 function migrarApelidosPessoas(){
   let alterou = false;
   (state.pessoas || []).forEach(p=>{
@@ -2041,7 +2055,7 @@ function showPersonActivities(nome){
       <td data-label="Atividade">${escapeHtml(e.atividade)}</td>
       <td data-label="Ação" style="text-align:right;"><button type="button" class="btn btn-ghost btn-small btn-del-escala" data-escala-id="${e.id}" style="color:var(--danger);border-color:var(--danger-soft);">🗑 Excluir</button></td>
     </tr>`).join('');
-  openModal(nome, `${recs.length} registro(s) na escala`, '<th>Data</th><th>Atividade</th><th></th>', rowsHtml, 'Esse filho ainda não tem registros.');
+  openModal(nomeComApelido(nome), `${recs.length} registro(s) na escala`, '<th>Data</th><th>Atividade</th><th></th>', rowsHtml, 'Esse filho ainda não tem registros.');
   if(countsRows.length){
     document.getElementById('modal-summary').innerHTML = `
       <div style="margin-bottom:16px;">
@@ -2123,7 +2137,7 @@ function showAtividadePessoas(atividade){
   const rowsHtml = recs.map(e=>`
     <tr>
       <td class="mono" data-label="Data">${formatDateBR(e.data)}</td>
-      <td data-label="Filho">${escapeHtml(e.pessoa)}</td>
+      <td data-label="Filho">${escapeHtml(apelidoDe(e.pessoa))} <span style="font-weight:400;color:var(--ink-soft);font-size:12px;">${escapeHtml(e.pessoa)}</span></td>
       <td data-label="Executado"><span class="pill ${e.executado==='SIM'?'pill-ok':'pill-no'}">${e.executado==='SIM'?'Sim':'Não'}</span></td>
     </tr>`).join('');
   openModal(atividade, `${recs.length} registro(s)`, '<th>Data</th><th>Filho</th><th>Executado</th>', rowsHtml, 'Nenhum registro para essa atividade.');
@@ -2132,18 +2146,31 @@ function showAtividadePessoas(atividade){
 /* ---------- PAINEL ---------- */
 function simEscalas(){ return state.escalas.filter(e=>e.executado==='SIM'); }
 
+let painelSearchTerm = '';
+
+function matchPainelSearch(nome, apelido){
+  if(!painelSearchTerm) return true;
+  const termo = normalizeNomeComp(painelSearchTerm);
+  return normalizeNomeComp(nome).includes(termo) || normalizeNomeComp(apelido||'').includes(termo);
+}
+
 function renderBarList(){
   const sim = simEscalas();
   const counts = {};
   state.pessoas.filter(p=> pessoaStatus(p)==='Ativo').forEach(p=> counts[p.nome] = 0);
   sim.forEach(e=> counts[e.pessoa] = (counts[e.pessoa]||0)+1);
   const activeNames = new Set(state.pessoas.filter(p=> pessoaStatus(p)==='Ativo').map(p=>p.nome));
-  const rows = Object.entries(counts).filter(([nome])=> activeNames.has(nome)).sort((a,b)=>b[1]-a[1]);
+  let rows = Object.entries(counts).filter(([nome])=> activeNames.has(nome)).sort((a,b)=>b[1]-a[1]);
+  rows = rows.filter(([nome])=> matchPainelSearch(nome, apelidoDe(nome)));
   const max = rows.length ? rows[0][1] : 1;
   const container = document.getElementById('bar-list');
+  if(rows.length === 0){
+    container.innerHTML = `<div class="empty-state">Nenhum filho encontrado.</div>`;
+    return;
+  }
   container.innerHTML = rows.map(([nome,count], idx)=>`
     <div class="bar-row ${idx<3?'top':''}">
-      <div class="name clickable" data-person="${escapeAttr(nome)}" title="Ver atividades de ${escapeAttr(nome)}">${escapeHtml(nome)}</div>
+      <div class="name clickable" data-person="${escapeAttr(nome)}" title="Ver atividades de ${escapeAttr(nome)}">${escapeHtml(apelidoDe(nome))} <span style="font-weight:400;color:var(--ink-soft);font-size:12px;">${escapeHtml(nome)}</span></div>
       <div class="bar-track"><div class="bar-fill" style="width:${max?(count/max*100):0}%"></div></div>
       <div class="count">${count}</div>
     </div>
@@ -2162,26 +2189,31 @@ function renderDiasSem(){
   const today = new Date();
   // Exibe TODOS os filhos cadastrados, inclusive os que ainda não possuem
   // nenhuma atividade registrada e os que estão inativos.
-  const rows = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo').map(p=>{
+  let rows = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo').map(p=>{
     const lastDate = last[p.nome];
     let dias = null;
     if(lastDate){
       const dt = new Date(lastDate+'T00:00:00');
       dias = Math.floor((today - dt) / 86400000);
     }
-    return {nome:p.nome, lastDate, dias};
+    return {nome:p.nome, apelido: p.apelido || primeiroNome(p.nome), lastDate, dias};
   }).sort((a,b)=>{
     if(a.dias===null && b.dias===null) return a.nome.localeCompare(b.nome,'pt-BR');
     if(a.dias===null) return -1;
     if(b.dias===null) return 1;
     return b.dias - a.dias;
   });
+  rows = rows.filter(r=> matchPainelSearch(r.nome, r.apelido));
   const container = document.getElementById('tbody-dias-sem');
+  if(rows.length === 0){
+    container.innerHTML = `<div class="empty-state">Nenhum filho encontrado.</div>`;
+    return;
+  }
   container.innerHTML = rows.map(r=>{
     let pillClass = 'pill-ok';
     if(r.dias===null || r.dias>30) pillClass='pill-no';
     return `<div class="dias-row">
-      <span class="clickable" data-person="${escapeAttr(r.nome)}" title="Ver atividades de ${escapeAttr(r.nome)}">${escapeHtml(r.nome)}</span>
+      <span class="clickable" data-person="${escapeAttr(r.nome)}" title="Ver atividades de ${escapeAttr(r.nome)}">${escapeHtml(r.apelido)} <span style="font-weight:400;color:var(--ink-soft);font-size:12px;">${escapeHtml(r.nome)}</span></span>
       <span class="dias-num"><span class="pill ${pillClass}">${r.dias===null?'—':r.dias+' dias'}</span></span>
       <span class="ultima">${r.lastDate ? formatDateBR(r.lastDate) : 'sem registro'}</span>
     </div>`;
@@ -2203,19 +2235,21 @@ function renderAniversariantesMes(){
     .filter(p => pessoaStatus(p)==='Ativo' && p.aniversario)
     .map(p=>{
       const [, m, d] = p.aniversario.split('-');
-      return {nome: p.nome, mes: parseInt(m,10), dia: parseInt(d,10), aniversario: p.aniversario};
+      return {nome: p.nome, apelido: p.apelido || primeiroNome(p.nome), mes: parseInt(m,10), dia: parseInt(d,10), aniversario: p.aniversario};
     })
     .filter(p => p.mes === mesAtual)
+    .filter(p => matchPainelSearch(p.nome, p.apelido))
     .sort((a,b)=> a.dia - b.dia || a.nome.localeCompare(b.nome,'pt-BR'));
 
   const tbody = document.getElementById('tbody-aniversariantes');
   if(!tbody) return;
   if(rows.length === 0){
-    tbody.innerHTML = `<tr><td colspan="2"><div class="empty-state">Nenhum aniversariante cadastrado para este mês.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="3"><div class="empty-state">Nenhum aniversariante cadastrado para este mês.</div></td></tr>`;
     return;
   }
   tbody.innerHTML = rows.map(r=>`
     <tr>
+      <td style="font-weight:600;">${escapeHtml(r.apelido)}</td>
       <td>${escapeHtml(r.nome)}</td>
       <td style="text-align:right;" class="mono">${formatAniversario(r.aniversario)}</td>
     </tr>
@@ -2226,6 +2260,25 @@ function renderPainel(){
   renderBarList();
   renderDiasSem();
   renderAniversariantesMes();
+}
+
+function setupPainelSearch(){
+  const input = document.getElementById('filter-painel-nome');
+  const clearBtn = document.getElementById('btn-clear-painel-search');
+  function runSearch(){
+    painelSearchTerm = input.value.trim();
+    clearBtn.style.display = painelSearchTerm ? 'inline-block' : 'none';
+    renderPainel();
+  }
+  document.getElementById('btn-search-painel').addEventListener('click', runSearch);
+  input.addEventListener('keydown', ev=>{ if(ev.key==='Enter'){ ev.preventDefault(); runSearch(); } });
+  input.addEventListener('input', runSearch);
+  clearBtn.addEventListener('click', ()=>{
+    input.value = '';
+    painelSearchTerm = '';
+    clearBtn.style.display = 'none';
+    renderPainel();
+  });
 }
 
 /* ---------- ATENDIMENTO ---------- */
@@ -2367,17 +2420,17 @@ function renderCorpoSelects(){
   const selMedium = document.getElementById('atend-select-medium');
   const selCambone = document.getElementById('atend-select-cambone');
   selMedium.innerHTML = mediums.length
-    ? mediums.map(p=>`<option value="${escapeAttr(p.nome)}">${escapeHtml(p.nome)}</option>`).join('')
+    ? mediums.map(p=>`<option value="${escapeAttr(p.nome)}">${escapeHtml(nomeComApelido(p.nome))}</option>`).join('')
     : `<option value="">Nenhum filho com classificação "Atendimento"</option>`;
   selCambone.innerHTML = cambones.length
-    ? cambones.map(p=>`<option value="${escapeAttr(p.nome)}">${escapeHtml(p.nome)}</option>`).join('')
+    ? cambones.map(p=>`<option value="${escapeAttr(p.nome)}">${escapeHtml(nomeComApelido(p.nome))}</option>`).join('')
     : `<option value="">Nenhum filho com classificação "Cambone"</option>`;
 
   const dia = ensureAtendDia(atendDateKey());
   const selPref = document.getElementById('f-consulente-medium-preferido');
   const atual = selPref.value;
   selPref.innerHTML = '<option value="">Sem preferência — atendente escolhe</option>' +
-    dia.corpo.map(p=>`<option value="${escapeAttr(p.medium)}">${escapeHtml(p.medium)}</option>`).join('');
+    dia.corpo.map(p=>`<option value="${escapeAttr(p.medium)}">${escapeHtml(nomeComApelido(p.medium))}</option>`).join('');
   selPref.value = dia.corpo.some(p=>p.medium===atual) ? atual : '';
 }
 
@@ -2418,7 +2471,7 @@ function renderCorpoTable(){
     return `
     <div class="atend-card">
       <div class="atend-row1">
-        <span class="atend-title">${escapeHtml(p.medium)}</span>
+        <span class="atend-title">${escapeHtml(nomeComApelido(p.medium))}</span>
         <span class="pill ${atual?'pill-no':'pill-ok'}">${atual?'Atendendo':'Livre'}</span>
       </div>
       <div class="atend-row2">
@@ -2596,7 +2649,7 @@ function renderHistoricoAtendimento(){
     ? dia.corpo.map(p=>`
       <div class="atend-card">
         <div class="atend-row1">
-          <span class="atend-title">${escapeHtml(p.medium)}</span>
+          <span class="atend-title">${escapeHtml(nomeComApelido(p.medium))}</span>
           <span class="mono" style="font-size:19px;font-weight:700;color:var(--brand-dark);">${porMedium[p.medium]||0}</span>
         </div>
         <div class="atend-row2"><span>${p.cambones.map(escapeHtml).join(', ') || '—'}</span></div>
@@ -2973,7 +3026,7 @@ function renderCalendarDayDetail(dateStr){
   } else {
     tbody.innerHTML = recs.map(e=>`
       <tr>
-        <td data-label="Filho">${escapeHtml(e.pessoa)}</td>
+        <td data-label="Filho">${escapeHtml(apelidoDe(e.pessoa))} <span style="font-weight:400;color:var(--ink-soft);font-size:12px;">${escapeHtml(e.pessoa)}</span></td>
         <td data-label="Atividade">${escapeHtml(e.atividade)}</td>
         <td data-label="Executado"><span class="pill ${e.executado==='SIM'?'pill-ok':'pill-no'}">${e.executado==='SIM'?'Sim':'Não'}</span></td>
       </tr>
@@ -3533,6 +3586,7 @@ async function initApp(){
   setupPessoasForm();
   setupPessoaViewModal();
   setupPessoaSearch();
+  setupPainelSearch();
   setupAtividadesForm();
   setupGirasForm();
   setupCalendarGiraModal();
