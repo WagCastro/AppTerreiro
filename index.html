@@ -760,6 +760,7 @@
           <button class="btn btn-ghost btn-small" id="btn-export-backup" title="Baixa um arquivo .json com todos os dados">💾 Salvar backup</button>
           <button class="btn btn-ghost btn-small" id="btn-import-backup" title="Carrega um arquivo .json salvo antes">📂 Carregar backup</button>
           <input type="file" id="input-import-backup" accept="application/json" style="display:none;">
+          <button class="btn btn-primary btn-small" id="btn-alterar-minha-senha" title="Altera a senha do usuário logado">🔑 Alterar senha</button>
         </div>
       </div>
 
@@ -3572,12 +3573,29 @@ async function renderUsuariosTable(){
       <td data-label="Perfil">${u.papel==='admin'?'Administrador':(u.papel==='atendente'?'Atendente':'Usuário')}</td>
       <td data-label="Status"><span class="pill ${u.ativo!==false?'pill-ok':'pill-no'}">${u.ativo!==false?'Ativo':'Inativo'}</span></td>
       <td style="text-align:right;white-space:nowrap;">
+        <button type="button" class="btn btn-ghost btn-small btn-senha-usuario" data-usuario="${escapeAttr(u.usuario)}">🔑 Alterar senha</button>
         <button type="button" class="btn btn-ghost btn-small btn-toggle-usuario" data-usuario="${escapeAttr(u.usuario)}">${u.ativo!==false?'🚫 Inativar':'✅ Liberar acesso'}</button>
         <button type="button" class="btn btn-ghost btn-small btn-del-usuario" data-usuario="${escapeAttr(u.usuario)}" style="color:var(--danger);border-color:var(--danger-soft);">🗑 Excluir</button>
       </td>
     </tr>
   `).join('') || `<tr><td colspan="4"><div class="empty-state">Nenhum usuário cadastrado.</div></td></tr>`;
 
+  tbody.querySelectorAll('.btn-senha-usuario').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const novaSenha = prompt('Digite a nova senha para ' + btn.dataset.usuario + ':');
+      if(novaSenha === null) return;
+      if(!novaSenha.trim()){ alert('A senha não pode ficar em branco.'); return; }
+      const confirmaSenha = prompt('Confirme a nova senha:');
+      if(confirmaSenha === null) return;
+      if(novaSenha !== confirmaSenha){ alert('As senhas não conferem. Tente novamente.'); return; }
+      const lista2 = await getUsersDoc() || [];
+      const u = lista2.find(x=> normalizeUsuario(x.usuario)===normalizeUsuario(btn.dataset.usuario));
+      if(!u) return;
+      u.senhaHash = await sha256Hex(novaSenha);
+      await saveUsersDoc(lista2);
+      alert('Senha de ' + btn.dataset.usuario + ' alterada com sucesso.');
+    });
+  });
   tbody.querySelectorAll('.btn-toggle-usuario').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(normalizeUsuario(btn.dataset.usuario) === normalizeUsuario(currentUser.usuario)){
@@ -3604,6 +3622,30 @@ async function renderUsuariosTable(){
       await saveUsersDoc(lista2);
       renderUsuariosTable();
     });
+  });
+}
+
+function setupAlterarMinhaSenha(){
+  const btn = document.getElementById('btn-alterar-minha-senha');
+  if(!btn) return;
+  btn.addEventListener('click', async ()=>{
+    if(!currentUser){ return; }
+    const senhaAtual = prompt('Digite sua senha atual:');
+    if(senhaAtual === null) return;
+    const lista = await getUsersDoc() || [];
+    const u = lista.find(x=> normalizeUsuario(x.usuario)===normalizeUsuario(currentUser.usuario));
+    if(!u){ alert('Usuário não encontrado.'); return; }
+    const hashAtual = await sha256Hex(senhaAtual);
+    if(hashAtual !== u.senhaHash){ alert('Senha atual incorreta.'); return; }
+    const novaSenha = prompt('Digite a nova senha:');
+    if(novaSenha === null) return;
+    if(!novaSenha.trim()){ alert('A senha não pode ficar em branco.'); return; }
+    const confirmaSenha = prompt('Confirme a nova senha:');
+    if(confirmaSenha === null) return;
+    if(novaSenha !== confirmaSenha){ alert('As senhas não conferem. Tente novamente.'); return; }
+    u.senhaHash = await sha256Hex(novaSenha);
+    await saveUsersDoc(lista);
+    alert('Senha alterada com sucesso.');
   });
 }
 
@@ -3648,6 +3690,7 @@ async function initApp(){
   setupCalendar();
   setupConfirmacoesImport();
   setupUsuariosForm();
+  setupAlterarMinhaSenha();
   setupAtendimento();
   renderPessoasTable();
   renderAtividadesTable();
