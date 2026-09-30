@@ -1521,7 +1521,7 @@ function renderPessoasTable(){
   const tbody = document.getElementById('tbody-pessoas');
   const counts = {};
   state.escalas.forEach(e=>{ if(e.executado==='SIM') counts[e.pessoa] = (counts[e.pessoa]||0)+1; });
-  let rows = state.pessoas.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  let rows = state.pessoas.filter(p => !PAIS_MAES_CLASSIFICACOES.includes(p.classificacao)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   if(pessoaStatusFilter !== 'Todos') rows = rows.filter(p => pessoaStatus(p) === pessoaStatusFilter);
   if(pessoaSearchTerm) rows = rows.filter(p => p.nome.toLowerCase().includes(pessoaSearchTerm));
   if(rows.length === 0){
@@ -2211,9 +2211,10 @@ function matchPainelSearch(nome, apelido){
 function renderBarList(){
   const sim = simEscalas();
   const counts = {};
-  state.pessoas.filter(p=> pessoaStatus(p)==='Ativo').forEach(p=> counts[p.nome] = 0);
-  sim.forEach(e=> counts[e.pessoa] = (counts[e.pessoa]||0)+1);
-  const activeNames = new Set(state.pessoas.filter(p=> pessoaStatus(p)==='Ativo').map(p=>p.nome));
+  const filhosAtivos = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo' && !PAIS_MAES_CLASSIFICACOES.includes(p.classificacao));
+  filhosAtivos.forEach(p=> counts[p.nome] = 0);
+  sim.forEach(e=> { if(counts.hasOwnProperty(e.pessoa)) counts[e.pessoa] = (counts[e.pessoa]||0)+1; });
+  const activeNames = new Set(filhosAtivos.map(p=>p.nome));
   let rows = Object.entries(counts).filter(([nome])=> activeNames.has(nome)).sort((a,b)=>b[1]-a[1]);
   rows = rows.filter(([nome])=> matchPainelSearch(nome, apelidoDe(nome)));
   const max = rows.length ? rows[0][1] : 1;
@@ -2243,7 +2244,7 @@ function renderDiasSem(){
   const today = new Date();
   // Exibe TODOS os filhos cadastrados, inclusive os que ainda não possuem
   // nenhuma atividade registrada e os que estão inativos.
-  let rows = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo').map(p=>{
+  let rows = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo' && !PAIS_MAES_CLASSIFICACOES.includes(p.classificacao)).map(p=>{
     const lastDate = last[p.nome];
     let dias = null;
     if(lastDate){
