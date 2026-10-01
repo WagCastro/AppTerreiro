@@ -3537,7 +3537,8 @@ function setupLogin(){
     if(!usuario || !senha){ showLogin('Preencha usuário e senha.'); return; }
     btn.disabled = true; btn.textContent = 'Entrando...';
     try{
-      const res = await tentarLogin(usuario, senha);
+      const timeout = new Promise((_, reject)=> setTimeout(()=> reject(new Error('timeout')), 12000));
+      const res = await Promise.race([tentarLogin(usuario, senha), timeout]);
       if(res.ok){
         saveSession(res.user);
         await showApp(res.user);
@@ -3546,7 +3547,11 @@ function setupLogin(){
       }
     }catch(e){
       console.error('Erro no login', e);
-      showLogin('Erro ao conectar. Tente novamente.');
+      if(e && e.message === 'timeout'){
+        showLogin('Não foi possível conectar ao servidor. Verifique sua internet ou desative bloqueadores de anúncio/rastreadores do navegador e tente novamente.');
+      } else {
+        showLogin('Erro ao conectar. Tente novamente.');
+      }
     }finally{
       btn.disabled = false; btn.textContent = 'Entrar';
     }
@@ -3706,13 +3711,20 @@ async function bootstrapAuth(){
   const session = loadSession();
   if(session && session.usuario){
     try{
-      const lista = await ensureBootstrapAdmin();
+      const timeout = new Promise((_, reject)=> setTimeout(()=> reject(new Error('timeout')), 12000));
+      const lista = await Promise.race([ensureBootstrapAdmin(), timeout]);
       const match = lista.find(u=> normalizeUsuario(u.usuario)===normalizeUsuario(session.usuario) && u.ativo !== false);
       if(match){
         await showApp({ usuario: match.usuario, papel: match.papel });
         return;
       }
-    }catch(e){ console.error('Falha ao validar sessão salva', e); }
+    }catch(e){
+      console.error('Falha ao validar sessão salva', e);
+      if(e && e.message === 'timeout'){
+        showLogin('Não foi possível conectar ao servidor. Verifique sua internet ou desative bloqueadores de anúncio/rastreadores do navegador e tente novamente.');
+        return;
+      }
+    }
     clearSession();
   }
   showLogin();
