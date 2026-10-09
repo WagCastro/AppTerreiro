@@ -905,10 +905,14 @@
             <h3 class="section-title" style="font-size:14px;margin-bottom:2px;">Filhos no atendimento <span id="corpo-apoio-count" class="mono" style="font-weight:400;color:var(--ink-soft);"></span></h3>
             <p class="section-hint" style="margin:0 0 10px;">Escolha até 5 filhos, entre os confirmados que não são médiuns de atendimento, para trabalhar no atendimento.</p>
             <div id="corpo-apoio-slots" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;"></div>
+            <div id="corpo-apoio-avulso" style="margin-top:12px;"></div>
           </div>
         </div>
 
-        <h3 class="section-title" style="font-size:14px;margin-bottom:6px;">Corpo mediúnico do dia</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
+          <h3 class="section-title" style="font-size:14px;margin:0;">Corpo mediúnico do dia</h3>
+          <button type="button" class="btn btn-primary btn-small" id="btn-relatorio-corpo">📄 Gerar relatório (PDF)</button>
+        </div>
         <details style="margin-bottom:14px;">
           <summary style="cursor:pointer;font-size:13px;color:var(--brand-dark);font-weight:600;">Adicionar dupla manualmente</summary>
         <p class="section-hint" style="margin-top:8px;">Use apenas se precisar incluir alguém que não está na lista de confirmação: um médium de atendimento pode ter mais de um cambone auxiliando.</p>
@@ -1016,10 +1020,16 @@
 
         <div class="toolbar" style="margin-bottom:8px;"><div class="filters">
           <input type="text" id="cad-consulente-busca" placeholder="Buscar por nome ou WhatsApp…" style="padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13px;min-width:240px;">
+          <select id="cad-consulente-filtro-assoc" style="padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13px;">
+            <option value="todos">Todos</option>
+            <option value="associados">★ Somente associados</option>
+            <option value="nao">Não associados</option>
+          </select>
+          <span id="cad-assoc-count" class="mono" style="font-size:12px;color:var(--ink-soft);"></span>
         </div></div>
         <div class="table-wrap table-cards scroll-y" style="max-height:520px;">
           <table>
-            <thead><tr><th>Consulente</th><th>WhatsApp</th><th style="width:100px;">Aniversário</th><th style="width:80px;">Visitas</th><th style="width:120px;">Última visita</th><th style="min-width:190px;">Ações</th></tr></thead>
+            <thead><tr><th>Consulente</th><th style="width:150px;min-width:150px;">Associado</th><th>WhatsApp</th><th style="width:100px;">Aniversário</th><th style="width:80px;">Visitas</th><th style="width:120px;">Última visita</th><th style="min-width:190px;">Ações</th></tr></thead>
             <tbody id="tbody-cad-consulentes"></tbody>
           </table>
         </div>
@@ -2579,6 +2589,19 @@ function cadConsultentesPorNomeExato(nome){
   const alvo = normalizeNomeComp(nome);
   return cadConsulentes().filter(c=> normalizeNomeComp(c.nome) === alvo);
 }
+// Marca/desmarca associado no cadastro e propaga para quem ainda está na fila ou em atendimento,
+// para que a fila (ordem de chamada e etiqueta) acompanhe o cadastro. Atendimentos já concluídos não mudam.
+function definirAssociado(cad, valor){
+  cad.associado = !!valor;
+  Object.keys(state.atendimentos||{}).forEach(k=>{
+    ((state.atendimentos[k]||{}).consulentes||[]).forEach(x=>{
+      if(x.cadastroId === cad.id && x.status !== 'atendido') x.associado = !!valor;
+    });
+  });
+}
+function badgeAssociado(c){
+  return c && c.associado ? '<span class="pill pill-ok">★ Associado</span>' : '';
+}
 function soDigitos(s){ return String(s||'').replace(/\D/g,''); }
 
 // Todas as passagens do consulente pelas giras (a partir dos registros de atendimento de cada dia).
@@ -2633,7 +2656,7 @@ function mostrarSelecaoRecepcao(cad){
   const el = document.getElementById('recepcao-selecionado');
   const r = resumoVisitas(cad.id);
   el.style.display = 'block';
-  el.innerHTML = `<span class="pill pill-ok">✔ Já cadastrado</span>
+  el.innerHTML = `<span class="pill pill-ok">✔ Já cadastrado</span>${cad.associado ? ' <span class="pill pill-ok">★ Associado</span>' : ''}
     <span style="color:var(--ink-soft);">${r.total} visita(s)${r.ultima ? ' · última em '+formatDateBR(r.ultima) : ''}</span>
     <a href="#" id="recepcao-nao-e-essa" style="margin-left:8px;color:var(--danger);">não é essa pessoa</a>`;
   document.getElementById('recepcao-nao-e-essa').addEventListener('click', (ev)=>{
@@ -2667,7 +2690,7 @@ function renderSugestoesRecepcao(){
       const r = resumoVisitas(c.id);
       return `<div class="atend-card" data-sugestao="${c.id}" style="cursor:pointer;padding:9px 12px;margin-bottom:6px;">
         <div class="atend-row1" style="margin-bottom:2px;"><span class="atend-title" style="font-size:14.5px;">${escapeHtml(c.nome)}</span>
-          ${c.associado ? '<span class="pill pill-ok">Associado</span>' : ''}</div>
+          ${badgeAssociado(c)}</div>
         <div class="atend-row2"><span class="mono">${escapeHtml(c.whatsapp||'sem WhatsApp')}${c.aniversario ? ' · 🎂 '+formatAniversario(c.aniversario) : ''} · ${r.total} visita(s)${r.ultima ? ', última '+formatDateBR(r.ultima) : ''}</span></div>
       </div>`;
     }).join('');
@@ -2740,17 +2763,23 @@ function renderCadConsulentes(){
   const termo = normalizeNomeComp(document.getElementById('cad-consulente-busca').value);
   const dig = soDigitos(termo);
   const todos = cadConsulentes();
+  const filtroAssoc = document.getElementById('cad-consulente-filtro-assoc').value;
+  document.getElementById('cad-assoc-count').textContent = `★ ${todos.filter(c=>c.associado).length} associado(s)`;
   const lista = todos.filter(c=> !termo || normalizeNomeComp(c.nome).includes(termo) || (dig.length>=3 && soDigitos(c.whatsapp).includes(dig)))
+    .filter(c=> filtroAssoc==='todos' || (filtroAssoc==='associados' ? !!c.associado : !c.associado))
     .sort((a,b)=> a.nome.localeCompare(b.nome,'pt-BR'));
   document.getElementById('cad-consulentes-count').textContent = `(${lista.length}${termo ? ' de '+todos.length : ''})`;
   if(lista.length === 0){
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">${todos.length ? 'Nenhum consulente encontrado.' : 'Nenhum consulente cadastrado ainda. Eles são cadastrados automaticamente na Recepção.'}</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">${todos.length ? 'Nenhum consulente encontrado.' : 'Nenhum consulente cadastrado ainda. Eles são cadastrados automaticamente na Recepção.'}</div></td></tr>`;
     return;
   }
   tbody.innerHTML = lista.map(c=>{
     const r = resumoVisitas(c.id);
-    return `<tr>
-      <td data-label="Consulente"><span style="font-weight:600;">${escapeHtml(c.nome)}</span> ${c.associado ? '<span class="pill pill-ok">Associado</span>' : ''}</td>
+    return `<tr style="${c.associado ? 'background:var(--ok-soft);' : ''}">
+      <td data-label="Consulente"><span style="font-weight:600;">${c.associado ? '★ ' : ''}${escapeHtml(c.nome)}</span></td>
+      <td data-label="Associado"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;white-space:nowrap;">
+        <input type="checkbox" data-assoc-cad="${c.id}" ${c.associado ? 'checked' : ''} style="width:16px;height:16px;"> ${c.associado ? '<strong style="color:var(--ok);">Associado</strong>' : 'Não'}
+      </label></td>
       <td data-label="WhatsApp" class="mono">${escapeHtml(c.whatsapp||'—')}</td>
       <td data-label="Aniversário" class="mono">${formatAniversario(c.aniversario)}</td>
       <td data-label="Visitas" class="mono">${r.total}</td>
@@ -2762,6 +2791,11 @@ function renderCadConsulentes(){
       </span></td>
     </tr>`;
   }).join('');
+  tbody.querySelectorAll('[data-assoc-cad]').forEach(cb=>cb.addEventListener('change', ()=>{
+    const c = cadConsulentePorId(parseInt(cb.dataset.assocCad,10)); if(!c) return;
+    definirAssociado(c, cb.checked);
+    persist(); renderAtendimento();
+  }));
   tbody.querySelectorAll('[data-hist-cad]').forEach(b=>b.addEventListener('click', ()=>{
     const c = cadConsulentePorId(parseInt(b.dataset.histCad,10)); if(c) mostrarHistoricoConsulente(c);
   }));
@@ -2789,7 +2823,7 @@ function salvarCadConsulente(){
   if(editingCadConsulenteId){
     const c = cadConsulentePorId(editingCadConsulenteId);
     if(!c){ fecharFormCadConsulente(); return; }
-    c.nome = nome; c.whatsapp = whatsapp; c.aniversario = aniversario; c.associado = associado;
+    c.nome = nome; c.whatsapp = whatsapp; c.aniversario = aniversario; definirAssociado(c, associado);
     // mantém o histórico com o nome atualizado
     Object.keys(state.atendimentos||{}).forEach(k=>{
       (state.atendimentos[k].consulentes||[]).forEach(x=>{
@@ -2808,6 +2842,7 @@ function setupCadConsulentes(){
   document.getElementById('btn-cad-c-cancelar').addEventListener('click', fecharFormCadConsulente);
   document.getElementById('btn-cad-c-salvar').addEventListener('click', salvarCadConsulente);
   document.getElementById('cad-consulente-busca').addEventListener('input', renderCadConsulentes);
+  document.getElementById('cad-consulente-filtro-assoc').addEventListener('change', renderCadConsulentes);
   document.getElementById('cad-aniv-mes').addEventListener('change', renderAniversariantesConsulentes);
   const nomeInput = document.getElementById('f-consulente-nome');
   nomeInput.addEventListener('input', ()=>{
@@ -2819,8 +2854,80 @@ function setupCadConsulentes(){
   });
 }
 
+/* ---------- RELATÓRIO DO CORPO MEDIÚNICO ---------- */
+function gerarRelatorioCorpoMediunico(){
+  const date = atendDateKey();
+  const dia = ensureAtendDia(date);
+  if(dia.corpo.length === 0){ alert('Monte o corpo mediúnico deste dia antes de gerar o relatório.'); return; }
+  if(!window.jspdf || !window.jspdf.jsPDF){
+    alert('Não foi possível carregar o gerador de PDF. Verifique sua conexão com a internet e tente novamente.');
+    return;
+  }
+  const girasDia = Array.from(giraDatesMap()[date] || []);
+  const giraLabel = girasDia.length ? girasDia.join(' / ') : '—';
+  const entidadeDe = (item)=> item.entidade || '—';
+  const corpo = dia.corpo.slice().sort((a,b)=> a.medium.localeCompare(b.medium,'pt-BR'));
+  const apoio = ensureApoio(dia).filter(Boolean);
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'a4'});
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 50;
+  const brand = [47,74,62], ink = [31,42,36], inkSoft = [91,104,96];
+  const tableStyle = {
+    theme: 'grid', margin: {left: margin, right: margin},
+    styles: {font:'helvetica', fontSize:10.5, cellPadding:7, textColor:ink, lineColor:[221,227,217], lineWidth:0.75, valign:'middle'},
+    headStyles: {fillColor: brand, textColor:255, fontStyle:'bold', fontSize:10.5, halign:'left'},
+    alternateRowStyles: {fillColor:[247,249,245]}
+  };
+
+  let y = 56;
+  doc.setFont('helvetica','bold'); doc.setFontSize(17); doc.setTextColor(...brand);
+  doc.text('CORPO MEDIÚNICO', pageWidth/2, y, {align:'center'});
+  y += 24;
+  doc.setFontSize(11.5); doc.setTextColor(...ink);
+  doc.text(`GIRA: ${giraLabel}`, pageWidth/2, y, {align:'center'});
+  y += 18;
+  doc.text(`Data: ${formatDateBR(date)}`, pageWidth/2, y, {align:'center'});
+  y += 28;
+
+  doc.setFontSize(12); doc.setTextColor(...brand);
+  doc.text('Atendimento (médiuns/cambone)', margin, y);
+  y += 8;
+  doc.autoTable({
+    ...tableStyle, startY: y,
+    head: [['Médium','Entidade','Cambone(s)']],
+    body: corpo.map(c=>[
+      nomeComApelido(c.medium),
+      entidadeDe(c),
+      (c.cambones||[]).length ? c.cambones.map(n=>nomeComApelido(n)).join(', ') : '—'
+    ]),
+    columnStyles: {0:{cellWidth:150, fontStyle:'bold'}, 1:{cellWidth:150}, 2:{cellWidth:'auto'}}
+  });
+  y = doc.lastAutoTable.finalY + 28;
+
+  if(apoio.length){
+    if(y > pageHeight - 140){ doc.addPage(); y = 56; }
+    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...brand);
+    doc.text('Recepção', margin, y);
+    y += 8;
+    doc.autoTable({
+      ...tableStyle, startY: y,
+      head: [['#','Filho']],
+      body: apoio.map((n,i)=>[String(i+1), nomeComApelido(n)]),
+      columnStyles: {0:{cellWidth:30}, 1:{cellWidth:'auto', fontStyle:'bold'}}
+    });
+  }
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...inkSoft);
+  doc.text('Gerado automaticamente pelo app Escala da Casa.', margin, pageHeight - 30);
+  doc.save(`corpo_mediunico_${date}.pdf`);
+}
+
 /* ---------- CORPO MEDIÚNICO A PARTIR DA LISTA DE CONFIRMAÇÃO ---------- */
 const APOIO_MAX = 5;
+let avulsoAbertoCorpo = false;
 
 // Cruza o CSV de confirmação (somente "Sim") com o cadastro de filhos ativos, pelo apelido.
 function resolverConfirmadosDia(dateStr){
@@ -2999,7 +3106,8 @@ function renderCorpoConfirmados(){
   document.getElementById('corpo-apoio-count').textContent = `(${preenchidos}/${APOIO_MAX})`;
   const slots = document.getElementById('corpo-apoio-slots');
   slots.innerHTML = apoio.map((nome,i)=>{
-    const atual = nome ? `<option value="${escapeAttr(nome)}" selected>${escapeHtml(nomeCurto(nome))}</option>` : '';
+    const ehAvulso = Array.isArray(dia.apoioAvulso) && dia.apoioAvulso.includes(nome);
+    const atual = nome ? `<option value="${escapeAttr(nome)}" selected>${escapeHtml(nomeCurto(nome))}${ehAvulso ? ' (avulso)' : ''}</option>` : '';
     return `
     <div class="field" style="margin:0;">
       <label>Vaga ${i+1}</label>
@@ -3023,6 +3131,43 @@ function renderCorpoConfirmados(){
       persist(); renderAtendimento();
     });
   });
+
+  // Filho avulso: filho ativo cadastrado que não está na lista de confirmação
+  const avulsoBox = document.getElementById('corpo-apoio-avulso');
+  const jaNaLista = new Set([...mediuns, ...disponiveis].map(x=>x.p.nome));
+  dia.corpo.forEach(c=> jaNaLista.add(c.medium));
+  ocupados.forEach(n=> jaNaLista.add(n));
+  const candidatos = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo' && !jaNaLista.has(p.nome))
+    .sort((a,b)=> a.nome.localeCompare(b.nome,'pt-BR'));
+  const semVaga = apoio.every(Boolean);
+  if(semVaga){
+    avulsoBox.innerHTML = `<span style="font-size:12px;color:var(--ink-soft);">Todas as ${APOIO_MAX} vagas estão ocupadas. Limpe uma vaga para incluir um filho avulso.</span>`;
+  } else if(!avulsoAbertoCorpo){
+    avulsoBox.innerHTML = `<button type="button" class="btn btn-ghost btn-small" id="btn-apoio-avulso">+ Incluir filho avulso</button>
+      <span style="font-size:12px;color:var(--ink-soft);margin-left:8px;">filho cadastrado que não está na lista de confirmação</span>`;
+    document.getElementById('btn-apoio-avulso').addEventListener('click', ()=>{ avulsoAbertoCorpo = true; renderCorpoConfirmados(); });
+  } else {
+    avulsoBox.innerHTML = `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <select id="apoio-avulso-sel" style="padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13px;min-width:220px;">
+        <option value="">Selecione o filho…</option>
+        ${candidatos.map(p=>`<option value="${escapeAttr(p.nome)}">${escapeHtml(p.apelido ? p.nome+' ('+p.apelido+')' : p.nome)}</option>`).join('')}
+      </select>
+      <button type="button" class="btn btn-primary btn-small" id="btn-apoio-avulso-ok">Incluir</button>
+      <button type="button" class="btn btn-ghost btn-small" id="btn-apoio-avulso-cancel">Cancelar</button>
+    </div>${candidatos.length ? '' : '<div style="font-size:12px;color:var(--ink-soft);margin-top:6px;">Todos os filhos ativos já estão na lista ou escalados.</div>'}`;
+    document.getElementById('btn-apoio-avulso-cancel').addEventListener('click', ()=>{ avulsoAbertoCorpo = false; renderCorpoConfirmados(); });
+    document.getElementById('btn-apoio-avulso-ok').addEventListener('click', ()=>{
+      const nome = document.getElementById('apoio-avulso-sel').value;
+      if(!nome){ alert('Selecione o filho que será incluído.'); return; }
+      const idx = dia.apoio.indexOf('');
+      if(idx === -1){ alert(`Todas as ${APOIO_MAX} vagas estão ocupadas.`); return; }
+      dia.apoio[idx] = nome;
+      if(!Array.isArray(dia.apoioAvulso)) dia.apoioAvulso = [];
+      if(!dia.apoioAvulso.includes(nome)) dia.apoioAvulso.push(nome);
+      avulsoAbertoCorpo = false;
+      persist(); renderAtendimento();
+    });
+  }
 }
 
 function renderCorpoSelects(){
@@ -3225,7 +3370,7 @@ function renderEmAtendimento(){
     return `
     <div class="atend-card">
       <div class="atend-row1">
-        <span class="atend-title">${escapeHtml(nomeConsulente(c))}</span>
+        <span class="atend-title">${escapeHtml(nomeConsulente(c))} ${badgeAssociado(c)}</span>
         <span class="pill pill-no">${escapeHtml(c.medium)}</span>
       </div>
       <div class="atend-row2">
@@ -3350,7 +3495,7 @@ function renderBuscaConsulente(){
   }
   resultado.innerHTML = encontrados.map(c=>`
     <div class="atend-card">
-      <div class="atend-row1"><span class="atend-title">${escapeHtml(nomeConsulente(c))}</span></div>
+      <div class="atend-row1"><span class="atend-title">${escapeHtml(nomeConsulente(c))}</span>${badgeAssociado(c)}</div>
       <div class="atend-row2">${statusConsulenteHtml(dia, c)}</div>
     </div>
   `).join('');
@@ -3405,6 +3550,7 @@ function setupAtendimento(){
     persist(); renderAtendimento();
   });
 
+  document.getElementById('btn-relatorio-corpo').addEventListener('click', gerarRelatorioCorpoMediunico);
   const corpoFile = document.getElementById('corpo-confirmacoes-file');
   document.getElementById('btn-corpo-importar').addEventListener('click', ()=> corpoFile.click());
   corpoFile.addEventListener('change', async (ev)=>{
@@ -3459,7 +3605,7 @@ function setupAtendimento(){
       if(jaNaGira && !confirm(`${cad.nome} já está registrado(a) nesta gira e ainda não foi atendido(a). Registrar de novo mesmo assim?`)) return;
       if(whatsapp) cad.whatsapp = whatsapp;
       if(aniversario) cad.aniversario = aniversario;
-      cad.associado = associado;
+      definirAssociado(cad, associado);
     } else {
       cad = {id: nextCadConsulenteId(), nome, whatsapp, aniversario, associado, criadoEm: atendDateKey()};
       cadConsulentes().push(cad);
