@@ -2929,6 +2929,27 @@ function gerarRelatorioCorpoMediunico(){
 const APOIO_MAX = 5;
 let avulsoAbertoCorpo = false;
 
+// Casa o nome digitado no formulário com um filho do cadastro. Tenta, em ordem: apelido, nome completo,
+// todas as partes do nome digitado dentro do nome cadastrado, e primeiro nome. Só aceita se for único.
+function acharPessoaConfirmada(nomeCsv, pessoasAtivas){
+  const alvo = normalizeNomeComp(nomeCsv);
+  if(!alvo) return {status:'nao'};
+  const partes = alvo.split(/\s+/).filter(Boolean);
+  const tiers = [
+    p=> normalizeNomeComp(p.apelido || primeiroNome(p.nome)) === alvo,
+    p=> normalizeNomeComp(p.nome) === alvo,
+    p=> partes.length >= 2 && (()=>{ const t = normalizeNomeComp(p.nome).split(/\s+/); return partes.every(x=>t.includes(x)); })(),
+    p=> partes.length === 1 && normalizeNomeComp(primeiroNome(p.nome)) === alvo
+  ];
+  let ambiguo = false;
+  for(const f of tiers){
+    const m = pessoasAtivas.filter(f);
+    if(m.length === 1) return {status:'ok', p:m[0]};
+    if(m.length > 1) ambiguo = true;
+  }
+  return {status: ambiguo ? 'ambiguo' : 'nao'};
+}
+
 // Cruza o CSV de confirmação (somente "Sim") com o cadastro de filhos ativos, pelo apelido.
 function resolverConfirmadosDia(dateStr){
   const lista = (state.confirmacoes && state.confirmacoes[dateStr]) || [];
@@ -2939,11 +2960,10 @@ function resolverConfirmadosDia(dateStr){
   const ambiguos = [];
   const vistos = new Set();
   sim.forEach(r=>{
-    const alvo = normalizeNomeComp(r.nome);
-    const matches = pessoasAtivas.filter(x=> normalizeNomeComp(x.apelido || primeiroNome(x.nome)) === alvo);
-    if(matches.length === 0){ naoEncontrados.push(r.nome); return; }
-    if(matches.length > 1){ ambiguos.push(r.nome); return; }
-    const p = matches[0];
+    const res = acharPessoaConfirmada(r.nome, pessoasAtivas);
+    if(res.status === 'nao'){ naoEncontrados.push(r.nome); return; }
+    if(res.status === 'ambiguo'){ ambiguos.push(r.nome); return; }
+    const p = res.p;
     if(vistos.has(p.nome)) return;
     vistos.add(p.nome);
     encontrados.push({p, entidade: (r.entidade||'').trim()});
@@ -3841,6 +3861,19 @@ function normalizeNomeComp(s){
     .trim().toLowerCase().replace(/\s+/g,' ');
 }
 
+// Acha a coluna com o nome de quem respondeu. Em alguns formulários o título dessa coluna vem em branco
+// (ou diferente de "Nome"), e a coluna "Nome da entidade" não pode ser confundida com ela.
+function encontrarColunaNomeConfirmacao(row, colPresenca, colEntidade){
+  const keys = Object.keys(row);
+  const exata = keys.find(k=> k !== colEntidade && normalizeNomeComp(k) === 'nome');
+  if(exata) return exata;
+  const vazia = keys.find(k=> k.trim() === '');
+  if(vazia !== undefined) return vazia;
+  const comNome = keys.find(k=> k !== colEntidade && k !== colPresenca && /^(nome|filho|seu nome|nome completo)\b/.test(normalizeNomeComp(k)));
+  if(comNome) return comNome;
+  const sobra = keys.find(k=> k !== colPresenca && k !== colEntidade && !/carimbo|data\/hora|timestamp|e-?mail/.test(normalizeNomeComp(k)));
+  return sobra || null;
+}
 function parseCSVText(text){
   text = text.replace(/^\uFEFF/, '');
   const lines = text.split(/\r\n|\n|\r/).filter(l=>l.length>0);
@@ -3908,10 +3941,10 @@ async function importarConfirmacoesArquivo(file, dateStr){
     const rows = parseCSVText(csvText);
     if(rows.length === 0){ alert('O arquivo não tem registros.'); return; }
 
-    const colNome = findCsvColumn(rows[0], ['Nome']);
     const colPresenca = findCsvColumn(rows[0], ['Comparecerá à gira ?','Comparecerá à gira','Comparecera a gira']);
     const colEntidade = findCsvColumn(rows[0], ['Nome da entidade (se médium de atendimento)','Nome da entidade']);
-    if(!colNome || !colPresenca){
+    const colNome = encontrarColunaNomeConfirmacao(rows[0], colPresenca, colEntidade);
+    if(colNome === null || colNome === undefined || !colPresenca){
       alert('Não reconheci as colunas do formulário. Confira se o CSV tem as colunas "Nome" e "Comparecerá à gira ?".');
       return;
     }
@@ -3967,11 +4000,10 @@ function renderConfirmados(dateStr){
   const pessoasAtivas = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo');
 
   const linhas = sim.map(r=>{
-    const alvo = normalizeNomeComp(r.nome);
-    const matches = pessoasAtivas.filter(x=> normalizeNomeComp(x.apelido || primeiroNome(x.nome)) === alvo);
-    if(matches.length === 0){ naoEncontrados.push(r.nome); return null; }
-    if(matches.length > 1){ ambiguos.push(r.nome); return null; }
-    const p = matches[0];
+    const res = acharPessoaConfirmada(r.nome, pessoasAtivas);
+    if(res.status === 'nao'){ naoEncontrados.push(r.nome); return null; }
+    if(res.status === 'ambiguo'){ ambiguos.push(r.nome); return null; }
+    const p = res.p;
     const info = ultimaAtividadeInfo(p.nome);
     return {p, entidade: r.entidade, ...info};
   }).filter(Boolean);
