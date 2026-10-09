@@ -282,6 +282,20 @@
   .cal-legend{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-soft);margin-bottom:18px;}
   .cal-legend .swatch{width:12px;height:12px;border-radius:4px;background:var(--accent-soft);border:1px solid var(--accent);display:inline-block;}
 
+  .cal-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:10px;}
+  .cal-chip{display:flex;flex-direction:column;gap:2px;text-align:left;cursor:pointer;padding:9px 12px;border-radius:10px;
+    border:1.5px solid var(--accent);background:var(--accent-soft);color:var(--brand-dark);font-family:var(--body);}
+  .cal-chip:hover{filter:brightness(0.96);}
+  .cal-chip .cc-date{font-weight:700;font-size:14px;}
+  .cal-chip .cc-week{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
+  .cal-chip .cc-gira{font-size:12.5px;font-weight:600;line-height:1.2;}
+  .cal-chip.sem-gira{background:var(--surface);border-style:dashed;border-color:var(--line);}
+  .cal-chip.today{box-shadow:inset 0 0 0 2px var(--brand);}
+  .cal-chip.selected{background:var(--brand);border-color:var(--brand);color:#fff;}
+  .cal-chip.selected .cc-week{color:rgba(255,255,255,.8);}
+  .cal-empty{grid-column:1/-1;font-size:13px;color:var(--ink-soft);padding:10px 2px;}
+  .cal-add-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;}
+  .cal-add-row input{padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:12.5px;}
   .cal-day-detail{margin-top:20px;padding-top:16px;border-top:1px solid var(--line);}
   .cal-gira-name{font-family:var(--display);font-weight:700;color:var(--accent);font-size:14.5px;margin:2px 0 14px;}
 
@@ -606,7 +620,7 @@
     <!-- CALENDÁRIO -->
     <section id="view-calendario" class="view active">
       <h2 class="section-title">Calendário de giras</h2>
-      <p class="section-hint">Dias com gira aparecem destacados. Clique num dia destacado para ver a escala completa.</p>
+      <p class="section-hint">Toque numa data para trabalhar nela: escala, confirmados, corpo mediúnico, recepção e relatórios ficam todos nessa data.</p>
 
       <div class="cal-header">
         <button class="btn btn-ghost btn-small" id="cal-prev" title="Mês anterior">◀</button>
@@ -618,11 +632,12 @@
         <button class="btn btn-ghost btn-small" id="cal-today">Hoje</button>
       </div>
 
-      <div class="cal-weekdays">
-        <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+      <div class="cal-strip" id="cal-grid"></div>
+      <div class="cal-add-row">
+        <span>Gira em outra data?</span>
+        <input type="date" id="cal-add-date" title="Data da gira">
+        <button type="button" class="btn btn-ghost btn-small" id="cal-add-btn">+ Abrir / cadastrar data</button>
       </div>
-      <div class="cal-grid" id="cal-grid"></div>
-      <div class="cal-legend"><span class="swatch"></span> dia com gira registrada</div>
 
       <div id="cal-day-detail" class="cal-day-detail" style="display:none;">
         <h3 id="cal-detail-title" class="section-title" style="font-size:15px;margin-bottom:2px;"></h3>
@@ -3732,43 +3747,67 @@ function renderCalendarHeaderSelects(){
   yearSel.value = String(calYear);
 }
 
+let calAutoSelecaoFeita = false;
+const SEMANA_CURTA = ['dom','seg','ter','qua','qui','sex','sáb'];
+
+// Datas do mês exibido que têm gira ou algum movimento (escala, confirmações, atendimento).
+function datasDoMes(prefixo){
+  const set = new Set();
+  Object.keys(giraDatesMap()).forEach(d=>{ if(d.startsWith(prefixo)) set.add(d); });
+  state.escalas.forEach(e=>{ if(e.data && e.data.startsWith(prefixo)) set.add(e.data); });
+  Object.keys(state.confirmacoes||{}).forEach(d=>{ if(d.startsWith(prefixo) && (state.confirmacoes[d]||[]).length) set.add(d); });
+  Object.keys(state.atendimentos||{}).forEach(d=>{
+    const dia = state.atendimentos[d];
+    if(d.startsWith(prefixo) && dia && ((dia.consulentes||[]).length || (dia.corpo||[]).length)) set.add(d);
+  });
+  if(calSelectedDate && calSelectedDate.startsWith(prefixo)) set.add(calSelectedDate);
+  return Array.from(set).sort();
+}
+
 function renderCalendar(){
   if(calYear === null) initCalendarState();
   renderCalendarHeaderSelects();
 
   const grid = document.getElementById('cal-grid');
   const giraMap = giraDatesMap();
-  const firstOfMonth = new Date(calYear, calMonth, 1);
-  const startWeekday = firstOfMonth.getDay();
-  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
   const todayStr = new Date().toISOString().slice(0,10);
+  const prefixo = `${calYear}-${String(calMonth+1).padStart(2,'0')}-`;
+  const datas = datasDoMes(prefixo);
 
-  let html = '';
-  for(let i=0; i<startWeekday; i++) html += `<div class="cal-day empty"></div>`;
-  for(let d=1; d<=daysInMonth; d++){
-    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const giras = giraMap[dateStr] ? Array.from(giraMap[dateStr]) : [];
-    const hasGira = giras.length > 0;
-    const classes = ['cal-day'];
-    if(hasGira) classes.push('has-gira');
-    if(dateStr === todayStr) classes.push('today');
-    if(dateStr === calSelectedDate) classes.push('selected');
-    const labels = giras.map(g=>`<span class="gira-label" title="${escapeAttr(g)}">${escapeHtml(g)}</span>`).join('');
-    html += `<div class="${classes.join(' ')}" data-date="${dateStr}" title="${hasGira ? 'Clique para editar a gira' : 'Clique para cadastrar a gira'}">
-      <span>${d}</span>${labels}${hasGira ? '<span class="dot"></span>' : ''}
-    </div>`;
+  // Primeira abertura: já deixa selecionada a gira de hoje, a próxima ou a última do mês.
+  if(!calSelectedDate && !calAutoSelecaoFeita && datas.length){
+    calAutoSelecaoFeita = true;
+    calSelectedDate = datas.includes(todayStr) ? todayStr
+      : (datas.find(d=>d >= todayStr) || datas[datas.length-1]);
   }
-  grid.innerHTML = html;
 
-  grid.querySelectorAll('.cal-day:not(.empty)').forEach(el=>{
-    el.addEventListener('click', ()=> selectCalendarDay(el.dataset.date));
-  });
+  if(datas.length === 0){
+    grid.innerHTML = `<div class="cal-empty">Nenhuma gira em ${MESES_PT[calMonth]} de ${calYear}. Use o campo abaixo para abrir ou cadastrar uma data.</div>`;
+  } else {
+    grid.innerHTML = datas.map(dateStr=>{
+      const giras = giraMap[dateStr] ? Array.from(giraMap[dateStr]) : [];
+      const [y,m,d] = dateStr.split('-').map(n=>parseInt(n,10));
+      const sem = SEMANA_CURTA[new Date(y, m-1, d).getDay()];
+      const classes = ['cal-chip'];
+      if(giras.length === 0) classes.push('sem-gira');
+      if(dateStr === todayStr) classes.push('today');
+      if(dateStr === calSelectedDate) classes.push('selected');
+      return `<button type="button" class="${classes.join(' ')}" data-date="${dateStr}">
+        <span class="cc-week">${sem}${dateStr===todayStr?' · hoje':''}</span>
+        <span class="cc-date">${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}</span>
+        <span class="cc-gira">${giras.length ? escapeHtml(giras.join(' / ')) : 'sem gira cadastrada'}</span>
+      </button>`;
+    }).join('');
+    grid.querySelectorAll('.cal-chip').forEach(el=>{
+      el.addEventListener('click', ()=> selectCalendarDay(el.dataset.date));
+    });
+  }
 
-  // Sempre exibe os detalhes do dia selecionado, mesmo quando ainda não
-  // existe gira cadastrada. Assim os filhos e atividades já lançados
-  // continuam visíveis no calendário.
+  // Detalhes do dia selecionado (escala, confirmados, corpo mediúnico, relatórios).
   if(calSelectedDate){
     renderCalendarDayDetail(calSelectedDate);
+  } else {
+    document.getElementById('cal-day-detail').style.display = 'none';
   }
 }
 
@@ -3847,17 +3886,68 @@ async function saveCalendarGira(){
   if(calSelectedDate) renderCalendarDayDetail(calSelectedDate);
 }
 
+// O que existe lançado em uma data (além do cadastro da gira em si).
+function resumoDadosDaData(dateStr){
+  const escalas = state.escalas.filter(e=>e.data===dateStr).length;
+  const confirmacoes = ((state.confirmacoes||{})[dateStr]||[]).length;
+  const dia = (state.atendimentos||{})[dateStr];
+  const consulentes = dia && Array.isArray(dia.consulentes) ? dia.consulentes.length : 0;
+  const corpo = dia && Array.isArray(dia.corpo) ? dia.corpo.length : 0;
+  return {escalas, confirmacoes, consulentes, corpo, total: escalas + confirmacoes + consulentes + corpo};
+}
+
+function descricaoDadosDaData(d){
+  const partes = [];
+  if(d.escalas) partes.push(`${d.escalas} lançamento(s) de escala`);
+  if(d.confirmacoes) partes.push(`${d.confirmacoes} confirmação(ões) importada(s)`);
+  if(d.corpo) partes.push(`${d.corpo} médium(ns) no corpo mediúnico`);
+  if(d.consulentes) partes.push(`${d.consulentes} consulente(s) registrado(s) na recepção`);
+  return partes.join(', ');
+}
+
+async function finalizarRemocaoData(dateStr){
+  calSelectedDate = null;
+  calAutoSelecaoFeita = true;
+  await persist();
+  closeCalendarGiraModal();
+  document.getElementById('cal-day-detail').style.display = 'none';
+  renderCalendar();
+  renderGirasTable();
+  if(typeof renderPainel === 'function') renderPainel();
+  renderAtendimento();
+}
+
+// Apaga tudo que foi lançado numa data (escala, confirmações, corpo e atendimentos).
+async function limparDadosDaData(dateStr, perguntarSempre){
+  const d = resumoDadosDaData(dateStr);
+  if(d.total > 0){
+    const msg = `${formatDateBR(dateStr)} ainda tem: ${descricaoDadosDaData(d)}.\n\nApagar também esses dados? Isso não pode ser desfeito.\n\nOK = apagar tudo desta data\nCancelar = manter os dados`;
+    if(!confirm(msg)){
+      if(perguntarSempre) return;
+      return false;
+    }
+    state.escalas = state.escalas.filter(e=>e.data!==dateStr);
+    if(state.confirmacoes) delete state.confirmacoes[dateStr];
+    if(state.atendimentos) delete state.atendimentos[dateStr];
+  }
+  if(perguntarSempre){
+    if(state.girasAgendadas) delete state.girasAgendadas[dateStr];
+    await finalizarRemocaoData(dateStr);
+  }
+  return true;
+}
+
 async function removeCalendarGira(){
   const dateStr = calSelectedDate;
   if(!dateStr) return;
-  if(!confirm('Remover a gira deste dia?')) return;
+  if(!confirm(`Cancelar a gira de ${formatDateBR(dateStr)}?`)) return;
   if(state.girasAgendadas) delete state.girasAgendadas[dateStr];
   state.escalas.forEach(e=>{ if(e.data === dateStr) delete e.gira; });
-  await persist();
-  closeCalendarGiraModal();
-  document.getElementById('cal-day-detail').style.display='none';
-  renderCalendar();
-  renderGirasTable();
+  // Se a data ainda tem lançamentos (ex.: foi cadastrada no dia errado), oferece apagar tudo.
+  if(resumoDadosDaData(dateStr).total > 0){
+    await limparDadosDaData(dateStr, false);
+  }
+  await finalizarRemocaoData(dateStr);
 }
 
 function renderCalendarDayDetail(dateStr){
@@ -3868,17 +3958,28 @@ function renderCalendarDayDetail(dateStr){
   document.getElementById('cal-detail-title').textContent = formatDateBR(dateStr);
   const giraEl = document.getElementById('cal-detail-gira');
   if(giras.length){
-    giraEl.innerHTML = `Gira: <strong>${escapeHtml(giras.join(', '))}</strong> <button type="button" class="btn btn-ghost" id="cal-detail-edit-gira" style="margin-left:10px;padding:5px 10px;font-size:11px;vertical-align:middle;">Editar</button>`;
+    giraEl.innerHTML = `Gira: <strong>${escapeHtml(giras.join(', '))}</strong> <button type="button" class="btn btn-ghost" id="cal-detail-edit-gira" style="margin-left:10px;padding:5px 10px;font-size:11px;vertical-align:middle;">Editar</button> <button type="button" class="btn btn-ghost" id="cal-detail-remove-gira" style="margin-left:4px;padding:5px 10px;font-size:11px;vertical-align:middle;color:var(--danger);border-color:var(--danger);">Cancelar gira</button>`;
     document.getElementById('cal-detail-edit-gira').addEventListener('click', ev=>{
       ev.stopPropagation();
       openCalendarGiraModal(dateStr);
       editCalendarGira();
     });
+    document.getElementById('cal-detail-remove-gira').addEventListener('click', ev=>{
+      ev.stopPropagation();
+      removeCalendarGira();
+    });
   } else {
-    giraEl.innerHTML = 'Sem gira registrada nesse dia. <button type="button" class="btn btn-primary" id="cal-detail-add-gira" style="margin-left:10px;padding:5px 10px;font-size:11px;vertical-align:middle;">Cadastrar gira</button>';
+    const dados = resumoDadosDaData(dateStr);
+    giraEl.innerHTML = 'Sem gira registrada nesse dia. <button type="button" class="btn btn-primary" id="cal-detail-add-gira" style="margin-left:10px;padding:5px 10px;font-size:11px;vertical-align:middle;">Cadastrar gira</button>'
+      + (dados.total ? ' <button type="button" class="btn btn-ghost" id="cal-detail-clear-date" style="margin-left:4px;padding:5px 10px;font-size:11px;vertical-align:middle;color:var(--danger);border-color:var(--danger);">Remover esta data</button>' : '');
     document.getElementById('cal-detail-add-gira').addEventListener('click', ev=>{
       ev.stopPropagation();
       openCalendarGiraModal(dateStr);
+    });
+    const btnClear = document.getElementById('cal-detail-clear-date');
+    if(btnClear) btnClear.addEventListener('click', ev=>{
+      ev.stopPropagation();
+      limparDadosDaData(dateStr, true);
     });
   }
 
@@ -4171,8 +4272,16 @@ function setupCalendar(){
   document.getElementById('cal-today').addEventListener('click', ()=>{
     initCalendarState();
     calSelectedDate = null;
+    calAutoSelecaoFeita = false;
     document.getElementById('cal-day-detail').style.display = 'none';
     renderCalendar();
+    renderAtendimento();
+  });
+  document.getElementById('cal-add-btn').addEventListener('click', ()=>{
+    const v = document.getElementById('cal-add-date').value;
+    if(!v){ alert('Escolha a data da gira.'); return; }
+    selectCalendarDay(v);
+    if(!giraDatesMap()[v]) openCalendarGiraModal(v);
   });
   document.getElementById('cal-select-month').addEventListener('change', (ev)=>{
     calMonth = parseInt(ev.target.value, 10);
@@ -4522,6 +4631,7 @@ async function initApp(){
   setupAlterarMinhaSenha();
   setupAtendimento();
   setupCadConsulentes();
+  if(calSelectedDate) sincronizarDataAtiva(calSelectedDate);
   renderPessoasTable();
   renderAtividadesTable();
   renderGirasTable();
