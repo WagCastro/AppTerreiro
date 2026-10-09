@@ -627,6 +627,10 @@
       <div id="cal-day-detail" class="cal-day-detail" style="display:none;">
         <h3 id="cal-detail-title" class="section-title" style="font-size:15px;margin-bottom:2px;"></h3>
         <p id="cal-detail-gira" class="cal-gira-name"></p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px;">
+          <button type="button" class="btn btn-primary btn-small" id="btn-cal-rel-atividades">📄 Relatório das atividades</button>
+          <button type="button" class="btn btn-primary btn-small" id="btn-cal-rel-corpo">📄 Relatório do atendimento (corpo mediúnico)</button>
+        </div>
         <div class="table-wrap table-cards">
           <table>
             <thead><tr><th>Filho</th><th>Atividade</th><th>Executado</th></tr></thead>
@@ -652,6 +656,34 @@
             </table>
           </div>
           <div id="cal-confirmados-naoencontrados" style="margin-top:8px;font-size:12px;color:var(--ink-soft);"></div>
+        </div>
+
+        <!-- MONTAGEM A PARTIR DA LISTA DE CONFIRMAÇÃO -->
+        <div id="corpo-conf-block" style="margin-top:22px;padding-top:16px;border-top:1px solid var(--line);">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
+            <div style="flex:1;min-width:220px;">
+              <h3 class="section-title" style="font-size:14px;margin-bottom:2px;">Corpo mediúnico da gira — médiuns de atendimento</h3>
+              <p class="section-hint" id="corpo-conf-hint" style="margin:0;">Importe o CSV de confirmação desta gira para montar a lista automaticamente.</p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <button type="button" class="btn btn-ghost btn-small" id="btn-corpo-incluir-todos" style="display:none;">Incluir todos os médiuns</button>
+            </div>
+          </div>
+          <div id="corpo-conf-vazio" class="empty-state" style="display:none;"></div>
+          <div class="table-wrap table-cards" id="corpo-mediuns-wrap" style="margin-top:10px;display:none;">
+            <table>
+              <thead><tr><th>Médium</th><th>Entidade</th><th style="min-width:240px;">Cambone(s)</th><th style="width:90px;">Atende</th></tr></thead>
+              <tbody id="tbody-corpo-mediuns"></tbody>
+            </table>
+          </div>
+          <div id="corpo-conf-naoencontrados" style="margin-top:8px;font-size:12px;color:var(--ink-soft);"></div>
+
+          <div id="corpo-apoio-block" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);">
+            <h3 class="section-title" style="font-size:14px;margin-bottom:2px;">Filhos no atendimento <span id="corpo-apoio-count" class="mono" style="font-weight:400;color:var(--ink-soft);"></span></h3>
+            <p class="section-hint" style="margin:0 0 10px;">Escolha até 5 filhos, entre os confirmados que não são médiuns de atendimento, para trabalhar no atendimento.</p>
+            <div id="corpo-apoio-slots" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;"></div>
+            <div id="corpo-apoio-avulso" style="margin-top:12px;"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -879,33 +911,11 @@
 
       <!-- CORPO MEDIÚNICO -->
       <div id="sub-atend-corpo" class="subview active">
-        <!-- MONTAGEM A PARTIR DA LISTA DE CONFIRMAÇÃO -->
-        <div id="corpo-conf-block" style="margin-bottom:22px;">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
-            <div style="flex:1;min-width:220px;">
-              <h3 class="section-title" style="font-size:14px;margin-bottom:2px;">Médiuns de atendimento confirmados</h3>
-              <p class="section-hint" id="corpo-conf-hint" style="margin:0;">Importe o CSV de confirmação desta gira para montar a lista automaticamente.</p>
-            </div>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-              <input type="file" id="corpo-confirmacoes-file" accept=".csv,.zip" style="display:none;">
-              <button type="button" class="btn btn-ghost btn-small" id="btn-corpo-importar">📥 Importar confirmações (CSV)</button>
-              <button type="button" class="btn btn-ghost btn-small" id="btn-corpo-incluir-todos" style="display:none;">Incluir todos os médiuns</button>
-            </div>
-          </div>
-          <div id="corpo-conf-vazio" class="empty-state" style="display:none;"></div>
-          <div class="table-wrap table-cards" id="corpo-mediuns-wrap" style="margin-top:10px;display:none;">
-            <table>
-              <thead><tr><th>Médium</th><th>Entidade</th><th style="min-width:240px;">Cambone(s)</th><th style="width:90px;">Atende</th></tr></thead>
-              <tbody id="tbody-corpo-mediuns"></tbody>
-            </table>
-          </div>
-          <div id="corpo-conf-naoencontrados" style="margin-top:8px;font-size:12px;color:var(--ink-soft);"></div>
-
-          <div id="corpo-apoio-block" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);">
-            <h3 class="section-title" style="font-size:14px;margin-bottom:2px;">Filhos no atendimento <span id="corpo-apoio-count" class="mono" style="font-weight:400;color:var(--ink-soft);"></span></h3>
-            <p class="section-hint" style="margin:0 0 10px;">Escolha até 5 filhos, entre os confirmados que não são médiuns de atendimento, para trabalhar no atendimento.</p>
-            <div id="corpo-apoio-slots" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;"></div>
-            <div id="corpo-apoio-avulso" style="margin-top:12px;"></div>
+        <div class="atend-card" style="margin-bottom:16px;">
+          <div class="atend-row1"><span class="atend-title" style="font-size:14.5px;">Composição do corpo mediúnico</span></div>
+          <div class="atend-row2" style="flex-direction:column;align-items:flex-start;gap:8px;">
+            <span style="font-size:13px;color:var(--ink-soft);">Médiuns, cambones e filhos da Recepção agora são montados no <strong>Calendário</strong>, na data da gira, logo após importar o CSV de confirmação. O resumo do dia continua abaixo.</span>
+            <button type="button" class="btn btn-ghost btn-small" id="btn-ir-calendario-corpo">Abrir composição no Calendário</button>
           </div>
         </div>
 
@@ -2855,8 +2865,8 @@ function setupCadConsulentes(){
 }
 
 /* ---------- RELATÓRIO DO CORPO MEDIÚNICO ---------- */
-function gerarRelatorioCorpoMediunico(){
-  const date = atendDateKey();
+function gerarRelatorioCorpoMediunico(dateParam){
+  const date = (typeof dateParam === 'string' && dateParam) || atendDateKey();
   const dia = ensureAtendDia(date);
   if(dia.corpo.length === 0){ alert('Monte o corpo mediúnico deste dia antes de gerar o relatório.'); return; }
   if(!window.jspdf || !window.jspdf.jsPDF){
@@ -3001,8 +3011,10 @@ function sincronizarCorpoConfirmados(dateStr){
   return mudou;
 }
 
-function renderCorpoConfirmados(){
-  const dateStr = atendDateKey();
+function corpoDateKey(){ return calSelectedDate || atendDateKey(); }
+
+function renderCorpoConfirmados(dateParam){
+  const dateStr = (typeof dateParam === 'string' && dateParam) || corpoDateKey();
   const dia = ensureAtendDia(dateStr);
   const apoio = ensureApoio(dia);
   const hintEl = document.getElementById('corpo-conf-hint');
@@ -3017,12 +3029,12 @@ function renderCorpoConfirmados(){
   const lista = (state.confirmacoes && state.confirmacoes[dateStr]) || [];
   if(lista.length === 0){
     vazioEl.style.display = 'block';
-    vazioEl.textContent = `Nenhuma confirmação importada para ${formatDateBR(dateStr)}. Importe o CSV acima (ou na aba Calendário).`;
+    vazioEl.textContent = `Nenhuma confirmação importada para ${formatDateBR(dateStr)}. Importe o CSV no bloco "Confirmados na gira", acima.`;
     wrap.style.display = 'none';
     apoioBlock.style.display = 'none';
     btnTodos.style.display = 'none';
     naoEl.textContent = '';
-    hintEl.textContent = 'Importe o CSV de confirmação desta gira para montar a lista automaticamente.';
+    hintEl.textContent = 'Importe o CSV de confirmação desta data para montar a lista automaticamente.';
     return;
   }
 
@@ -3524,7 +3536,17 @@ function renderBuscaConsulente(){
 function setupAtendimento(){
   const dataInput = document.getElementById('atend-data');
   dataInput.value = new Date().toISOString().slice(0,10);
-  dataInput.addEventListener('change', ()=>{ exitCorpoEditMode(); renderAtendimento(); });
+  dataInput.addEventListener('change', ()=>{
+    exitCorpoEditMode();
+    const v = dataInput.value;
+    if(v){
+      const ri = document.getElementById('f-data-relatorio'); if(ri) ri.value = v;
+      calSelectedDate = v;
+      const [y,m] = v.split('-'); calYear = parseInt(y,10); calMonth = parseInt(m,10)-1;
+      renderCalendar();
+    }
+    renderAtendimento();
+  });
 
   document.getElementById('btn-buscar-consulente').addEventListener('click', renderBuscaConsulente);
   document.getElementById('busca-consulente').addEventListener('keydown', (ev)=>{
@@ -3570,18 +3592,25 @@ function setupAtendimento(){
     persist(); renderAtendimento();
   });
 
-  document.getElementById('btn-relatorio-corpo').addEventListener('click', gerarRelatorioCorpoMediunico);
-  const corpoFile = document.getElementById('corpo-confirmacoes-file');
-  document.getElementById('btn-corpo-importar').addEventListener('click', ()=> corpoFile.click());
-  corpoFile.addEventListener('change', async (ev)=>{
-    const file = ev.target.files[0];
-    corpoFile.value = '';
-    if(!file) return;
-    await importarConfirmacoesArquivo(file, atendDateKey());
-  });
+  document.getElementById('btn-relatorio-corpo').addEventListener('click', ()=> gerarRelatorioCorpoMediunico());
   document.getElementById('btn-corpo-incluir-todos').addEventListener('click', ()=>{
-    sincronizarCorpoConfirmados(atendDateKey());
+    sincronizarCorpoConfirmados(corpoDateKey());
     persist(); renderAtendimento();
+  });
+  document.getElementById('btn-ir-calendario-corpo').addEventListener('click', ()=>{
+    selectCalendarDay(atendDateKey());
+    document.getElementById('tab-calendario').click();
+    const bloco = document.getElementById('corpo-conf-block');
+    if(bloco) bloco.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+  document.getElementById('btn-cal-rel-atividades').addEventListener('click', ()=>{
+    if(!calSelectedDate){ alert('Selecione um dia no calendário.'); return; }
+    document.getElementById('f-data-relatorio').value = calSelectedDate;
+    gerarRelatorioPDF();
+  });
+  document.getElementById('btn-cal-rel-corpo').addEventListener('click', ()=>{
+    if(!calSelectedDate){ alert('Selecione um dia no calendário.'); return; }
+    gerarRelatorioCorpoMediunico(calSelectedDate);
   });
 
   document.getElementById('cancel-edit-corpo').addEventListener('click', (ev)=>{
@@ -3743,9 +3772,24 @@ function renderCalendar(){
   }
 }
 
+// Data única da operação: ao escolher o dia no calendário, Atendimento (recepção, fila, corpo),
+// consultas e relatórios passam a usar essa mesma data.
+function sincronizarDataAtiva(dateStr){
+  const ai = document.getElementById('atend-data');
+  if(ai && ai.value !== dateStr) ai.value = dateStr;
+  const ri = document.getElementById('f-data-relatorio');
+  if(ri && ri.value !== dateStr) ri.value = dateStr;
+}
+
 function selectCalendarDay(dateStr){
   calSelectedDate = dateStr;
+  const [y,m] = dateStr.split('-');
+  calYear = parseInt(y,10); calMonth = parseInt(m,10)-1;
+  const mudou = (document.getElementById('atend-data').value !== dateStr);
+  sincronizarDataAtiva(dateStr);
+  if(mudou) exitCorpoEditMode();
   renderCalendar();
+  renderAtendimento();
 }
 
 function openCalendarGiraModal(dateStr){
@@ -3851,7 +3895,9 @@ function renderCalendarDayDetail(dateStr){
     `).join('');
   }
   document.getElementById('cal-day-detail').style.display = 'block';
+  sincronizarDataAtiva(dateStr);
   renderConfirmados(dateStr);
+  renderCorpoConfirmados(dateStr);
 }
 
 /* ---------- CONFIRMAÇÕES DE PRESENÇA (CSV do formulário) ---------- */
