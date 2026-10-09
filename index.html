@@ -840,7 +840,7 @@
     <!-- ATENDIMENTO -->
     <section id="view-atendimento" class="view">
       <h2 class="section-title">Atendimento da gira</h2>
-      <p class="section-hint">Monte o corpo mediúnico, lance os consulentes conforme chegam, acompanhe a lista de espera e quem está em atendimento — tudo com registro de horário.</p>
+      <p class="section-hint">Monte o corpo mediúnico, registre os consulentes na recepção conforme chegam, acompanhe a lista de espera e quem está em atendimento — tudo com registro de horário.</p>
 
       <div class="toolbar">
         <div class="filters">
@@ -870,7 +870,8 @@
 
       <nav class="subtabs">
         <button class="subtab active" data-sub="atend-corpo">Corpo Mediúnico</button>
-        <button class="subtab" data-sub="atend-lancamento">Lançamento</button>
+        <button class="subtab" data-sub="atend-lancamento">Recepção</button>
+        <button class="subtab" data-sub="atend-consulentes">Consulentes</button>
         <button class="subtab" data-sub="atend-espera">Lista de Espera</button>
         <button class="subtab" data-sub="atend-em-atendimento">Em Atendimento</button>
         <button class="subtab" data-sub="atend-historico">Atendidos &amp; Estatísticas</button>
@@ -878,7 +879,39 @@
 
       <!-- CORPO MEDIÚNICO -->
       <div id="sub-atend-corpo" class="subview active">
-        <p class="section-hint" style="margin-top:-8px;">Antes da gira começar, monte as duplas do dia: um médium de atendimento pode ter mais de um cambone auxiliando.</p>
+        <!-- MONTAGEM A PARTIR DA LISTA DE CONFIRMAÇÃO -->
+        <div id="corpo-conf-block" style="margin-bottom:22px;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
+            <div style="flex:1;min-width:220px;">
+              <h3 class="section-title" style="font-size:14px;margin-bottom:2px;">Médiuns de atendimento confirmados</h3>
+              <p class="section-hint" id="corpo-conf-hint" style="margin:0;">Importe o CSV de confirmação desta gira para montar a lista automaticamente.</p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <input type="file" id="corpo-confirmacoes-file" accept=".csv,.zip" style="display:none;">
+              <button type="button" class="btn btn-ghost btn-small" id="btn-corpo-importar">📥 Importar confirmações (CSV)</button>
+              <button type="button" class="btn btn-ghost btn-small" id="btn-corpo-incluir-todos" style="display:none;">Incluir todos os médiuns</button>
+            </div>
+          </div>
+          <div id="corpo-conf-vazio" class="empty-state" style="display:none;"></div>
+          <div class="table-wrap table-cards" id="corpo-mediuns-wrap" style="margin-top:10px;display:none;">
+            <table>
+              <thead><tr><th>Médium</th><th>Entidade</th><th style="min-width:240px;">Cambone(s)</th><th style="width:90px;">Atende</th></tr></thead>
+              <tbody id="tbody-corpo-mediuns"></tbody>
+            </table>
+          </div>
+          <div id="corpo-conf-naoencontrados" style="margin-top:8px;font-size:12px;color:var(--ink-soft);"></div>
+
+          <div id="corpo-apoio-block" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);">
+            <h3 class="section-title" style="font-size:14px;margin-bottom:2px;">Filhos no atendimento <span id="corpo-apoio-count" class="mono" style="font-weight:400;color:var(--ink-soft);"></span></h3>
+            <p class="section-hint" style="margin:0 0 10px;">Escolha até 5 filhos, entre os confirmados que não são médiuns de atendimento, para trabalhar no atendimento.</p>
+            <div id="corpo-apoio-slots" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;"></div>
+          </div>
+        </div>
+
+        <h3 class="section-title" style="font-size:14px;margin-bottom:6px;">Corpo mediúnico do dia</h3>
+        <details style="margin-bottom:14px;">
+          <summary style="cursor:pointer;font-size:13px;color:var(--brand-dark);font-weight:600;">Adicionar dupla manualmente</summary>
+        <p class="section-hint" style="margin-top:8px;">Use apenas se precisar incluir alguém que não está na lista de confirmação: um médium de atendimento pode ter mais de um cambone auxiliando.</p>
         <div class="form-grid cols-2 atend-form">
           <div class="field"><label for="atend-select-medium">Médium de atendimento</label>
             <select id="atend-select-medium"></select>
@@ -896,17 +929,24 @@
             <span id="corpo-edit-tag" class="mono" style="display:none;color:var(--accent);">editando "<span id="corpo-edit-label"></span>" — <a href="#" id="cancel-edit-corpo" style="color:var(--danger);">cancelar</a></span>
           </div>
         </div>
+        </details>
         <div class="atend-card-list" id="tbody-corpo-mediunico"></div>
       </div>
 
       <!-- LANÇAMENTO -->
       <div id="sub-atend-lancamento" class="subview">
-        <h2 class="section-title" style="font-size:14px;">Registrar chegada de consulente</h2>
-        <p class="section-hint" style="margin-top:-8px;">Lance aqui cada consulente conforme ele chega. Depois de registrado, ele aparece automaticamente na aba "Lista de Espera".</p>
+        <h2 class="section-title" style="font-size:14px;">Recepção — registrar chegada de consulente</h2>
+        <p class="section-hint" style="margin-top:-8px;">Digite o nome para localizar um consulente já cadastrado; se for a primeira vez dele, o cadastro é criado ao registrar a chegada. Depois de registrado, ele aparece na aba "Lista de Espera".</p>
         <div class="form-grid cols-3 atend-form">
-          <div class="field"><label for="f-consulente-nome">Nome</label><input type="text" id="f-consulente-nome" placeholder="Nome"></div>
-          <div class="field"><label for="f-consulente-sobrenome">Sobrenome</label><input type="text" id="f-consulente-sobrenome" placeholder="Sobrenome"></div>
+          <div class="field" style="grid-column:1/-1;">
+            <label for="f-consulente-nome">Consulente</label>
+            <input type="text" id="f-consulente-nome" placeholder="Nome completo do consulente" autocomplete="off">
+            <div id="recepcao-sugestoes" style="display:none;margin-top:8px;"></div>
+            <div id="recepcao-selecionado" style="display:none;margin-top:8px;font-size:12.5px;"></div>
+          </div>
           <div class="field"><label for="f-consulente-whatsapp">WhatsApp</label><input type="text" id="f-consulente-whatsapp" placeholder="(00) 00000-0000"></div>
+          <div class="field"><label for="f-consulente-aniversario">Data de aniversário</label><input type="date" id="f-consulente-aniversario"></div>
+          <div class="field"></div>
           <div class="field">
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);margin-top:8px;cursor:pointer;">
               <input type="checkbox" id="f-consulente-associado" style="width:16px;height:16px;"> É associado
@@ -935,6 +975,53 @@
           <div class="field" style="grid-column:1/-1;">
             <button class="btn btn-primary" id="btn-registrar-consulente">+ Registrar chegada</button>
           </div>
+        </div>
+      </div>
+
+      <!-- CADASTRO DE CONSULENTES -->
+      <div id="sub-atend-consulentes" class="subview">
+        <h2 class="section-title" style="font-size:14px;">🎂 Aniversariantes do mês</h2>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <label for="cad-aniv-mes" style="font-size:12px;color:var(--ink-soft);">Mês</label>
+          <select id="cad-aniv-mes" style="padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:12.5px;font-family:var(--body);"></select>
+        </div>
+        <div class="table-wrap table-cards" style="margin-bottom:24px;">
+          <table>
+            <thead><tr><th>Consulente</th><th style="width:90px;">Dia</th><th>WhatsApp</th></tr></thead>
+            <tbody id="tbody-cad-aniversariantes"></tbody>
+          </table>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px;">
+          <h2 class="section-title" style="font-size:14px;margin:0;">Consulentes cadastrados <span id="cad-consulentes-count" class="mono" style="font-weight:400;color:var(--ink-soft);"></span></h2>
+          <button type="button" class="btn btn-ghost btn-small" id="btn-cad-consulente-novo">+ Novo consulente</button>
+        </div>
+
+        <div id="cad-consulente-form" class="atend-card" style="display:none;margin-bottom:12px;">
+          <div class="form-grid cols-2 atend-form">
+            <div class="field" style="grid-column:1/-1;"><label for="cad-c-nome">Consulente</label><input type="text" id="cad-c-nome" placeholder="Nome completo"></div>
+            <div class="field"><label for="cad-c-whatsapp">WhatsApp</label><input type="text" id="cad-c-whatsapp" placeholder="(00) 00000-0000"></div>
+            <div class="field"><label for="cad-c-aniversario">Data de aniversário</label><input type="date" id="cad-c-aniversario"></div>
+            <div class="field" style="grid-column:1/-1;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);cursor:pointer;">
+                <input type="checkbox" id="cad-c-associado" style="width:16px;height:16px;"> É associado
+              </label>
+            </div>
+            <div class="field" style="grid-column:1/-1;display:flex;gap:8px;">
+              <button type="button" class="btn btn-primary" id="btn-cad-c-salvar">Salvar</button>
+              <button type="button" class="btn btn-ghost" id="btn-cad-c-cancelar">Cancelar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="toolbar" style="margin-bottom:8px;"><div class="filters">
+          <input type="text" id="cad-consulente-busca" placeholder="Buscar por nome ou WhatsApp…" style="padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13px;min-width:240px;">
+        </div></div>
+        <div class="table-wrap table-cards scroll-y" style="max-height:520px;">
+          <table>
+            <thead><tr><th>Consulente</th><th>WhatsApp</th><th style="width:100px;">Aniversário</th><th style="width:80px;">Visitas</th><th style="width:120px;">Última visita</th><th style="min-width:190px;">Ações</th></tr></thead>
+            <tbody id="tbody-cad-consulentes"></tbody>
+          </table>
         </div>
       </div>
 
@@ -2470,6 +2557,474 @@ function finalizarAtendimento(dia, consulenteId){
   persist(); renderAtendimento();
 }
 
+/* ---------- CADASTRO DE CONSULENTES ---------- */
+let editingCadConsulenteId = null;
+let recepcaoSelecionadoId = null;
+
+function cadConsulentes(){
+  if(!Array.isArray(state.consulentes)) state.consulentes = [];
+  return state.consulentes;
+}
+// Registros antigos tinham Nome + Sobrenome separados; novos têm só "nome" (nome completo).
+function nomeConsulente(c){
+  return [c.nome, c.sobrenome].filter(Boolean).join(' ').trim();
+}
+function nextCadConsulenteId(){
+  return cadConsulentes().reduce((m,c)=>Math.max(m, c.id||0), 0) + 1;
+}
+function cadConsulentePorId(id){
+  return cadConsulentes().find(c=>c.id===id) || null;
+}
+function cadConsultentesPorNomeExato(nome){
+  const alvo = normalizeNomeComp(nome);
+  return cadConsulentes().filter(c=> normalizeNomeComp(c.nome) === alvo);
+}
+function soDigitos(s){ return String(s||'').replace(/\D/g,''); }
+
+// Todas as passagens do consulente pelas giras (a partir dos registros de atendimento de cada dia).
+function visitasDoConsulente(cadId){
+  const out = [];
+  Object.keys(state.atendimentos || {}).forEach(dataKey=>{
+    const dia = state.atendimentos[dataKey];
+    (dia && Array.isArray(dia.consulentes) ? dia.consulentes : []).forEach(c=>{
+      if(c.cadastroId === cadId) out.push({data: dataKey, c});
+    });
+  });
+  return out.sort((a,b)=> b.data.localeCompare(a.data) || (b.c.tsChegada||0)-(a.c.tsChegada||0));
+}
+function resumoVisitas(cadId){
+  const v = visitasDoConsulente(cadId);
+  return {total: v.length, ultima: v.length ? v[0].data : null, lista: v};
+}
+
+// Cria o cadastro dos consulentes que já passaram pela recepção antes desta função existir.
+function migrarConsulentesLegado(){
+  let mudou = false;
+  Object.keys(state.atendimentos || {}).sort().forEach(dataKey=>{
+    const dia = state.atendimentos[dataKey];
+    if(!dia || !Array.isArray(dia.consulentes)) return;
+    dia.consulentes.forEach(c=>{
+      if(c.cadastroId) return;
+      const nome = nomeConsulente(c);
+      if(!nome) return;
+      const existentes = cadConsultentesPorNomeExato(nome);
+      let cad = existentes.length === 1 ? existentes[0] : null;
+      if(!cad){
+        cad = {id: nextCadConsulenteId(), nome, whatsapp: c.whatsapp||'', aniversario:'', associado: !!c.associado, criadoEm: dataKey};
+        cadConsulentes().push(cad);
+      } else {
+        if(!cad.whatsapp && c.whatsapp) cad.whatsapp = c.whatsapp;
+        if(c.associado) cad.associado = true;
+      }
+      c.cadastroId = cad.id;
+      mudou = true;
+    });
+  });
+  return mudou;
+}
+
+/* --- Recepção: localizar consulente já cadastrado --- */
+function limparSelecaoRecepcao(){
+  recepcaoSelecionadoId = null;
+  const el = document.getElementById('recepcao-selecionado');
+  if(el){ el.style.display = 'none'; el.innerHTML = ''; }
+}
+function mostrarSelecaoRecepcao(cad){
+  const el = document.getElementById('recepcao-selecionado');
+  const r = resumoVisitas(cad.id);
+  el.style.display = 'block';
+  el.innerHTML = `<span class="pill pill-ok">✔ Já cadastrado</span>
+    <span style="color:var(--ink-soft);">${r.total} visita(s)${r.ultima ? ' · última em '+formatDateBR(r.ultima) : ''}</span>
+    <a href="#" id="recepcao-nao-e-essa" style="margin-left:8px;color:var(--danger);">não é essa pessoa</a>`;
+  document.getElementById('recepcao-nao-e-essa').addEventListener('click', (ev)=>{
+    ev.preventDefault();
+    limparSelecaoRecepcao();
+  });
+}
+function selecionarConsulenteRecepcao(cad){
+  recepcaoSelecionadoId = cad.id;
+  document.getElementById('f-consulente-nome').value = cad.nome;
+  document.getElementById('f-consulente-whatsapp').value = cad.whatsapp || '';
+  document.getElementById('f-consulente-aniversario').value = cad.aniversario || '';
+  const assoc = document.getElementById('f-consulente-associado');
+  assoc.checked = !!cad.associado;
+  document.getElementById('campo-medium-preferido').style.display = assoc.checked ? 'block' : 'none';
+  document.getElementById('recepcao-sugestoes').style.display = 'none';
+  mostrarSelecaoRecepcao(cad);
+}
+function renderSugestoesRecepcao(){
+  const box = document.getElementById('recepcao-sugestoes');
+  const termo = normalizeNomeComp(document.getElementById('f-consulente-nome').value);
+  if(recepcaoSelecionadoId || termo.length < 2){ box.style.display = 'none'; box.innerHTML = ''; return; }
+  const dig = soDigitos(termo);
+  const achados = cadConsulentes().filter(c=>
+    normalizeNomeComp(c.nome).includes(termo) || (dig.length >= 4 && soDigitos(c.whatsapp).includes(dig))
+  ).sort((a,b)=> a.nome.localeCompare(b.nome,'pt-BR')).slice(0,6);
+  if(achados.length === 0){ box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.style.display = 'block';
+  box.innerHTML = `<div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:5px;">Já cadastrados — toque para selecionar:</div>` +
+    achados.map(c=>{
+      const r = resumoVisitas(c.id);
+      return `<div class="atend-card" data-sugestao="${c.id}" style="cursor:pointer;padding:9px 12px;margin-bottom:6px;">
+        <div class="atend-row1" style="margin-bottom:2px;"><span class="atend-title" style="font-size:14.5px;">${escapeHtml(c.nome)}</span>
+          ${c.associado ? '<span class="pill pill-ok">Associado</span>' : ''}</div>
+        <div class="atend-row2"><span class="mono">${escapeHtml(c.whatsapp||'sem WhatsApp')}${c.aniversario ? ' · 🎂 '+formatAniversario(c.aniversario) : ''} · ${r.total} visita(s)${r.ultima ? ', última '+formatDateBR(r.ultima) : ''}</span></div>
+      </div>`;
+    }).join('');
+  box.querySelectorAll('[data-sugestao]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const cad = cadConsulentePorId(parseInt(el.dataset.sugestao,10));
+      if(cad) selecionarConsulenteRecepcao(cad);
+    });
+  });
+}
+
+/* --- Aba Consulentes: lista, aniversariantes, histórico --- */
+function renderAniversariantesConsulentes(){
+  const sel = document.getElementById('cad-aniv-mes');
+  if(!sel) return;
+  if(!sel.options.length){
+    sel.innerHTML = MESES_PT.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+    sel.value = String(new Date().getMonth()+1);
+  }
+  const mes = parseInt(sel.value,10);
+  const hoje = new Date();
+  const rows = cadConsulentes().filter(c=> c.aniversario && parseInt(c.aniversario.split('-')[1],10) === mes)
+    .map(c=>({c, dia: parseInt(c.aniversario.split('-')[2],10)}))
+    .sort((a,b)=> a.dia - b.dia || a.c.nome.localeCompare(b.c.nome,'pt-BR'));
+  const tbody = document.getElementById('tbody-cad-aniversariantes');
+  if(rows.length === 0){
+    tbody.innerHTML = `<tr><td colspan="3"><div class="empty-state">Nenhum consulente com aniversário em ${MESES_PT[mes-1]}.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(({c,dia})=>{
+    const ehHoje = (mes === hoje.getMonth()+1 && dia === hoje.getDate());
+    return `<tr>
+      <td data-label="Consulente" style="font-weight:600;">${escapeHtml(c.nome)} ${ehHoje ? '<span class="pill pill-accent">hoje 🎉</span>' : ''}</td>
+      <td data-label="Dia" class="mono">${String(dia).padStart(2,'0')}/${String(mes).padStart(2,'0')}</td>
+      <td data-label="WhatsApp" class="mono">${escapeHtml(c.whatsapp||'—')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function abrirFormCadConsulente(cad){
+  editingCadConsulenteId = cad ? cad.id : null;
+  document.getElementById('cad-c-nome').value = cad ? cad.nome : '';
+  document.getElementById('cad-c-whatsapp').value = cad ? (cad.whatsapp||'') : '';
+  document.getElementById('cad-c-aniversario').value = cad ? (cad.aniversario||'') : '';
+  document.getElementById('cad-c-associado').checked = cad ? !!cad.associado : false;
+  document.getElementById('cad-consulente-form').style.display = 'block';
+  document.getElementById('cad-c-nome').focus();
+}
+function fecharFormCadConsulente(){
+  editingCadConsulenteId = null;
+  document.getElementById('cad-consulente-form').style.display = 'none';
+}
+
+function mostrarHistoricoConsulente(cad){
+  const r = resumoVisitas(cad.id);
+  const rows = r.lista.map(({data,c})=>{
+    let status = 'Aguardando';
+    if(c.status === 'atendido') status = `Atendido${c.medium ? ' por '+escapeHtml(c.medium) : ''}${c.horaChamada ? ' · '+c.horaChamada+'–'+(c.horaFim||'') : ''}`;
+    else if(c.status === 'em_atendimento') status = `Em atendimento${c.medium ? ' com '+escapeHtml(c.medium) : ''}`;
+    return `<tr><td class="mono">${formatDateBR(data)}</td><td>${escapeHtml(categoriaLabel(c))}</td><td>${status}</td></tr>`;
+  }).join('');
+  openModal(cad.nome, `${r.total} visita(s)${cad.whatsapp ? ' · '+cad.whatsapp : ''}`,
+    '<th>Data</th><th>Categoria</th><th>Atendimento</th>', rows, 'Nenhuma visita registrada ainda.');
+}
+
+function renderCadConsulentes(){
+  renderAniversariantesConsulentes();
+  const tbody = document.getElementById('tbody-cad-consulentes');
+  if(!tbody) return;
+  const termo = normalizeNomeComp(document.getElementById('cad-consulente-busca').value);
+  const dig = soDigitos(termo);
+  const todos = cadConsulentes();
+  const lista = todos.filter(c=> !termo || normalizeNomeComp(c.nome).includes(termo) || (dig.length>=3 && soDigitos(c.whatsapp).includes(dig)))
+    .sort((a,b)=> a.nome.localeCompare(b.nome,'pt-BR'));
+  document.getElementById('cad-consulentes-count').textContent = `(${lista.length}${termo ? ' de '+todos.length : ''})`;
+  if(lista.length === 0){
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">${todos.length ? 'Nenhum consulente encontrado.' : 'Nenhum consulente cadastrado ainda. Eles são cadastrados automaticamente na Recepção.'}</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = lista.map(c=>{
+    const r = resumoVisitas(c.id);
+    return `<tr>
+      <td data-label="Consulente"><span style="font-weight:600;">${escapeHtml(c.nome)}</span> ${c.associado ? '<span class="pill pill-ok">Associado</span>' : ''}</td>
+      <td data-label="WhatsApp" class="mono">${escapeHtml(c.whatsapp||'—')}</td>
+      <td data-label="Aniversário" class="mono">${formatAniversario(c.aniversario)}</td>
+      <td data-label="Visitas" class="mono">${r.total}</td>
+      <td data-label="Última visita" class="mono">${r.ultima ? formatDateBR(r.ultima) : '—'}</td>
+      <td data-label="Ações"><span style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-danger-text" data-hist-cad="${c.id}" style="color:var(--brand);">histórico</button>
+        <button class="btn-danger-text" data-edit-cad="${c.id}" style="color:var(--brand);">editar</button>
+        <button class="btn-danger-text" data-rem-cad="${c.id}">excluir</button>
+      </span></td>
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('[data-hist-cad]').forEach(b=>b.addEventListener('click', ()=>{
+    const c = cadConsulentePorId(parseInt(b.dataset.histCad,10)); if(c) mostrarHistoricoConsulente(c);
+  }));
+  tbody.querySelectorAll('[data-edit-cad]').forEach(b=>b.addEventListener('click', ()=>{
+    const c = cadConsulentePorId(parseInt(b.dataset.editCad,10)); if(c) abrirFormCadConsulente(c);
+  }));
+  tbody.querySelectorAll('[data-rem-cad]').forEach(b=>b.addEventListener('click', ()=>{
+    const c = cadConsulentePorId(parseInt(b.dataset.remCad,10)); if(!c) return;
+    const r = resumoVisitas(c.id);
+    if(r.total > 0){ alert(`${c.nome} tem ${r.total} visita(s) no histórico e não pode ser excluído. Use "editar" para corrigir os dados.`); return; }
+    if(!confirm(`Excluir ${c.nome} do cadastro de consulentes?`)) return;
+    state.consulentes = cadConsulentes().filter(x=>x.id!==c.id);
+    persist(); renderAtendimento();
+  }));
+}
+
+function salvarCadConsulente(){
+  const nome = document.getElementById('cad-c-nome').value.trim().replace(/\s+/g,' ');
+  const whatsapp = document.getElementById('cad-c-whatsapp').value.trim();
+  const aniversario = document.getElementById('cad-c-aniversario').value;
+  const associado = document.getElementById('cad-c-associado').checked;
+  if(!nome){ alert('Informe o nome do consulente.'); return; }
+  const dup = cadConsultentesPorNomeExato(nome).filter(c=>c.id!==editingCadConsulenteId);
+  if(dup.length && !confirm(`Já existe um consulente chamado "${nome}". Cadastrar mesmo assim (pessoas diferentes com o mesmo nome)?`)) return;
+  if(editingCadConsulenteId){
+    const c = cadConsulentePorId(editingCadConsulenteId);
+    if(!c){ fecharFormCadConsulente(); return; }
+    c.nome = nome; c.whatsapp = whatsapp; c.aniversario = aniversario; c.associado = associado;
+    // mantém o histórico com o nome atualizado
+    Object.keys(state.atendimentos||{}).forEach(k=>{
+      (state.atendimentos[k].consulentes||[]).forEach(x=>{
+        if(x.cadastroId === c.id){ x.nome = nome; x.sobrenome = ''; if(whatsapp) x.whatsapp = whatsapp; }
+      });
+    });
+  } else {
+    cadConsulentes().push({id: nextCadConsulenteId(), nome, whatsapp, aniversario, associado, criadoEm: new Date().toISOString().slice(0,10)});
+  }
+  fecharFormCadConsulente();
+  persist(); renderAtendimento();
+}
+
+function setupCadConsulentes(){
+  document.getElementById('btn-cad-consulente-novo').addEventListener('click', ()=> abrirFormCadConsulente(null));
+  document.getElementById('btn-cad-c-cancelar').addEventListener('click', fecharFormCadConsulente);
+  document.getElementById('btn-cad-c-salvar').addEventListener('click', salvarCadConsulente);
+  document.getElementById('cad-consulente-busca').addEventListener('input', renderCadConsulentes);
+  document.getElementById('cad-aniv-mes').addEventListener('change', renderAniversariantesConsulentes);
+  const nomeInput = document.getElementById('f-consulente-nome');
+  nomeInput.addEventListener('input', ()=>{
+    if(recepcaoSelecionadoId){
+      const cad = cadConsulentePorId(recepcaoSelecionadoId);
+      if(!cad || normalizeNomeComp(cad.nome) !== normalizeNomeComp(nomeInput.value)) limparSelecaoRecepcao();
+    }
+    renderSugestoesRecepcao();
+  });
+}
+
+/* ---------- CORPO MEDIÚNICO A PARTIR DA LISTA DE CONFIRMAÇÃO ---------- */
+const APOIO_MAX = 5;
+
+// Cruza o CSV de confirmação (somente "Sim") com o cadastro de filhos ativos, pelo apelido.
+function resolverConfirmadosDia(dateStr){
+  const lista = (state.confirmacoes && state.confirmacoes[dateStr]) || [];
+  const sim = lista.filter(r=> normalizeNomeComp(r.comparecera) === 'sim');
+  const pessoasAtivas = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo');
+  const encontrados = [];
+  const naoEncontrados = [];
+  const ambiguos = [];
+  const vistos = new Set();
+  sim.forEach(r=>{
+    const alvo = normalizeNomeComp(r.nome);
+    const matches = pessoasAtivas.filter(x=> normalizeNomeComp(x.apelido || primeiroNome(x.nome)) === alvo);
+    if(matches.length === 0){ naoEncontrados.push(r.nome); return; }
+    if(matches.length > 1){ ambiguos.push(r.nome); return; }
+    const p = matches[0];
+    if(vistos.has(p.nome)) return;
+    vistos.add(p.nome);
+    encontrados.push({p, entidade: (r.entidade||'').trim()});
+  });
+  // Médium de atendimento = informou entidade no formulário OU tem classificação "Atendimento" no cadastro.
+  const mediuns = encontrados.filter(x=> x.entidade || x.p.classificacao==='Atendimento')
+    .sort((a,b)=> a.p.nome.localeCompare(b.p.nome,'pt-BR'));
+  const mediumNomes = new Set(mediuns.map(x=>x.p.nome));
+  const disponiveis = encontrados.filter(x=> !mediumNomes.has(x.p.nome))
+    .sort((a,b)=> a.p.nome.localeCompare(b.p.nome,'pt-BR'));
+  return {mediuns, disponiveis, naoEncontrados, ambiguos, totalSim: sim.length};
+}
+
+function ensureApoio(dia){
+  if(!Array.isArray(dia.apoio)) dia.apoio = [];
+  dia.apoio = dia.apoio.slice(0, APOIO_MAX);
+  while(dia.apoio.length < APOIO_MAX) dia.apoio.push('');
+  return dia.apoio;
+}
+
+// Inclui no corpo do dia todos os médiuns confirmados (sem apagar cambones já escolhidos).
+function sincronizarCorpoConfirmados(dateStr){
+  const dia = ensureAtendDia(dateStr);
+  const {mediuns} = resolverConfirmadosDia(dateStr);
+  let mudou = false;
+  mediuns.forEach(({p, entidade})=>{
+    const existente = dia.corpo.find(x=>x.medium===p.nome);
+    if(existente){
+      if(entidade && existente.entidade !== entidade){ existente.entidade = entidade; mudou = true; }
+    } else {
+      dia.corpo.push({id: nextCorpoId(dia), medium: p.nome, cambones: [], entidade});
+      mudou = true;
+    }
+  });
+  return mudou;
+}
+
+function renderCorpoConfirmados(){
+  const dateStr = atendDateKey();
+  const dia = ensureAtendDia(dateStr);
+  const apoio = ensureApoio(dia);
+  const hintEl = document.getElementById('corpo-conf-hint');
+  const vazioEl = document.getElementById('corpo-conf-vazio');
+  const wrap = document.getElementById('corpo-mediuns-wrap');
+  const tbody = document.getElementById('tbody-corpo-mediuns');
+  const naoEl = document.getElementById('corpo-conf-naoencontrados');
+  const apoioBlock = document.getElementById('corpo-apoio-block');
+  const btnTodos = document.getElementById('btn-corpo-incluir-todos');
+  if(!tbody) return;
+
+  const lista = (state.confirmacoes && state.confirmacoes[dateStr]) || [];
+  if(lista.length === 0){
+    vazioEl.style.display = 'block';
+    vazioEl.textContent = `Nenhuma confirmação importada para ${formatDateBR(dateStr)}. Importe o CSV acima (ou na aba Calendário).`;
+    wrap.style.display = 'none';
+    apoioBlock.style.display = 'none';
+    btnTodos.style.display = 'none';
+    naoEl.textContent = '';
+    hintEl.textContent = 'Importe o CSV de confirmação desta gira para montar a lista automaticamente.';
+    return;
+  }
+
+  const {mediuns, disponiveis, naoEncontrados, ambiguos, totalSim} = resolverConfirmadosDia(dateStr);
+  vazioEl.style.display = 'none';
+  hintEl.textContent = `${totalSim} confirmado(s) para ${formatDateBR(dateStr)} · ${mediuns.length} médium(ns) de atendimento · ${disponiveis.length} disponível(is) para cambone/apoio.`;
+
+  // Quem já está ocupado em algum papel hoje (cambone de alguém ou apoio).
+  const ocupados = new Set();
+  dia.corpo.forEach(c=> (c.cambones||[]).forEach(n=>ocupados.add(n)));
+  apoio.forEach(n=>{ if(n) ocupados.add(n); });
+  const livres = disponiveis.filter(x=> !ocupados.has(x.p.nome));
+  const nomeCurto = (nome)=>{ const p = state.pessoas.find(x=>x.nome===nome); return p ? (p.apelido || primeiroNome(p.nome)) : nome; };
+  const optionsLivres = livres.map(x=>`<option value="${escapeAttr(x.p.nome)}">${escapeHtml(x.p.apelido || x.p.nome)}</option>`).join('');
+
+  const faltamNoCorpo = mediuns.some(x=> !dia.corpo.some(c=>c.medium===x.p.nome));
+  btnTodos.style.display = faltamNoCorpo ? 'inline-block' : 'none';
+
+  if(mediuns.length === 0){
+    wrap.style.display = 'none';
+    vazioEl.style.display = 'block';
+    vazioEl.textContent = 'Nenhum confirmado informou entidade (nem tem classificação "Atendimento" no cadastro).';
+  } else {
+    wrap.style.display = 'block';
+    tbody.innerHTML = mediuns.map(({p, entidade})=>{
+      const item = dia.corpo.find(c=>c.medium===p.nome);
+      const noCorpo = !!item;
+      const chips = noCorpo ? (item.cambones||[]).map((n,i)=>`
+        <span style="display:inline-flex;align-items:center;gap:5px;background:var(--brand-soft);color:var(--brand-dark);padding:3px 6px 3px 10px;border-radius:20px;font-size:12.5px;">
+          ${escapeHtml(nomeCurto(n))}
+          <a href="#" data-remcamb="${escapeAttr(p.nome)}" data-idx="${i}" style="color:var(--danger);text-decoration:none;font-weight:700;padding:0 3px;">×</a>
+        </span>`).join('') : '';
+      const select = noCorpo
+        ? `<select class="corpo-add-cambone" data-medium="${escapeAttr(p.nome)}" style="padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:12.5px;max-width:100%;">
+             <option value="">${(item.cambones||[]).length ? '+ outro cambone…' : 'Selecionar cambone…'}</option>${optionsLivres}
+           </select>`
+        : `<span style="font-size:12px;color:var(--ink-soft);">Marque "Atende" para escolher o cambone.</span>`;
+      const entTxt = entidade || (item && item.entidade) || '';
+      return `
+      <tr>
+        <td data-label="Médium"><span style="font-weight:600;color:var(--brand-dark);">${escapeHtml(p.apelido || p.nome)}</span>
+          <div style="font-size:11.5px;color:var(--ink-soft);">${escapeHtml(p.nome)}</div></td>
+        <td data-label="Entidade">${entTxt ? escapeHtml(entTxt) : '<span style="color:var(--ink-soft);">não informada</span>'}</td>
+        <td data-label="Cambone(s)">
+          <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">${chips}${select}</div>
+        </td>
+        <td data-label="Atende">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;">
+            <input type="checkbox" class="corpo-atende" data-medium="${escapeAttr(p.nome)}" ${noCorpo?'checked':''} style="width:16px;height:16px;"> Sim
+          </label>
+        </td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('.corpo-add-cambone').forEach(sel=>{
+      sel.addEventListener('change', ()=>{
+        const nome = sel.value;
+        const item = dia.corpo.find(c=>c.medium===sel.dataset.medium);
+        if(!nome || !item) return;
+        if(!item.cambones.includes(nome)) item.cambones.push(nome);
+        persist(); renderAtendimento();
+      });
+    });
+    tbody.querySelectorAll('[data-remcamb]').forEach(a=>{
+      a.addEventListener('click', (ev)=>{
+        ev.preventDefault();
+        const item = dia.corpo.find(c=>c.medium===a.dataset.remcamb);
+        if(!item) return;
+        item.cambones.splice(parseInt(a.dataset.idx,10), 1);
+        persist(); renderAtendimento();
+      });
+    });
+    tbody.querySelectorAll('.corpo-atende').forEach(cb=>{
+      cb.addEventListener('change', ()=>{
+        const nome = cb.dataset.medium;
+        if(cb.checked){
+          const alvo = mediuns.find(x=>x.p.nome===nome);
+          if(!dia.corpo.some(c=>c.medium===nome)){
+            dia.corpo.push({id: nextCorpoId(dia), medium: nome, cambones: [], entidade: alvo ? alvo.entidade : ''});
+          }
+        } else {
+          if(consulenteAtualDoMedium(dia, nome) && !confirm(`${nome} está atendendo agora. Remover mesmo assim?`)){
+            cb.checked = true; return;
+          }
+          dia.corpo = dia.corpo.filter(c=>c.medium!==nome);
+          if(editingCorpoId && !dia.corpo.some(c=>c.id===editingCorpoId)) exitCorpoEditMode();
+        }
+        persist(); renderAtendimento();
+      });
+    });
+  }
+
+  naoEl.innerHTML = [
+    naoEncontrados.length ? `Não localizados no cadastro (apelido): ${escapeHtml(naoEncontrados.join(', '))}.` : '',
+    ambiguos.length ? `<br>Apelido duplicado, edite o cadastro para deixar único: ${escapeHtml(ambiguos.join(', '))}.` : ''
+  ].filter(Boolean).join('');
+
+  // Bloco dos filhos no atendimento (até 5)
+  apoioBlock.style.display = 'block';
+  const preenchidos = apoio.filter(Boolean).length;
+  document.getElementById('corpo-apoio-count').textContent = `(${preenchidos}/${APOIO_MAX})`;
+  const slots = document.getElementById('corpo-apoio-slots');
+  slots.innerHTML = apoio.map((nome,i)=>{
+    const atual = nome ? `<option value="${escapeAttr(nome)}" selected>${escapeHtml(nomeCurto(nome))}</option>` : '';
+    return `
+    <div class="field" style="margin:0;">
+      <label>Vaga ${i+1}</label>
+      <div style="display:flex;gap:6px;">
+        <select class="corpo-apoio-sel" data-slot="${i}" style="flex:1;">
+          <option value="">— vazia —</option>${atual}${optionsLivres}
+        </select>
+        ${nome ? `<button type="button" class="btn btn-ghost btn-small corpo-apoio-clear" data-slot="${i}" title="Limpar vaga">×</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  slots.querySelectorAll('.corpo-apoio-sel').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      dia.apoio[parseInt(sel.dataset.slot,10)] = sel.value;
+      persist(); renderAtendimento();
+    });
+  });
+  slots.querySelectorAll('.corpo-apoio-clear').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      dia.apoio[parseInt(btn.dataset.slot,10)] = '';
+      persist(); renderAtendimento();
+    });
+  });
+}
+
 function renderCorpoSelects(){
   const mediums = state.pessoas.filter(p=>p.classificacao==='Atendimento' && pessoaStatus(p)==='Ativo').sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   const cambones = state.pessoas.filter(p=>p.classificacao==='Cambone' && pessoaStatus(p)==='Ativo').sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
@@ -2527,7 +3082,7 @@ function renderCorpoTable(){
     return `
     <div class="atend-card">
       <div class="atend-row1">
-        <span class="atend-title">${escapeHtml(nomeComApelido(p.medium))}</span>
+        <span class="atend-title">${escapeHtml(nomeComApelido(p.medium))}${p.entidade ? ` <span style="font-weight:400;font-size:13px;color:var(--ink-soft);">· ${escapeHtml(p.entidade)}</span>` : ''}</span>
         <span class="pill ${atual?'pill-no':'pill-ok'}">${atual?'Atendendo':'Livre'}</span>
       </div>
       <div class="atend-row2">
@@ -2600,7 +3155,7 @@ function renderFila(){
       <div class="fila-row1">
         <div class="fila-who">
           <span class="fila-num">#${idx+1}</span>
-          <span class="fila-name">${escapeHtml(c.nome)} ${escapeHtml(c.sobrenome||'')}</span>
+          <span class="fila-name">${escapeHtml(nomeConsulente(c))}</span>
         </div>
         <span class="pill ${categoriaPillClass(c)}" style="${categoriaPillStyle(c)}">${categoriaLabel(c)}</span>
       </div>
@@ -2633,7 +3188,7 @@ function renderFila(){
       if(!c || !c.medium) return;
       const ocupado = consulenteAtualDoMedium(dia, c.medium);
       if(ocupado && ocupado.id !== c.id){
-        if(!confirm(`${c.medium} está atendendo ${ocupado.nome} agora. Encerrar esse atendimento e liberar ${c.nome} agora?`)) return;
+        if(!confirm(`${c.medium} está atendendo ${nomeConsulente(ocupado)} agora. Encerrar esse atendimento e liberar ${nomeConsulente(c)} agora?`)) return;
       }
       atribuirMedium(dia, id, c.medium);
     });
@@ -2649,7 +3204,7 @@ function renderFila(){
       const id = parseInt(btn.dataset.remconsulente,10);
       const c = dia.consulentes.find(x=>x.id===id);
       if(!c) return;
-      if(!confirm(`Remover ${c.nome} da fila (ele sai sem ser atendido)?`)) return;
+      if(!confirm(`Remover ${nomeConsulente(c)} da fila (ele sai sem ser atendido)?`)) return;
       dia.consulentes = dia.consulentes.filter(x=>x.id!==id);
       persist(); renderAtendimento();
     });
@@ -2670,7 +3225,7 @@ function renderEmAtendimento(){
     return `
     <div class="atend-card">
       <div class="atend-row1">
-        <span class="atend-title">${escapeHtml(c.nome)} ${escapeHtml(c.sobrenome||'')}</span>
+        <span class="atend-title">${escapeHtml(nomeConsulente(c))}</span>
         <span class="pill pill-no">${escapeHtml(c.medium)}</span>
       </div>
       <div class="atend-row2">
@@ -2725,7 +3280,7 @@ function renderHistoricoAtendimento(){
     return `
     <div class="atend-card">
       <div class="atend-row1">
-        <span class="atend-title">${escapeHtml(c.nome)} ${escapeHtml(c.sobrenome||'')}</span>
+        <span class="atend-title">${escapeHtml(nomeConsulente(c))}</span>
         <span class="pill ${categoriaPillClass(c)}" style="${categoriaPillStyle(c)}">${categoriaLabel(c)}</span>
       </div>
       <div class="atend-row2">
@@ -2747,7 +3302,7 @@ function renderHistoricoAtendimento(){
       const id = parseInt(btn.dataset.remconsulente2,10);
       const c = dia.consulentes.find(x=>x.id===id);
       if(!c) return;
-      if(!confirm(`Excluir o registro de atendimento de ${c.nome}?`)) return;
+      if(!confirm(`Excluir o registro de atendimento de ${nomeConsulente(c)}?`)) return;
       dia.consulentes = dia.consulentes.filter(x=>x.id!==id);
       persist(); renderAtendimento();
     });
@@ -2758,11 +3313,13 @@ function renderAtendimento(){
   const dia = ensureAtendDia(atendDateKey());
   document.getElementById('atend-cobranca').checked = !!dia.cobranca;
   renderCorpoSelects();
+  renderCorpoConfirmados();
   renderCorpoTable();
   renderFila();
   renderEmAtendimento();
   renderHistoricoAtendimento();
   renderBuscaConsulente();
+  renderCadConsulentes();
 }
 
 function statusConsulenteHtml(dia, c){
@@ -2785,7 +3342,7 @@ function renderBuscaConsulente(){
   if(!termo){ resultado.innerHTML = ''; return; }
   const dia = ensureAtendDia(atendDateKey());
   const encontrados = dia.consulentes.filter(c=>
-    `${c.nome} ${c.sobrenome||''}`.toLowerCase().includes(termo)
+    nomeConsulente(c).toLowerCase().includes(termo)
   );
   if(encontrados.length === 0){
     resultado.innerHTML = `<div class="empty-state">Nenhum consulente encontrado com esse nome hoje.</div>`;
@@ -2793,7 +3350,7 @@ function renderBuscaConsulente(){
   }
   resultado.innerHTML = encontrados.map(c=>`
     <div class="atend-card">
-      <div class="atend-row1"><span class="atend-title">${escapeHtml(c.nome)} ${escapeHtml(c.sobrenome||'')}</span></div>
+      <div class="atend-row1"><span class="atend-title">${escapeHtml(nomeConsulente(c))}</span></div>
       <div class="atend-row2">${statusConsulenteHtml(dia, c)}</div>
     </div>
   `).join('');
@@ -2848,6 +3405,19 @@ function setupAtendimento(){
     persist(); renderAtendimento();
   });
 
+  const corpoFile = document.getElementById('corpo-confirmacoes-file');
+  document.getElementById('btn-corpo-importar').addEventListener('click', ()=> corpoFile.click());
+  corpoFile.addEventListener('change', async (ev)=>{
+    const file = ev.target.files[0];
+    corpoFile.value = '';
+    if(!file) return;
+    await importarConfirmacoesArquivo(file, atendDateKey());
+  });
+  document.getElementById('btn-corpo-incluir-todos').addEventListener('click', ()=>{
+    sincronizarCorpoConfirmados(atendDateKey());
+    persist(); renderAtendimento();
+  });
+
   document.getElementById('cancel-edit-corpo').addEventListener('click', (ev)=>{
     ev.preventDefault();
     exitCorpoEditMode();
@@ -2861,18 +3431,42 @@ function setupAtendimento(){
   });
 
   document.getElementById('btn-registrar-consulente').addEventListener('click', ()=>{
-    const nome = document.getElementById('f-consulente-nome').value.trim();
-    const sobrenome = document.getElementById('f-consulente-sobrenome').value.trim();
+    const nome = document.getElementById('f-consulente-nome').value.trim().replace(/\s+/g,' ');
     const whatsapp = document.getElementById('f-consulente-whatsapp').value.trim();
+    const aniversario = document.getElementById('f-consulente-aniversario').value;
     const associado = document.getElementById('f-consulente-associado').checked;
     const preferencial = document.getElementById('f-consulente-preferencial').checked;
     const primeiraVez = document.getElementById('f-consulente-primeira-vez').checked;
     const motivo = document.getElementById('f-consulente-motivo').value.trim();
     const medium_preferido = associado ? document.getElementById('f-consulente-medium-preferido').value : '';
-    if(!nome){ alert('Informe ao menos o nome do consulente.'); return; }
+    if(!nome){ alert('Informe o nome do consulente.'); return; }
+
+    // Identifica o cadastro: selecionado na busca, ou mesmo nome já cadastrado, ou novo.
+    let cad = recepcaoSelecionadoId ? cadConsulentePorId(recepcaoSelecionadoId) : null;
+    if(!cad){
+      const mesmos = cadConsultentesPorNomeExato(nome);
+      if(mesmos.length){
+        const alvo = mesmos[0];
+        const ref = alvo.whatsapp ? ` (WhatsApp ${alvo.whatsapp})` : '';
+        if(confirm(`Já existe um consulente cadastrado como "${alvo.nome}"${ref}. É a mesma pessoa?\n\nOK = sim, usar o cadastro existente\nCancelar = não, cadastrar como outra pessoa`)){
+          cad = alvo;
+        }
+      }
+    }
     const dia = ensureAtendDia(atendDateKey());
+    if(cad){
+      const jaNaGira = dia.consulentes.find(c=> c.cadastroId === cad.id && c.status !== 'atendido');
+      if(jaNaGira && !confirm(`${cad.nome} já está registrado(a) nesta gira e ainda não foi atendido(a). Registrar de novo mesmo assim?`)) return;
+      if(whatsapp) cad.whatsapp = whatsapp;
+      if(aniversario) cad.aniversario = aniversario;
+      cad.associado = associado;
+    } else {
+      cad = {id: nextCadConsulenteId(), nome, whatsapp, aniversario, associado, criadoEm: atendDateKey()};
+      cadConsulentes().push(cad);
+    }
+
     dia.consulentes.push({
-      id: nextConsulenteId(dia), nome, sobrenome, whatsapp, associado, preferencial, primeiraVez, motivo, medium_preferido,
+      id: nextConsulenteId(dia), cadastroId: cad.id, nome: cad.nome, sobrenome: '', whatsapp: cad.whatsapp || whatsapp, associado, preferencial, primeiraVez, motivo, medium_preferido,
       status: 'aguardando',
       tsChegada: Date.now(), horaChegada: nowHMS(),
       medium: medium_preferido || '', tsChamada: null, horaChamada: '',
@@ -2880,8 +3474,8 @@ function setupAtendimento(){
       pago: false
     });
     document.getElementById('f-consulente-nome').value = '';
-    document.getElementById('f-consulente-sobrenome').value = '';
     document.getElementById('f-consulente-whatsapp').value = '';
+    document.getElementById('f-consulente-aniversario').value = '';
     document.getElementById('f-consulente-associado').checked = false;
     document.getElementById('f-consulente-preferencial').checked = false;
     document.getElementById('f-consulente-primeira-vez').checked = false;
@@ -2889,6 +3483,8 @@ function setupAtendimento(){
     document.getElementById('f-consulente-medium-preferido').value = '';
     document.getElementById('campo-motivo-preferencial').style.display = 'none';
     document.getElementById('campo-medium-preferido').style.display = 'none';
+    limparSelecaoRecepcao();
+    document.getElementById('recepcao-sugestoes').style.display = 'none';
     persist(); renderAtendimento();
     document.getElementById('f-consulente-nome').focus();
   });
@@ -3182,8 +3778,10 @@ async function importarConfirmacoesArquivo(file, dateStr){
 
     if(!state.confirmacoes) state.confirmacoes = {};
     state.confirmacoes[dateStr] = lista;
+    sincronizarCorpoConfirmados(dateStr);
     await persist();
     renderConfirmados(dateStr);
+    if(typeof renderAtendimento === 'function') renderAtendimento();
     flash('Confirmações importadas');
   }catch(e){
     console.error('Erro ao importar confirmações', e);
@@ -3679,7 +4277,9 @@ function setupUsuariosForm(){
 
 async function initApp(){
   state = await loadState();
-  if(migrarApelidosPessoas()){ await persist(); }
+  const migrouApelidos = migrarApelidosPessoas();
+  const migrouConsulentes = migrarConsulentesLegado();
+  if(migrouApelidos || migrouConsulentes){ await persist(); }
   updateStorageStatusLabel();
   setupTabs();
   setupModal();
@@ -3697,6 +4297,7 @@ async function initApp(){
   setupUsuariosForm();
   setupAlterarMinhaSenha();
   setupAtendimento();
+  setupCadConsulentes();
   renderPessoasTable();
   renderAtividadesTable();
   renderGirasTable();
