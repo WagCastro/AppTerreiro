@@ -296,35 +296,74 @@
   .cal-empty{grid-column:1/-1;font-size:13px;color:var(--ink-soft);padding:10px 2px;}
   .cal-add-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;}
   .cal-add-row input{padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:12.5px;}
-  .cal-bloco-titulo{display:block;font-size:16px;margin:0 0 6px;padding:7px 12px;background:var(--brand-soft);
-    border-left:4px solid var(--brand);border-radius:6px;color:var(--brand-dark);}
+  /* Painéis coloridos do Calendário: cada bloco com o seu fundo */
+  .cal-bloco{border-radius:14px;padding:16px 18px 18px;margin-top:22px;border:1px solid transparent;}
+  .cal-bloco .atend-card-list, .cal-bloco .fila-wrap{background:transparent;border:none;padding:0;overflow:visible;}
+  .cal-bloco-titulo{display:block;font-size:23px !important;font-weight:800 !important;line-height:1.2;margin:0 0 14px;padding:0 0 9px;
+    background:none;border:none;border-bottom:3px solid currentColor;border-radius:0;letter-spacing:-.01em;}
+  .cal-bloco .section-hint{color:inherit;opacity:.8;}
+  /* Calendário de giras (areia) */
+  .bloco-calendario{background:#ede5d2;border-color:#d8cba9;}
+  .bloco-calendario .cal-bloco-titulo{color:#5a4719;}
   /* Cadastro Limpeza (verde) */
-  .bloco-limpeza .cal-bloco-titulo{background:#d9eddf;border-left-color:#2f8a52;color:#17502d;}
-  .bloco-limpeza .atend-card{background:#e8f4ec;border-color:#b7dac4;}
-  .bloco-limpeza .atend-card-list{border-color:#cfe6d7;}
-  /* Cadastro Atendimento Mediúnico (azul mais escuro) */
-  .bloco-mediunico .cal-bloco-titulo{background:#c9d8ef;border-left-color:#1d4a87;color:#12335f;}
-  .bloco-mediunico .atend-card{background:#d6e3f5;border-color:#9db7de;}
-  .bloco-mediunico .atend-card-list{border-color:#b9cde9;}
+  .bloco-limpeza{background:#d2ebd9;border-color:#a6d2b4;}
+  .bloco-limpeza .cal-bloco-titulo{color:#17502d;}
+  .bloco-limpeza .atend-card{background:#f2faf5;border-color:#a6d2b4;}
+  /* Histórico de Atividades (verde-água) */
+  .bloco-historico{background:#cbe9e5;border-color:#98cfc8;}
+  .bloco-historico .cal-bloco-titulo{color:#0e5851;}
+  .bloco-historico .atend-card{background:#f0faf9;border-color:#98cfc8;}
+  /* Cadastro Atendimento Mediúnico (azul) */
+  .bloco-mediunico{background:#c6d7ef;border-color:#97b2dc;}
+  .bloco-mediunico .cal-bloco-titulo{color:#12335f;}
+  .bloco-mediunico .atend-card{background:#eef3fb;border-color:#97b2dc;}
   /* Recepção (âmbar) */
-  .bloco-recepcao .cal-bloco-titulo{background:#fbe6bd;border-left-color:#c27a0b;color:#74440a;}
-  .bloco-recepcao .atend-card{background:#fdf0d4;border-color:#ecd093;}
-
-  /* DE/PARA (lilás) */
-  .bloco-depara .cal-bloco-titulo{background:#e6dcf3;border-left-color:#7a55a8;color:#46286e;}
-  .bloco-depara .atend-card{background:#f0e9f9;border-color:#d0c1e6;}
-  .bloco-depara .atend-card-list{border-color:#dccfee;}
+  .bloco-recepcao{background:#f8e2b2;border-color:#e4c279;}
+  .bloco-recepcao .cal-bloco-titulo{color:#74440a;}
+  .bloco-recepcao .atend-card{background:#fffaed;border-color:#e4c279;}
+  /* Pendentes DE/PARA (lilás) */
+  .bloco-depara{background:#dfd2f0;border-color:#c1abdf;}
+  .bloco-depara .cal-bloco-titulo{color:#46286e;}
+  .bloco-depara .atend-card{background:#f8f4fd;border-color:#c1abdf;}
+  @media (max-width:640px){ .cal-bloco{padding:12px 12px 14px;} .cal-bloco-titulo{font-size:19px !important;} }
+  .cal-nome-fixa{display:inline-block;min-width:140px;}
   .cal-nome-col{flex:0 0 150px;min-width:0;font-size:17px;}
-  .cal-dias{font-size:16px;font-weight:800;padding:4px 13px;}
-  .cal-medium-card{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 16px;}
-  .cal-medium-esq{flex:1 1 190px;min-width:0;}
-  .cal-medium-esq .cal-medium-nome{font-size:18px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-  .cal-medium-ent{font-size:14px;font-weight:600;color:var(--ink-soft);margin-top:3px;}
-  .cal-medium-dir{flex:1 1 290px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:flex-end;}
+  /* mesmo espaçamento entre cartões em todos os blocos do dia (igual ao da Recepção) */
+  #cal-detail-tbody, #tbody-cal-confirmados, #tbody-corpo-mediuns, #corpo-apoio-slots{display:flex;flex-direction:column;gap:9px;}
+  .cal-dias{font-size:15px;font-weight:800;padding:2px 11px;}
+  .cal-medium-card{display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px 14px;min-height:64px;padding:8px 14px;margin-bottom:0;}
+  .cal-medium-esq{flex:1 1 220px;min-width:0;}
+  .cal-medium-esq .cal-medium-nome{font-size:17px;line-height:1.25;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .cal-medium-ent{font-size:13px;line-height:1.3;font-weight:600;color:var(--ink-soft);margin-top:2px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;}
+  .cal-medium-dir{flex:0 1 auto;display:flex;flex-wrap:nowrap;gap:8px 12px;align-items:center;justify-content:flex-end;}
+  .cal-medium-dir select{width:auto;flex:0 1 230px;min-width:170px;max-width:260px;}
   .cal-medium-camb{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
   @media (max-width:640px){
     .cal-nome-col{flex-basis:112px;font-size:16px;}
-    .cal-medium-dir{justify-content:flex-start;}
+    .cal-nome-fixa{min-width:0;}
+    .cal-medium-card{flex-wrap:wrap;}
+    .cal-medium-dir{justify-content:flex-start;flex-wrap:wrap;width:100%;}
+    .cal-medium-dir select{flex:1 1 170px;max-width:none;}
+  }
+  .camb-layout{display:grid;grid-template-columns:270px 1fr;gap:18px;align-items:start;}
+  .camb-lateral{position:sticky;top:12px;max-height:80vh;overflow-y:auto;}
+  .camb-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;cursor:pointer;
+    padding:10px 12px;margin-bottom:6px;border-radius:10px;border:1px solid var(--line);background:var(--surface);
+    font-family:var(--body);font-size:14.5px;font-weight:600;color:var(--ink);}
+  .camb-item:hover{background:var(--brand-soft);}
+  .camb-item.ativo{background:var(--brand);border-color:var(--brand);color:#fff;}
+  .camb-item .camb-qtd{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:12px;background:var(--brand-soft);color:var(--brand-dark);white-space:nowrap;}
+  .camb-item.ativo .camb-qtd{background:rgba(255,255,255,.22);color:#fff;}
+  .camb-mes{display:grid;grid-template-columns:110px 1fr;gap:6px 14px;align-items:center;}
+  .camb-mes-nome{font-weight:700;font-size:14px;color:var(--brand-dark);text-transform:capitalize;}
+  .camb-mes.vazio{opacity:.55;}
+  .camb-chip{display:inline-flex;flex-direction:column;gap:1px;padding:6px 12px;border-radius:10px;background:var(--brand-soft);color:var(--brand-dark);margin:2px 8px 2px 0;}
+  .camb-chip b{font-size:15px;}
+  .camb-chip span{font-size:12px;color:var(--ink-soft);}
+  @media (max-width:760px){
+    .camb-layout{grid-template-columns:1fr;}
+    .camb-lateral{position:static;max-height:260px;}
+    .camb-mes{grid-template-columns:1fr;}
   }
   .cal-day-detail{margin-top:20px;padding-top:16px;border-top:1px solid var(--line);}
   .cal-gira-name{font-family:var(--display);font-weight:700;color:var(--accent);font-size:14.5px;margin:2px 0 14px;}
@@ -640,6 +679,7 @@
     <button class="tab active" data-tab="calendario" id="tab-calendario">Calendário</button>
     <button class="tab" data-tab="painel" id="tab-painel">Painel</button>
     <button class="tab" data-tab="atendimento" id="tab-atendimento">Atendimento</button>
+    <button class="tab" data-tab="cambones" id="tab-cambones">Cambones</button>
     <button class="tab" data-tab="cadastros" id="tab-cadastros">Cadastros</button>
     <button class="tab" data-tab="usuarios" id="tab-usuarios" style="display:none;">Administração</button>
   </nav>
@@ -649,7 +689,8 @@
 
     <!-- CALENDÁRIO -->
     <section id="view-calendario" class="view active">
-      <h2 class="section-title">Calendário de giras</h2>
+      <div class="cal-bloco bloco-calendario" style="margin-top:0;">
+      <h2 class="section-title cal-bloco-titulo">Calendário de giras</h2>
       <p class="section-hint">Toque numa data para trabalhar nela: escala, confirmados, corpo mediúnico, recepção e relatórios ficam todos nessa data.</p>
 
       <div class="cal-header">
@@ -668,6 +709,7 @@
         <input type="date" id="cal-add-date" title="Data da gira">
         <button type="button" class="btn btn-ghost btn-small" id="cal-add-btn">+ Abrir / cadastrar data</button>
       </div>
+      </div>
 
       <div id="cal-day-detail" class="cal-day-detail" style="display:none;">
         <h3 id="cal-detail-title" class="section-title" style="font-size:15px;margin-bottom:2px;"></h3>
@@ -679,8 +721,9 @@
         <div class="cal-bloco bloco-limpeza">
         <h3 class="section-title cal-bloco-titulo" style="margin-top:6px;">Cadastro Limpeza</h3>
         <div class="atend-card-list" id="cal-detail-tbody"></div>
-
-        <div id="cal-confirmados-block" style="margin-top:22px;padding-top:16px;border-top:1px solid var(--line);">
+        </div>
+        <div id="cal-confirmados-block" class="cal-bloco bloco-historico" style="margin-top:28px;">
+          <h3 class="section-title cal-bloco-titulo">Histórico de Atividades</h3>
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px;">
             <div>
               <h3 class="section-title" style="font-size:14px;margin-bottom:2px;">Confirmados na gira (formulário)</h3>
@@ -693,7 +736,6 @@
           </div>
           <div class="atend-card-list" id="tbody-cal-confirmados" style="margin-top:10px;"></div>
           <div id="cal-confirmados-naoencontrados" style="margin-top:8px;font-size:12px;color:var(--ink-soft);"></div>
-        </div>
         </div>
 
         <!-- MONTAGEM A PARTIR DA LISTA DE CONFIRMAÇÃO -->
@@ -718,7 +760,7 @@
           <div id="corpo-apoio-block" class="cal-bloco bloco-recepcao" style="display:none;margin-top:28px;">
             <h3 class="section-title cal-bloco-titulo">Recepção <span id="corpo-apoio-count" class="mono" style="font-weight:400;font-size:13px;opacity:.8;"></span></h3>
             <p class="section-hint" style="margin:0 0 10px;">Escolha até 5 filhos, entre os confirmados que não são médiuns de atendimento, para trabalhar na Recepção.</p>
-            <div id="corpo-apoio-slots" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;"></div>
+            <div id="corpo-apoio-slots" class="atend-card-list" style="display:flex;flex-direction:column;gap:9px;"></div>
             <div id="corpo-apoio-avulso" style="margin-top:12px;"></div>
           </div>
 
@@ -832,6 +874,24 @@
     </section>
 
     <!-- ADMINISTRAÇÃO (somente ADM) -->
+    <section id="view-cambones" class="view">
+      <h2 class="section-title">Cambones</h2>
+      <p class="section-hint">Cada cambone fica com o mesmo médium durante um mês e, ao longo do ano, passa por todos os médiuns. Escolha um cambone para ver, mês a mês, com quem ele trabalhou. O histórico vem do corpo mediúnico montado em cada gira.</p>
+      <div class="toolbar"><div class="filters">
+        <span style="display:flex;align-items:center;gap:6px;">
+          <label for="camb-ano" style="font-size:12px;color:var(--ink-soft);">Ano</label>
+          <select id="camb-ano" style="padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:12.5px;font-family:var(--body);"></select>
+        </span>
+      </div></div>
+      <div class="camb-layout">
+        <aside class="camb-lateral">
+          <input type="text" id="camb-busca" placeholder="Buscar cambone…" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13px;margin-bottom:8px;">
+          <div id="camb-lista"></div>
+        </aside>
+        <div class="camb-detalhe" id="camb-detalhe"></div>
+      </div>
+    </section>
+
     <section id="view-usuarios" class="view">
       <h2 class="section-title">Administração</h2>
       <p class="section-hint">Backup dos dados, além do cadastro e liberação de acesso de usuários e administradores. Somente administradores veem esta aba.</p>
@@ -1489,6 +1549,7 @@ function setupTabs(){
       if(btn.dataset.tab === 'calendario') renderCalendar();
       if(btn.dataset.tab === 'usuarios') renderUsuariosTable();
       if(btn.dataset.tab === 'atendimento') renderAtendimento();
+      if(btn.dataset.tab === 'cambones') renderCambones();
     });
   });
   document.querySelectorAll('.subtab').forEach(btn=>{
@@ -1594,7 +1655,7 @@ function gerarRelatorioPDF(){
     doc.autoTable({
       startY: y,
       head: [['Filhos', 'Atividade']],
-      body: principais.map(e=>[nomeComApelido(e.pessoa), e.atividade]),
+      body: principais.map(e=>[apelidoDe(e.pessoa), e.atividade]),
       theme: 'grid',
       margin: {left: margin, right: margin},
       styles: {
@@ -1624,7 +1685,7 @@ function gerarRelatorioPDF(){
     doc.autoTable({
       startY: y,
       head: [['Filhos', 'Atividade']],
-      body: standBy.map(e=>[nomeComApelido(e.pessoa), e.atividade]),
+      body: standBy.map(e=>[apelidoDe(e.pessoa), e.atividade]),
       theme: 'grid',
       margin: {left: margin, right: margin},
       styles: {
@@ -2626,6 +2687,133 @@ function finalizarAtendimento(dia, consulenteId){
   persist(); renderAtendimento();
 }
 
+/* ---------- ABA CAMBONES ---------- */
+let cambSelecionado = null;
+let cambAno = null;
+
+// Reúne, a partir do corpo mediúnico de cada gira, com quais médiuns cada cambone trabalhou.
+function coletarCambonagens(){
+  const porCambone = {};   // nome -> { 'YYYY-MM': { medium: {entidade, datas:Set} } }
+  const entidadePorMedium = {};
+  const mediuns = new Set();
+  Object.keys(state.atendimentos||{}).sort().forEach(dataKey=>{
+    const dia = state.atendimentos[dataKey];
+    (dia && Array.isArray(dia.corpo) ? dia.corpo : []).forEach(item=>{
+      mediuns.add(item.medium);
+      if(item.entidade) entidadePorMedium[item.medium] = item.entidade;
+      (item.cambones||[]).forEach(c=>{
+        const mes = dataKey.slice(0,7);
+        porCambone[c] = porCambone[c] || {};
+        porCambone[c][mes] = porCambone[c][mes] || {};
+        const reg = porCambone[c][mes][item.medium] = porCambone[c][mes][item.medium] || {entidade:'', datas:new Set()};
+        if(item.entidade) reg.entidade = item.entidade;
+        reg.datas.add(dataKey);
+      });
+    });
+  });
+  return {porCambone, entidadePorMedium, mediuns};
+}
+
+function renderCambones(){
+  const lista = document.getElementById('camb-lista');
+  if(!lista) return;
+  const {porCambone, entidadePorMedium, mediuns} = coletarCambonagens();
+
+  // anos disponíveis
+  const anos = new Set([String(new Date().getFullYear())]);
+  Object.values(porCambone).forEach(meses=> Object.keys(meses).forEach(m=> anos.add(m.slice(0,4))));
+  const anoSel = document.getElementById('camb-ano');
+  const listaAnos = Array.from(anos).sort().reverse();
+  if(!cambAno || !listaAnos.includes(cambAno)) cambAno = listaAnos.includes(String(new Date().getFullYear())) ? String(new Date().getFullYear()) : listaAnos[0];
+  anoSel.innerHTML = listaAnos.map(a=>`<option value="${a}"${a===cambAno?' selected':''}>${a}</option>`).join('');
+
+  // todos os cambones: classificação "Cambone" (ativos) + quem já cambonou
+  const nomes = new Set(state.pessoas.filter(p=> pessoaStatus(p)==='Ativo' && p.classificacao==='Cambone').map(p=>p.nome));
+  Object.keys(porCambone).forEach(n=>nomes.add(n));
+  const termo = normalizeNomeComp(document.getElementById('camb-busca').value);
+  const itens = Array.from(nomes)
+    .filter(n=> !termo || normalizeNomeComp(apelidoDe(n)).includes(termo) || normalizeNomeComp(n).includes(termo))
+    .sort((a,b)=> apelidoDe(a).localeCompare(apelidoDe(b),'pt-BR'));
+
+  const qtdMediunsNoAno = (nome)=>{
+    const meses = porCambone[nome] || {};
+    const set = new Set();
+    Object.keys(meses).filter(m=>m.startsWith(cambAno)).forEach(m=> Object.keys(meses[m]).forEach(md=>set.add(md)));
+    return set.size;
+  };
+
+  if(cambSelecionado && !nomes.has(cambSelecionado)) cambSelecionado = null;
+  if(!cambSelecionado && itens.length) cambSelecionado = itens[0];
+
+  lista.innerHTML = itens.length ? itens.map(n=>`
+    <button type="button" class="camb-item${n===cambSelecionado?' ativo':''}" data-camb="${escapeAttr(n)}">
+      <span>${escapeHtml(apelidoDe(n))}</span>
+      <span class="camb-qtd" title="Médiuns diferentes em ${cambAno}">${qtdMediunsNoAno(n)} méd.</span>
+    </button>`).join('') : '<div class="empty-state">Nenhum cambone encontrado.</div>';
+  lista.querySelectorAll('.camb-item').forEach(b=>{
+    b.addEventListener('click', ()=>{ cambSelecionado = b.dataset.camb; renderCambones(); });
+  });
+
+  const detalhe = document.getElementById('camb-detalhe');
+  if(!cambSelecionado){
+    detalhe.innerHTML = '<div class="empty-state">Selecione um cambone na lista ao lado.</div>';
+    return;
+  }
+
+  const meses = porCambone[cambSelecionado] || {};
+  const mediunsAno = new Set();
+  let girasAno = 0;
+  Object.keys(meses).filter(m=>m.startsWith(cambAno)).forEach(m=>{
+    Object.keys(meses[m]).forEach(md=>{ mediunsAno.add(md); girasAno += meses[m][md].datas.size; });
+  });
+
+  const linhasMes = [];
+  for(let m=1;m<=12;m++){
+    const chave = `${cambAno}-${String(m).padStart(2,'0')}`;
+    const dados = meses[chave];
+    const nomeMes = MESES_PT[m-1];
+    if(!dados){
+      linhasMes.push(`<div class="atend-card camb-mes vazio"><span class="camb-mes-nome">${nomeMes}</span><span style="font-size:13px;color:var(--ink-soft);">sem registro</span></div>`);
+      continue;
+    }
+    const mds = Object.keys(dados).sort((a,b)=> apelidoDe(a).localeCompare(apelidoDe(b),'pt-BR'));
+    const chips = mds.map(md=>{
+      const ent = dados[md].entidade || entidadePorMedium[md] || '';
+      const n = dados[md].datas.size;
+      return `<span class="camb-chip"><b>${escapeHtml(apelidoDe(md))}</b><span>${ent ? escapeHtml(ent)+' · ' : ''}${n} gira${n>1?'s':''}</span></span>`;
+    }).join('');
+    linhasMes.push(`<div class="atend-card camb-mes"><span class="camb-mes-nome">${nomeMes}</span><span>${chips}${mds.length>1 ? '<span class="pill pill-no" title="Pela regra, o cambone fica com um médium por mês">mais de um médium no mês</span>' : ''}</span></div>`);
+  }
+
+  // médiuns que ainda não foram cambonados no ano
+  const todosMediuns = new Set(mediuns);
+  state.pessoas.filter(p=> pessoaStatus(p)==='Ativo' && p.classificacao==='Atendimento').forEach(p=>todosMediuns.add(p.nome));
+  const faltam = Array.from(todosMediuns).filter(md=> !mediunsAno.has(md) && md !== cambSelecionado)
+    .sort((a,b)=> apelidoDe(a).localeCompare(apelidoDe(b),'pt-BR'));
+
+  const pessoa = state.pessoas.find(p=>p.nome===cambSelecionado);
+  detalhe.innerHTML = `
+    <div class="atend-card" style="margin-bottom:12px;">
+      <div class="atend-row1">
+        <span class="atend-title" style="font-size:20px;">${escapeHtml(apelidoDe(cambSelecionado))}</span>
+        <span class="pill pill-ok" style="font-size:13px;">${mediunsAno.size} médium(ns) em ${cambAno}</span>
+      </div>
+      <div class="atend-row2"><span>${pessoa && pessoa.apelido ? escapeHtml(pessoa.nome)+' · ' : ''}${girasAno} gira(s) cambonada(s) em ${cambAno}</span></div>
+    </div>
+    <h3 class="section-title" style="font-size:14px;margin:0 0 8px;">Mês a mês — ${cambAno}</h3>
+    <div class="atend-card-list" style="display:flex;flex-direction:column;gap:6px;">${linhasMes.join('')}</div>
+    <h3 class="section-title" style="font-size:14px;margin:18px 0 8px;">Ainda não cambonou em ${cambAno} <span class="mono" style="font-weight:400;color:var(--ink-soft);">(${faltam.length})</span></h3>
+    <div>${faltam.length ? faltam.map(md=>{
+      const ent = entidadePorMedium[md] || '';
+      return `<span class="camb-chip"><b>${escapeHtml(apelidoDe(md))}</b>${ent ? `<span>${escapeHtml(ent)}</span>` : ''}</span>`;
+    }).join('') : '<span style="font-size:13px;color:var(--ink-soft);">Já passou por todos os médiuns conhecidos neste ano.</span>'}</div>`;
+}
+
+function setupCambones(){
+  document.getElementById('camb-ano').addEventListener('change', (ev)=>{ cambAno = ev.target.value; renderCambones(); });
+  document.getElementById('camb-busca').addEventListener('input', renderCambones);
+}
+
 /* ---------- CADASTRO DE CONSULENTES ---------- */
 let editingCadConsulenteId = null;
 let recepcaoSelecionadoId = null;
@@ -2958,9 +3146,9 @@ function gerarRelatorioCorpoMediunico(dateParam){
     ...tableStyle, startY: y,
     head: [['Médium','Entidade','Cambone(s)']],
     body: corpo.map(c=>[
-      nomeComApelido(c.medium),
+      apelidoDe(c.medium),
       entidadeDe(c),
-      (c.cambones||[]).length ? c.cambones.map(n=>nomeComApelido(n)).join(', ') : '—'
+      (c.cambones||[]).length ? c.cambones.map(n=>apelidoDe(n)).join(', ') : '—'
     ]),
     columnStyles: {0:{cellWidth:150, fontStyle:'bold'}, 1:{cellWidth:150}, 2:{cellWidth:'auto'}}
   });
@@ -2974,7 +3162,7 @@ function gerarRelatorioCorpoMediunico(dateParam){
     doc.autoTable({
       ...tableStyle, startY: y,
       head: [['#','Filho']],
-      body: apoio.map((n,i)=>[String(i+1), nomeComApelido(n)]),
+      body: apoio.map((n,i)=>[String(i+1), apelidoDe(n)]),
       columnStyles: {0:{cellWidth:30}, 1:{cellWidth:'auto', fontStyle:'bold'}}
     });
   }
@@ -3204,9 +3392,13 @@ function renderCorpoConfirmados(dateParam){
     const ehAvulso = Array.isArray(dia.apoioAvulso) && dia.apoioAvulso.includes(nome);
     const atual = nome ? `<option value="${escapeAttr(nome)}" selected>${escapeHtml(nomeCurto(nome))}${ehAvulso ? ' (avulso)' : ''}</option>` : '';
     return `
-    <div class="atend-card" style="margin:0;padding:10px 12px;">
-      <div style="display:flex;gap:6px;">
-        <select class="corpo-apoio-sel" data-slot="${i}" style="flex:1;">
+    <div class="atend-card cal-medium-card">
+      <div class="cal-medium-esq">
+        <div class="cal-medium-nome">${nome ? escapeHtml(nomeCurto(nome)) : '<span style="color:var(--ink-soft);font-weight:600;">Selecione filho</span>'}${ehAvulso ? ' <span class="pill pill-ok">avulso</span>' : ''}</div>
+        <div class="cal-medium-ent" style="font-weight:400;">${nome ? escapeHtml(nome) : 'Recepção · filho ' + (i+1)}</div>
+      </div>
+      <div class="cal-medium-dir">
+        <select class="corpo-apoio-sel" data-slot="${i}">
           <option value="">Selecione filho</option>${atual}${optionsLivres}
         </select>
         ${nome ? `<button type="button" class="btn btn-ghost btn-small corpo-apoio-clear" data-slot="${i}" title="Limpar">×</button>` : ''}
@@ -3559,6 +3751,7 @@ function renderAtendimento(){
   renderHistoricoAtendimento();
   renderBuscaConsulente();
   renderCadConsulentes();
+  if(typeof renderCambones === 'function') renderCambones();
 }
 
 function statusConsulenteHtml(dia, c){
@@ -4216,12 +4409,12 @@ function renderCalendarDayDetail(dateStr){
     tbody.innerHTML = `<div class="empty-state">Nenhum registro de escala para esse dia.</div>`;
   } else {
     tbody.innerHTML = recs.map(e=>`
-      <div class="atend-card">
-        <div class="atend-row1">
-          <span class="atend-title">${escapeHtml(apelidoDe(e.pessoa))} <span style="font-weight:400;font-size:13px;color:var(--ink-soft);">${escapeHtml(e.pessoa)}</span></span>
-          <span class="pill ${e.executado==='SIM'?'pill-ok':'pill-no'}">${e.executado==='SIM'?'Executado':'Não executado'}</span>
+      <div class="atend-card cal-medium-card">
+        <div class="cal-medium-esq">
+          <div class="cal-medium-nome">${escapeHtml(apelidoDe(e.pessoa))} <span style="font-weight:400;font-size:13px;color:var(--ink-soft);">${escapeHtml(e.pessoa)}</span></div>
+          <div class="cal-medium-ent" style="font-weight:400;">${escapeHtml(e.atividade)}</div>
         </div>
-        <div class="atend-row2"><span>${escapeHtml(e.atividade)}</span></div>
+        <div class="cal-medium-dir"><span class="pill ${e.executado==='SIM'?'pill-ok':'pill-no'}">${e.executado==='SIM'?'Executado':'Não executado'}</span></div>
       </div>
     `).join('');
   }
@@ -4417,23 +4610,21 @@ function renderConfirmados(dateStr){
         : '';
       const entidadeTxt = entidade ? `<div style="font-size:11.5px;color:var(--ink-soft);margin-top:2px;">Entidade: ${escapeHtml(entidade)}</div>` : '';
       return `
-      <div class="atend-card">
-        <div class="atend-row1" style="justify-content:flex-start;gap:6px;">
-          <span class="atend-title cal-nome-col"><span class="clickable" data-person="${escapeAttr(p.nome)}" style="color:var(--brand-dark);">${escapeHtml(p.apelido || p.nome)}</span></span>
-          <span class="pill ${pillClass} cal-dias" title="Dias sem atividade">${dias===null?'sem registro':(dias===1?'1 dia':dias+' dias')}</span>
-        </div>
-        <div class="atend-row2">
-          <span>
-            <span class="mono">Última atividade: ${lastDate ? formatDateBR(lastDate) : 'sem registro'}</span>
+      <div class="atend-card cal-medium-card">
+        <div class="cal-medium-esq">
+          <div class="cal-medium-nome"><span class="cal-nome-fixa"><span class="clickable" data-person="${escapeAttr(p.nome)}" style="color:var(--brand-dark);">${escapeHtml(p.apelido || p.nome)}</span></span>
+            <span class="pill ${pillClass} cal-dias" title="Dias sem atividade">${dias===null?'sem registro':(dias===1?'1 dia':dias+' dias')}</span></div>
+          <div class="cal-medium-ent" style="font-weight:400;">
+            <span class="mono" style="font-size:12.5px;">Última atividade: ${lastDate ? formatDateBR(lastDate) : 'sem registro'}</span>
             ${chips}
-          </span>
-          <span class="atend-actions">
-            <select class="cal-confirm-atividade" data-pessoa="${escapeAttr(p.nome)}" style="padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:12.5px;">
-              <option value="">Atividade…</option>
-              ${atividadeOptions}
-            </select>
-            <button type="button" class="btn btn-primary btn-small btn-atribuir-confirmado" data-pessoa="${escapeAttr(p.nome)}">+ Atribuir</button>
-          </span>
+          </div>
+        </div>
+        <div class="cal-medium-dir">
+          <select class="cal-confirm-atividade" data-pessoa="${escapeAttr(p.nome)}" style="padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:12.5px;">
+            <option value="">Atividade…</option>
+            ${atividadeOptions}
+          </select>
+          <button type="button" class="btn btn-primary btn-small btn-atribuir-confirmado" data-pessoa="${escapeAttr(p.nome)}">+ Atribuir</button>
         </div>
       </div>`;
     }).join('');
@@ -4665,7 +4856,7 @@ function applyUserUI(user){
   if(tabUsuarios) tabUsuarios.style.display = user.papel === 'admin' ? '' : 'none';
 
   const isAtendente = user.papel === 'atendente';
-  ['tab-calendario','tab-painel','tab-cadastros'].forEach(id=>{
+  ['tab-calendario','tab-painel','tab-cadastros','tab-cambones'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.style.display = isAtendente ? 'none' : '';
   });
@@ -4871,6 +5062,7 @@ async function initApp(){
   setupAlterarMinhaSenha();
   setupAtendimento();
   setupCadConsulentes();
+  setupCambones();
   if(calSelectedDate) sincronizarDataAtiva(calSelectedDate);
   renderPessoasTable();
   renderAtividadesTable();
