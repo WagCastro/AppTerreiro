@@ -1356,6 +1356,13 @@
             </div>
             <div id="entidades-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;"></div>
           </div>
+          <div class="field">
+            <label style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Atividades que pode executar</label>
+            <div style="font-size:12px;color:var(--ink-soft);margin-bottom:6px;">Desmarque as atividades que este filho não pode fazer. Elas deixam de aparecer na hora de atribuir.
+              <a href="#" id="f-ativ-marcar-todas" style="margin-left:6px;">marcar todas</a> ·
+              <a href="#" id="f-ativ-desmarcar-todas">desmarcar todas</a></div>
+            <div id="f-atividades-pessoa" style="max-height:220px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;"></div>
+          </div>
         </div>
         <div id="pessoa-edit-tag" style="display:none;margin-top:12px;">
           <span class="mono" style="color:var(--accent);font-size:12.5px;">editando "<span id="pessoa-edit-label"></span>"</span>
@@ -1399,6 +1406,40 @@ const SEED_DATA = {"escalas": [{"data": "2026-01-31", "pessoa": "Cézar", "ativi
 const STORAGE_KEY = 'escala-casa-data-v1';
 let state = null;
 let editingPessoaCodigo = null;
+
+/* ---------- ATIVIDADES PERMITIDAS POR FILHO ----------
+   Guardamos só as atividades BLOQUEADAS (p.atividadesBloqueadas). Assim todo filho começa com todas
+   liberadas e qualquer atividade nova já nasce liberada para todos. */
+function atividadePermitida(p, atividade){
+  return !(p && Array.isArray(p.atividadesBloqueadas) && p.atividadesBloqueadas.includes(atividade));
+}
+function atividadesPermitidasDe(nomePessoa){
+  const p = state.pessoas.find(x=>x.nome===nomePessoa);
+  return state.atividades.filter(a=> atividadePermitida(p, a.atividade))
+    .sort((a,b)=> a.atividade.localeCompare(b.atividade,'pt-BR'));
+}
+function opcoesAtividadesHtml(nomePessoa){
+  const lista = atividadesPermitidasDe(nomePessoa);
+  if(lista.length === 0) return '<option value="">Sem atividade liberada</option>';
+  return lista.map(a=>`<option value="${escapeAttr(a.atividade)}">${escapeHtml(a.atividade)}</option>`).join('');
+}
+function renderAtividadesPermitidasForm(p){
+  const box = document.getElementById('f-atividades-pessoa');
+  const lista = state.atividades.slice().sort((a,b)=>a.atividade.localeCompare(b.atividade,'pt-BR'));
+  if(lista.length === 0){
+    box.innerHTML = '<span style="font-size:12.5px;color:var(--ink-soft);">Nenhuma atividade cadastrada ainda.</span>';
+    return;
+  }
+  box.innerHTML = lista.map(a=>`
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);cursor:pointer;">
+      <input type="checkbox" class="f-ativ-check" data-atividade="${escapeAttr(a.atividade)}" ${atividadePermitida(p, a.atividade) ? 'checked' : ''} style="width:16px;height:16px;flex:0 0 auto;">
+      <span>${escapeHtml(a.atividade)}</span>
+    </label>`).join('');
+}
+function lerAtividadesBloqueadasForm(){
+  return Array.from(document.querySelectorAll('#f-atividades-pessoa .f-ativ-check'))
+    .filter(cb=>!cb.checked).map(cb=>cb.dataset.atividade);
+}
 let pessoaEntidadesTemp = [];
 let editingCorpoId = null;
 let corpoCambonesTemp = [];
@@ -1904,6 +1945,7 @@ function openPessoaModal(p){
   document.getElementById('f-emergencia-telefone-pessoa').value = p ? (p.emergenciaTelefone || '') : '';
   document.getElementById('f-classificacao-pessoa').value = p ? (p.classificacao || '') : '';
   pessoaEntidadesTemp = p && Array.isArray(p.entidades) ? p.entidades.slice() : [];
+  renderAtividadesPermitidasForm(p);
   document.getElementById('f-entidade-input').value = '';
   renderEntidadesChips();
   document.getElementById('pessoa-modal-title').textContent = p ? 'Editar filho' : 'Incluir filho';
@@ -1943,6 +1985,14 @@ function setupPessoasForm(){
     }
   });
 
+  document.getElementById('f-ativ-marcar-todas').addEventListener('click', (ev)=>{
+    ev.preventDefault();
+    document.querySelectorAll('#f-atividades-pessoa .f-ativ-check').forEach(cb=>cb.checked = true);
+  });
+  document.getElementById('f-ativ-desmarcar-todas').addEventListener('click', (ev)=>{
+    ev.preventDefault();
+    document.querySelectorAll('#f-atividades-pessoa .f-ativ-check').forEach(cb=>cb.checked = false);
+  });
   document.getElementById('f-convenio-pessoa').addEventListener('change', (ev)=>{
     document.getElementById('campo-convenio-nome').style.display = ev.target.checked ? 'block' : 'none';
   });
@@ -1968,6 +2018,7 @@ function setupPessoasForm(){
       const emergenciaTelefone = document.getElementById('f-emergencia-telefone-pessoa').value.trim();
       const classificacao = document.getElementById('f-classificacao-pessoa').value;
       const entidades = pessoaEntidadesTemp.slice();
+      const blocked = lerAtividadesBloqueadasForm();
       if(!nome) return;
 
       if(editingPessoaCodigo){
@@ -1993,6 +2044,7 @@ function setupPessoasForm(){
         p.emergenciaTelefone = emergenciaTelefone;
         p.classificacao = classificacao;
         p.entidades = entidades;
+        p.atividadesBloqueadas = blocked;
         if(oldNome !== nome){
           state.escalas.forEach(e=>{ if(e.pessoa===oldNome) e.pessoa = nome; });
         }
@@ -2001,7 +2053,7 @@ function setupPessoasForm(){
         if(state.pessoas.some(p=>p.nome.toLowerCase()===nome.toLowerCase())){
           alert('Esse filho já está cadastrado.'); return;
         }
-        state.pessoas.push({codigo: nextPessoaCodigo(), nome, apelido, endereco, numero, bairro, cidade, estado, celular, aniversario, cpf, convenioMedico, convenioNome, hospitalEmergencia, emergenciaNome, emergenciaTelefone, classificacao, entidades, status:'Ativo'});
+        state.pessoas.push({codigo: nextPessoaCodigo(), atividadesBloqueadas: blocked, nome, apelido, endereco, numero, bairro, cidade, estado, celular, aniversario, cpf, convenioMedico, convenioNome, hospitalEmergencia, emergenciaNome, emergenciaTelefone, classificacao, entidades, status:'Ativo'});
         closePessoaModal();
       }
       persist(); renderPessoasTable(); renderPainel();
@@ -2151,6 +2203,9 @@ function renderAtividadesTable(){
     if(!a) return;
     if(confirm(`Remover "${a.atividade}" da lista de atividades?`)){
       state.atividades = state.atividades.filter(x=>x.codigo!==cod);
+      state.pessoas.forEach(p=>{
+        if(Array.isArray(p.atividadesBloqueadas)) p.atividadesBloqueadas = p.atividadesBloqueadas.filter(x=>x!==a.atividade);
+      });
       persist(); renderAtividadesTable();
     }
   }));
@@ -2172,6 +2227,9 @@ function setupAtividadesForm(){
         a.atividade = desc;
         if(oldDesc !== desc){
           state.escalas.forEach(e=>{ if(e.atividade===oldDesc) e.atividade = desc; });
+          state.pessoas.forEach(p=>{
+            if(Array.isArray(p.atividadesBloqueadas)) p.atividadesBloqueadas = p.atividadesBloqueadas.map(x=> x===oldDesc ? desc : x);
+          });
         }
         exitAtividadeEditMode();
       } else {
@@ -2366,8 +2424,7 @@ function renderModalQuickAdd(nome){
     state.giras.slice().sort((a,b)=>a.gira.localeCompare(b.gira,'pt-BR'))
       .map(g=>`<option value="${escapeAttr(g.gira)}">${escapeHtml(g.gira)}</option>`)
   ).join('');
-  const atividadeOptions = state.atividades.slice().sort((a,b)=>a.atividade.localeCompare(b.atividade,'pt-BR'))
-    .map(a=>`<option value="${escapeAttr(a.atividade)}">${escapeHtml(a.atividade)}</option>`).join('');
+  const atividadeOptions = opcoesAtividadesHtml(nome);
 
   container.innerHTML = `
     <div class="quickadd-form">
@@ -2390,6 +2447,10 @@ function renderModalQuickAdd(nome){
     const executado = document.getElementById('qa-executado').value;
     if(!data || !atividade){
       alert('Preencha data e atividade.');
+      return;
+    }
+    if(!atividadePermitida(state.pessoas.find(x=>x.nome===nome), atividade)){
+      alert('Esse filho não pode executar essa atividade (veja o cadastro do filho).');
       return;
     }
     state.escalas.push({id: nextEscalaId(), data, gira, pessoa: nome, atividade, executado});
@@ -4411,7 +4472,7 @@ function renderCalendarDayDetail(dateStr){
     tbody.innerHTML = recs.map(e=>`
       <div class="atend-card cal-medium-card">
         <div class="cal-medium-esq">
-          <div class="cal-medium-nome">${escapeHtml(apelidoDe(e.pessoa))} <span style="font-weight:400;font-size:13px;color:var(--ink-soft);">${escapeHtml(e.pessoa)}</span></div>
+          <div class="cal-medium-nome">${escapeHtml(apelidoDe(e.pessoa))}</div>
           <div class="cal-medium-ent" style="font-weight:400;">${escapeHtml(e.atividade)}</div>
         </div>
         <div class="cal-medium-dir"><span class="pill ${e.executado==='SIM'?'pill-ok':'pill-no'}">${e.executado==='SIM'?'Executado':'Não executado'}</span></div>
@@ -4599,9 +4660,8 @@ function renderConfirmados(dateStr){
   if(linhas.length === 0){
     tbody.innerHTML = `<div class="empty-state">Nenhum confirmado localizado no cadastro.</div>`;
   } else {
-    const atividadeOptions = state.atividades.slice().sort((a,b)=>a.atividade.localeCompare(b.atividade,'pt-BR'))
-      .map(a=>`<option value="${escapeAttr(a.atividade)}">${escapeHtml(a.atividade)}</option>`).join('');
     tbody.innerHTML = linhas.map(({p,entidade,lastDate,dias})=>{
+      const atividadeOptions = opcoesAtividadesHtml(p.nome);
       let pillClass = 'pill-ok';
       if(dias===null || dias>30) pillClass = 'pill-no';
       const jaAtribuidas = state.escalas.filter(e=>e.data===dateStr && e.pessoa===p.nome);
@@ -4644,6 +4704,7 @@ function renderConfirmados(dateStr){
       const select = tbody.querySelector(`.cal-confirm-atividade[data-pessoa="${CSS.escape(nome)}"]`);
       const atividade = select ? select.value : '';
       if(!atividade){ alert('Escolha uma atividade.'); return; }
+      if(!atividadePermitida(state.pessoas.find(x=>x.nome===nome), atividade)){ alert('Esse filho não pode executar essa atividade.'); return; }
       const girasDia = Array.from(giraDatesMap()[dateStr] || []);
       const gira = girasDia[0] || '';
       state.escalas.push({id: nextEscalaId(), data: dateStr, gira, pessoa: nome, atividade, executado:'SIM'});
