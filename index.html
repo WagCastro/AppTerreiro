@@ -296,6 +296,36 @@
   .cal-empty{grid-column:1/-1;font-size:13px;color:var(--ink-soft);padding:10px 2px;}
   .cal-add-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;}
   .cal-add-row input{padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:12.5px;}
+  .cal-bloco-titulo{display:block;font-size:16px;margin:0 0 6px;padding:7px 12px;background:var(--brand-soft);
+    border-left:4px solid var(--brand);border-radius:6px;color:var(--brand-dark);}
+  /* Cadastro Limpeza (verde) */
+  .bloco-limpeza .cal-bloco-titulo{background:#d9eddf;border-left-color:#2f8a52;color:#17502d;}
+  .bloco-limpeza .atend-card{background:#e8f4ec;border-color:#b7dac4;}
+  .bloco-limpeza .atend-card-list{border-color:#cfe6d7;}
+  /* Cadastro Atendimento Mediúnico (azul mais escuro) */
+  .bloco-mediunico .cal-bloco-titulo{background:#c9d8ef;border-left-color:#1d4a87;color:#12335f;}
+  .bloco-mediunico .atend-card{background:#d6e3f5;border-color:#9db7de;}
+  .bloco-mediunico .atend-card-list{border-color:#b9cde9;}
+  /* Recepção (âmbar) */
+  .bloco-recepcao .cal-bloco-titulo{background:#fbe6bd;border-left-color:#c27a0b;color:#74440a;}
+  .bloco-recepcao .atend-card{background:#fdf0d4;border-color:#ecd093;}
+
+  /* DE/PARA (lilás) */
+  .bloco-depara .cal-bloco-titulo{background:#e6dcf3;border-left-color:#7a55a8;color:#46286e;}
+  .bloco-depara .atend-card{background:#f0e9f9;border-color:#d0c1e6;}
+  .bloco-depara .atend-card-list{border-color:#dccfee;}
+  .cal-nome-col{flex:0 0 150px;min-width:0;font-size:17px;}
+  .cal-dias{font-size:16px;font-weight:800;padding:4px 13px;}
+  .cal-medium-card{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 16px;}
+  .cal-medium-esq{flex:1 1 190px;min-width:0;}
+  .cal-medium-esq .cal-medium-nome{font-size:18px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .cal-medium-ent{font-size:14px;font-weight:600;color:var(--ink-soft);margin-top:3px;}
+  .cal-medium-dir{flex:1 1 290px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:flex-end;}
+  .cal-medium-camb{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+  @media (max-width:640px){
+    .cal-nome-col{flex-basis:112px;font-size:16px;}
+    .cal-medium-dir{justify-content:flex-start;}
+  }
   .cal-day-detail{margin-top:20px;padding-top:16px;border-top:1px solid var(--line);}
   .cal-gira-name{font-family:var(--display);font-weight:700;color:var(--accent);font-size:14.5px;margin:2px 0 14px;}
 
@@ -646,12 +676,9 @@
           <button type="button" class="btn btn-primary btn-small" id="btn-cal-rel-atividades">📄 Relatório das atividades</button>
           <button type="button" class="btn btn-primary btn-small" id="btn-cal-rel-corpo">📄 Relatório do atendimento (corpo mediúnico)</button>
         </div>
-        <div class="table-wrap table-cards">
-          <table>
-            <thead><tr><th>Filho</th><th>Atividade</th><th>Executado</th></tr></thead>
-            <tbody id="cal-detail-tbody"></tbody>
-          </table>
-        </div>
+        <div class="cal-bloco bloco-limpeza">
+        <h3 class="section-title cal-bloco-titulo" style="margin-top:6px;">Cadastro Limpeza</h3>
+        <div class="atend-card-list" id="cal-detail-tbody"></div>
 
         <div id="cal-confirmados-block" style="margin-top:22px;padding-top:16px;border-top:1px solid var(--line);">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px;">
@@ -664,20 +691,16 @@
               <button type="button" class="btn btn-ghost btn-small" id="btn-importar-confirmacoes">📥 Importar confirmações (CSV)</button>
             </div>
           </div>
-          <div class="table-wrap table-cards" style="margin-top:10px;">
-            <table>
-              <thead><tr><th>Filho</th><th style="width:140px;">Dias sem atividade</th><th style="width:120px;">Última atividade</th><th style="min-width:220px;">Atribuir atividade</th></tr></thead>
-              <tbody id="tbody-cal-confirmados"></tbody>
-            </table>
-          </div>
+          <div class="atend-card-list" id="tbody-cal-confirmados" style="margin-top:10px;"></div>
           <div id="cal-confirmados-naoencontrados" style="margin-top:8px;font-size:12px;color:var(--ink-soft);"></div>
+        </div>
         </div>
 
         <!-- MONTAGEM A PARTIR DA LISTA DE CONFIRMAÇÃO -->
-        <div id="corpo-conf-block" style="margin-top:22px;padding-top:16px;border-top:1px solid var(--line);">
+        <div id="corpo-conf-block" class="cal-bloco bloco-mediunico" style="margin-top:28px;">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
             <div style="flex:1;min-width:220px;">
-              <h3 class="section-title" style="font-size:14px;margin-bottom:2px;">Corpo mediúnico da gira — médiuns de atendimento</h3>
+              <h3 class="section-title cal-bloco-titulo">Cadastro Atendimento Mediúnico</h3>
               <p class="section-hint" id="corpo-conf-hint" style="margin:0;">Importe o CSV de confirmação desta gira para montar a lista automaticamente.</p>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -685,20 +708,28 @@
             </div>
           </div>
           <div id="corpo-conf-vazio" class="empty-state" style="display:none;"></div>
-          <div class="table-wrap table-cards" id="corpo-mediuns-wrap" style="margin-top:10px;display:none;">
-            <table>
-              <thead><tr><th>Médium</th><th>Entidade</th><th style="min-width:240px;">Cambone(s)</th><th style="width:90px;">Atende</th></tr></thead>
-              <tbody id="tbody-corpo-mediuns"></tbody>
-            </table>
+          <div class="atend-card-list" id="corpo-mediuns-wrap" style="margin-top:10px;display:none;">
+            <div id="tbody-corpo-mediuns"></div>
           </div>
           <div id="corpo-conf-naoencontrados" style="margin-top:8px;font-size:12px;color:var(--ink-soft);"></div>
 
-          <div id="corpo-apoio-block" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);">
-            <h3 class="section-title" style="font-size:14px;margin-bottom:2px;">Filhos no atendimento <span id="corpo-apoio-count" class="mono" style="font-weight:400;color:var(--ink-soft);"></span></h3>
-            <p class="section-hint" style="margin:0 0 10px;">Escolha até 5 filhos, entre os confirmados que não são médiuns de atendimento, para trabalhar no atendimento.</p>
+        </div>
+
+          <div id="corpo-apoio-block" class="cal-bloco bloco-recepcao" style="display:none;margin-top:28px;">
+            <h3 class="section-title cal-bloco-titulo">Recepção <span id="corpo-apoio-count" class="mono" style="font-weight:400;font-size:13px;opacity:.8;"></span></h3>
+            <p class="section-hint" style="margin:0 0 10px;">Escolha até 5 filhos, entre os confirmados que não são médiuns de atendimento, para trabalhar na Recepção.</p>
             <div id="corpo-apoio-slots" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;"></div>
             <div id="corpo-apoio-avulso" style="margin-top:12px;"></div>
           </div>
+
+        <div id="cal-depara-block" class="cal-bloco bloco-depara" style="display:none;margin-top:28px;">
+          <h3 class="section-title cal-bloco-titulo">Pendentes de importação — DE/PARA</h3>
+          <p class="section-hint" id="cal-depara-hint" style="margin:0 0 10px;"></p>
+          <div class="atend-card-list" id="cal-depara-lista"></div>
+          <details id="cal-depara-salvos" style="margin-top:12px;display:none;">
+            <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--brand-dark);" id="cal-depara-salvos-resumo"></summary>
+            <div id="cal-depara-salvos-lista" style="margin-top:8px;"></div>
+          </details>
         </div>
       </div>
     </section>
@@ -2956,9 +2987,20 @@ let avulsoAbertoCorpo = false;
 
 // Casa o nome digitado no formulário com um filho do cadastro. Tenta, em ordem: apelido, nome completo,
 // todas as partes do nome digitado dentro do nome cadastrado, e primeiro nome. Só aceita se for único.
+function deParaMap(){
+  if(!state.deParaConfirmacoes || typeof state.deParaConfirmacoes !== 'object') state.deParaConfirmacoes = {};
+  return state.deParaConfirmacoes;
+}
+
 function acharPessoaConfirmada(nomeCsv, pessoasAtivas){
   const alvo = normalizeNomeComp(nomeCsv);
   if(!alvo) return {status:'nao'};
+  // Vínculo manual (DE/PARA) tem prioridade sobre qualquer casamento automático.
+  const vinculado = deParaMap()[alvo];
+  if(vinculado){
+    const pv = pessoasAtivas.find(x=> x.nome === vinculado);
+    if(pv) return {status:'ok', p:pv};
+  }
   const partes = alvo.split(/\s+/).filter(Boolean);
   const tiers = [
     p=> normalizeNomeComp(p.apelido || primeiroNome(p.nome)) === alvo,
@@ -3077,6 +3119,7 @@ function renderCorpoConfirmados(dateParam){
     tbody.innerHTML = mediuns.map(({p, entidade})=>{
       const item = dia.corpo.find(c=>c.medium===p.nome);
       const noCorpo = !!item;
+      const atual = noCorpo ? consulenteAtualDoMedium(dia, p.nome) : null;
       const chips = noCorpo ? (item.cambones||[]).map((n,i)=>`
         <span style="display:inline-flex;align-items:center;gap:5px;background:var(--brand-soft);color:var(--brand-dark);padding:3px 6px 3px 10px;border-radius:20px;font-size:12.5px;">
           ${escapeHtml(nomeCurto(n))}
@@ -3086,22 +3129,24 @@ function renderCorpoConfirmados(dateParam){
         ? `<select class="corpo-add-cambone" data-medium="${escapeAttr(p.nome)}" style="padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:12.5px;max-width:100%;">
              <option value="">${(item.cambones||[]).length ? '+ outro cambone…' : 'Selecionar cambone…'}</option>${optionsLivres}
            </select>`
-        : `<span style="font-size:12px;color:var(--ink-soft);">Marque "Atende" para escolher o cambone.</span>`;
+        : `<span>Marque "Atende" para escolher o cambone.</span>`;
       const entTxt = entidade || (item && item.entidade) || '';
+      const pill = !noCorpo
+        ? '<span class="pill" style="background:var(--surface);color:var(--ink-soft);border:1px solid var(--line);">Fora do corpo</span>'
+        : `<span class="pill ${atual?'pill-no':'pill-ok'}">${atual?'Atendendo':'Livre'}</span>`;
       return `
-      <tr>
-        <td data-label="Médium"><span style="font-weight:600;color:var(--brand-dark);">${escapeHtml(p.apelido || p.nome)}</span>
-          <div style="font-size:11.5px;color:var(--ink-soft);">${escapeHtml(p.nome)}</div></td>
-        <td data-label="Entidade">${entTxt ? escapeHtml(entTxt) : '<span style="color:var(--ink-soft);">não informada</span>'}</td>
-        <td data-label="Cambone(s)">
-          <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">${chips}${select}</div>
-        </td>
-        <td data-label="Atende">
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;">
-            <input type="checkbox" class="corpo-atende" data-medium="${escapeAttr(p.nome)}" ${noCorpo?'checked':''} style="width:16px;height:16px;"> Sim
+      <div class="atend-card cal-medium-card"${noCorpo ? '' : ' style="opacity:.65;"'}>
+        <div class="cal-medium-esq">
+          <div class="cal-medium-nome">${escapeHtml(p.apelido || p.nome)} ${pill}</div>
+          <div class="cal-medium-ent">${entTxt ? escapeHtml(entTxt) : '<span style="font-weight:400;">entidade não informada</span>'}</div>
+        </div>
+        <div class="cal-medium-dir">
+          <span class="cal-medium-camb">${chips}${select}</span>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;color:var(--ink-soft);">
+            <input type="checkbox" class="corpo-atende" data-medium="${escapeAttr(p.nome)}" ${noCorpo?'checked':''} style="width:16px;height:16px;"> Atende
           </label>
-        </td>
-      </tr>`;
+        </div>
+      </div>`;
     }).join('');
 
     tbody.querySelectorAll('.corpo-add-cambone').forEach(sel=>{
@@ -3156,13 +3201,12 @@ function renderCorpoConfirmados(dateParam){
     const ehAvulso = Array.isArray(dia.apoioAvulso) && dia.apoioAvulso.includes(nome);
     const atual = nome ? `<option value="${escapeAttr(nome)}" selected>${escapeHtml(nomeCurto(nome))}${ehAvulso ? ' (avulso)' : ''}</option>` : '';
     return `
-    <div class="field" style="margin:0;">
-      <label>Vaga ${i+1}</label>
+    <div class="atend-card" style="margin:0;padding:10px 12px;">
       <div style="display:flex;gap:6px;">
         <select class="corpo-apoio-sel" data-slot="${i}" style="flex:1;">
-          <option value="">— vazia —</option>${atual}${optionsLivres}
+          <option value="">Selecione filho</option>${atual}${optionsLivres}
         </select>
-        ${nome ? `<button type="button" class="btn btn-ghost btn-small corpo-apoio-clear" data-slot="${i}" title="Limpar vaga">×</button>` : ''}
+        ${nome ? `<button type="button" class="btn btn-ghost btn-small corpo-apoio-clear" data-slot="${i}" title="Limpar">×</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -3188,7 +3232,7 @@ function renderCorpoConfirmados(dateParam){
     .sort((a,b)=> a.nome.localeCompare(b.nome,'pt-BR'));
   const semVaga = apoio.every(Boolean);
   if(semVaga){
-    avulsoBox.innerHTML = `<span style="font-size:12px;color:var(--ink-soft);">Todas as ${APOIO_MAX} vagas estão ocupadas. Limpe uma vaga para incluir um filho avulso.</span>`;
+    avulsoBox.innerHTML = `<span style="font-size:12px;color:var(--ink-soft);">Todos os ${APOIO_MAX} campos da Recepção estão preenchidos. Limpe um deles para incluir um filho avulso.</span>`;
   } else if(!avulsoAbertoCorpo){
     avulsoBox.innerHTML = `<button type="button" class="btn btn-ghost btn-small" id="btn-apoio-avulso">+ Incluir filho avulso</button>
       <span style="font-size:12px;color:var(--ink-soft);margin-left:8px;">filho cadastrado que não está na lista de confirmação</span>`;
@@ -3207,7 +3251,7 @@ function renderCorpoConfirmados(dateParam){
       const nome = document.getElementById('apoio-avulso-sel').value;
       if(!nome){ alert('Selecione o filho que será incluído.'); return; }
       const idx = dia.apoio.indexOf('');
-      if(idx === -1){ alert(`Todas as ${APOIO_MAX} vagas estão ocupadas.`); return; }
+      if(idx === -1){ alert(`Todos os ${APOIO_MAX} campos da Recepção estão preenchidos.`); return; }
       dia.apoio[idx] = nome;
       if(!Array.isArray(dia.apoioAvulso)) dia.apoioAvulso = [];
       if(!dia.apoioAvulso.includes(nome)) dia.apoioAvulso.push(nome);
@@ -3950,6 +3994,108 @@ async function removeCalendarGira(){
   await finalizarRemocaoData(dateStr);
 }
 
+// Nomes do CSV de uma data que não entraram na lista (não localizados ou apelido duplicado).
+function pendentesDaData(dateStr){
+  const lista = (state.confirmacoes && state.confirmacoes[dateStr]) || [];
+  const ativos = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo');
+  const vistos = new Set();
+  const out = [];
+  lista.forEach(r=>{
+    if(normalizeNomeComp(r.comparecera) !== 'sim') return;
+    const chave = normalizeNomeComp(r.nome);
+    if(!chave || vistos.has(chave)) return;
+    const res = acharPessoaConfirmada(r.nome, ativos);
+    if(res.status === 'ok') return;
+    vistos.add(chave);
+    out.push({nome: r.nome, chave, entidade: (r.entidade||'').trim(), status: res.status});
+  });
+  return out;
+}
+
+function renderDeParaPendentes(dateStr){
+  const block = document.getElementById('cal-depara-block');
+  if(!block) return;
+  const lista = document.getElementById('cal-depara-lista');
+  const hint = document.getElementById('cal-depara-hint');
+  const salvosBox = document.getElementById('cal-depara-salvos');
+  const mapa = deParaMap();
+  const chavesSalvas = Object.keys(mapa);
+  const temConfirmacoes = ((state.confirmacoes||{})[dateStr]||[]).length > 0;
+  if(!temConfirmacoes && chavesSalvas.length === 0){ block.style.display = 'none'; return; }
+  block.style.display = 'block';
+
+  const pend = temConfirmacoes ? pendentesDaData(dateStr) : [];
+  const ativos = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo').sort((a,b)=> a.nome.localeCompare(b.nome,'pt-BR'));
+  const opcoes = ativos.map(p=>`<option value="${escapeAttr(p.nome)}">${escapeHtml(p.apelido ? p.nome+' ('+p.apelido+')' : p.nome)}</option>`).join('');
+
+  hint.textContent = !temConfirmacoes
+    ? 'Importe o CSV desta data para ver os nomes pendentes. Os vínculos já salvos aparecem abaixo.'
+    : (pend.length
+        ? `${pend.length} nome(s) do formulário não casaram com o cadastro. Indique o filho correto e vincule: ele entra na lista de disponíveis e o vínculo vale também para as próximas giras.`
+        : 'Nenhum nome pendente nesta data.');
+
+  if(!temConfirmacoes || pend.length === 0){
+    lista.style.display = 'none';
+    lista.innerHTML = '';
+  } else {
+    lista.style.display = '';
+    lista.innerHTML = pend.map(x=>`
+      <div class="atend-card">
+        <div class="atend-row1">
+          <span class="atend-title">${escapeHtml(x.nome)}</span>
+          <span class="pill pill-no">${x.status==='ambiguo' ? 'Apelido duplicado' : 'Não localizado'}</span>
+        </div>
+        <div class="atend-row2">
+          <span>${x.entidade ? 'Entidade informada: <strong>'+escapeHtml(x.entidade)+'</strong>' : 'Sem entidade informada'}</span>
+          <span class="atend-actions">
+            <select class="cal-depara-sel" data-chave="${escapeAttr(x.chave)}" style="padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:12.5px;max-width:260px;">
+              <option value="">PARA: selecione o filho…</option>${opcoes}
+            </select>
+            <button type="button" class="btn btn-primary btn-small cal-depara-ok" data-chave="${escapeAttr(x.chave)}">Vincular</button>
+          </span>
+        </div>
+      </div>`).join('');
+    lista.querySelectorAll('.cal-depara-ok').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const chave = btn.dataset.chave;
+        const sel = lista.querySelector(`.cal-depara-sel[data-chave="${CSS.escape(chave)}"]`);
+        if(!sel || !sel.value){ alert('Selecione o filho do cadastro para vincular.'); return; }
+        deParaMap()[chave] = sel.value;
+        sincronizarCorpoConfirmados(dateStr);
+        await persist();
+        renderCalendarDayDetail(dateStr);
+        renderAtendimento();
+      });
+    });
+  }
+
+  // Vínculos já salvos (permite desfazer)
+  if(chavesSalvas.length === 0){
+    salvosBox.style.display = 'none';
+  } else {
+    salvosBox.style.display = 'block';
+    document.getElementById('cal-depara-salvos-resumo').textContent = `Vínculos salvos (${chavesSalvas.length})`;
+    const box = document.getElementById('cal-depara-salvos-lista');
+    box.innerHTML = chavesSalvas.sort().map(k=>{
+      const p = state.pessoas.find(x=>x.nome===mapa[k]);
+      return `<div class="atend-card" style="padding:9px 12px;">
+        <div class="atend-row2" style="margin:0;">
+          <span><strong>${escapeHtml(k)}</strong> &rarr; ${escapeHtml(p ? (p.apelido ? p.nome+' ('+p.apelido+')' : p.nome) : mapa[k]+' (não encontrado no cadastro)')}</span>
+          <span class="atend-actions"><button type="button" class="btn-danger-text" data-rem-depara="${escapeAttr(k)}">desfazer</button></span>
+        </div>
+      </div>`;
+    }).join('');
+    box.querySelectorAll('[data-rem-depara]').forEach(b=>{
+      b.addEventListener('click', async ()=>{
+        delete deParaMap()[b.dataset.remDepara];
+        await persist();
+        renderCalendarDayDetail(dateStr);
+        renderAtendimento();
+      });
+    });
+  }
+}
+
 function renderCalendarDayDetail(dateStr){
   const giraMap = giraDatesMap();
   const giras = giraMap[dateStr] ? Array.from(giraMap[dateStr]) : [];
@@ -3985,20 +4131,23 @@ function renderCalendarDayDetail(dateStr){
 
   const tbody = document.getElementById('cal-detail-tbody');
   if(recs.length === 0){
-    tbody.innerHTML = `<tr><td colspan="3"><div class="empty-state">Nenhum registro de escala para esse dia.</div></td></tr>`;
+    tbody.innerHTML = `<div class="empty-state">Nenhum registro de escala para esse dia.</div>`;
   } else {
     tbody.innerHTML = recs.map(e=>`
-      <tr>
-        <td data-label="Filho">${escapeHtml(apelidoDe(e.pessoa))} <span style="font-weight:400;color:var(--ink-soft);font-size:12px;">${escapeHtml(e.pessoa)}</span></td>
-        <td data-label="Atividade">${escapeHtml(e.atividade)}</td>
-        <td data-label="Executado"><span class="pill ${e.executado==='SIM'?'pill-ok':'pill-no'}">${e.executado==='SIM'?'Sim':'Não'}</span></td>
-      </tr>
+      <div class="atend-card">
+        <div class="atend-row1">
+          <span class="atend-title">${escapeHtml(apelidoDe(e.pessoa))} <span style="font-weight:400;font-size:13px;color:var(--ink-soft);">${escapeHtml(e.pessoa)}</span></span>
+          <span class="pill ${e.executado==='SIM'?'pill-ok':'pill-no'}">${e.executado==='SIM'?'Executado':'Não executado'}</span>
+        </div>
+        <div class="atend-row2"><span>${escapeHtml(e.atividade)}</span></div>
+      </div>
     `).join('');
   }
   document.getElementById('cal-day-detail').style.display = 'block';
   sincronizarDataAtiva(dateStr);
   renderConfirmados(dateStr);
   renderCorpoConfirmados(dateStr);
+  renderDeParaPendentes(dateStr);
 }
 
 /* ---------- CONFIRMAÇÕES DE PRESENÇA (CSV do formulário) ---------- */
@@ -4107,6 +4256,7 @@ async function importarConfirmacoesArquivo(file, dateStr){
     sincronizarCorpoConfirmados(dateStr);
     await persist();
     renderConfirmados(dateStr);
+    if(calSelectedDate === dateStr) renderDeParaPendentes(dateStr);
     if(typeof renderAtendimento === 'function') renderAtendimento();
     flash('Confirmações importadas');
   }catch(e){
@@ -4135,7 +4285,7 @@ function renderConfirmados(dateStr){
   const lista = (state.confirmacoes && state.confirmacoes[dateStr]) || [];
 
   if(lista.length === 0){
-    tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state">Nenhuma confirmação importada para esse dia ainda.</div></td></tr>`;
+    tbody.innerHTML = `<div class="empty-state">Nenhuma confirmação importada para esse dia ainda.</div>`;
     naoEl.textContent = '';
     hintEl.textContent = 'Importe o CSV de confirmação de presença desse dia para ver a lista de quem confirmou "Sim".';
     return;
@@ -4165,7 +4315,7 @@ function renderConfirmados(dateStr){
   hintEl.textContent = `${linhas.length} filho(s) confirmado(s) para esse dia.`;
 
   if(linhas.length === 0){
-    tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state">Nenhum confirmado localizado no cadastro.</div></td></tr>`;
+    tbody.innerHTML = `<div class="empty-state">Nenhum confirmado localizado no cadastro.</div>`;
   } else {
     const atividadeOptions = state.atividades.slice().sort((a,b)=>a.atividade.localeCompare(b.atividade,'pt-BR'))
       .map(a=>`<option value="${escapeAttr(a.atividade)}">${escapeHtml(a.atividade)}</option>`).join('');
@@ -4178,24 +4328,25 @@ function renderConfirmados(dateStr){
         : '';
       const entidadeTxt = entidade ? `<div style="font-size:11.5px;color:var(--ink-soft);margin-top:2px;">Entidade: ${escapeHtml(entidade)}</div>` : '';
       return `
-      <tr>
-        <td data-label="Filho">
-          <span class="clickable" data-person="${escapeAttr(p.nome)}" style="font-weight:600;color:var(--brand-dark);">${escapeHtml(p.apelido || p.nome)}</span>
-          ${entidadeTxt}
-        </td>
-        <td data-label="Dias sem atividade"><span class="pill ${pillClass}">${dias===null?'—':dias+' dias'}</span></td>
-        <td class="mono" data-label="Última atividade">${lastDate ? formatDateBR(lastDate) : 'sem registro'}</td>
-        <td data-label="Atribuir atividade">
-          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+      <div class="atend-card">
+        <div class="atend-row1" style="justify-content:flex-start;gap:6px;">
+          <span class="atend-title cal-nome-col"><span class="clickable" data-person="${escapeAttr(p.nome)}" style="color:var(--brand-dark);">${escapeHtml(p.apelido || p.nome)}</span></span>
+          <span class="pill ${pillClass} cal-dias" title="Dias sem atividade">${dias===null?'sem registro':(dias===1?'1 dia':dias+' dias')}</span>
+        </div>
+        <div class="atend-row2">
+          <span>
+            <span class="mono">Última atividade: ${lastDate ? formatDateBR(lastDate) : 'sem registro'}</span>
+            ${chips}
+          </span>
+          <span class="atend-actions">
             <select class="cal-confirm-atividade" data-pessoa="${escapeAttr(p.nome)}" style="padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:12.5px;">
               <option value="">Atividade…</option>
               ${atividadeOptions}
             </select>
             <button type="button" class="btn btn-primary btn-small btn-atribuir-confirmado" data-pessoa="${escapeAttr(p.nome)}">+ Atribuir</button>
-          </div>
-          ${chips}
-        </td>
-      </tr>`;
+          </span>
+        </div>
+      </div>`;
     }).join('');
   }
 
