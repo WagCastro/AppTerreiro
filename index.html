@@ -725,7 +725,10 @@
         <div id="cal-depara-block" class="cal-bloco bloco-depara" style="display:none;margin-top:28px;">
           <h3 class="section-title cal-bloco-titulo">Pendentes de importação — DE/PARA</h3>
           <p class="section-hint" id="cal-depara-hint" style="margin:0 0 10px;"></p>
+          <div style="margin:0 0 10px;"><button type="button" class="btn btn-primary btn-small" id="btn-cal-manual">+ Incluir filho manualmente</button></div>
+          <div id="cal-manual-form" class="atend-card" style="display:none;margin-bottom:12px;"></div>
           <div class="atend-card-list" id="cal-depara-lista"></div>
+          <div id="cal-manual-lista" style="margin-top:12px;"></div>
           <details id="cal-depara-salvos" style="margin-top:12px;display:none;">
             <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--brand-dark);" id="cal-depara-salvos-resumo"></summary>
             <div id="cal-depara-salvos-lista" style="margin-top:8px;"></div>
@@ -3662,6 +3665,11 @@ function setupAtendimento(){
     const bloco = document.getElementById('corpo-conf-block');
     if(bloco) bloco.scrollIntoView({behavior:'smooth', block:'start'});
   });
+  document.getElementById('btn-cal-manual').addEventListener('click', ()=>{
+    if(!calSelectedDate){ alert('Selecione um dia no calendário.'); return; }
+    manualAbertoCal = !manualAbertoCal;
+    renderDeParaPendentes(calSelectedDate);
+  });
   document.getElementById('btn-cal-rel-atividades').addEventListener('click', ()=>{
     if(!calSelectedDate){ alert('Selecione um dia no calendário.'); return; }
     document.getElementById('f-data-relatorio').value = calSelectedDate;
@@ -4012,6 +4020,8 @@ function pendentesDaData(dateStr){
   return out;
 }
 
+let manualAbertoCal = false;
+
 function renderDeParaPendentes(dateStr){
   const block = document.getElementById('cal-depara-block');
   if(!block) return;
@@ -4021,7 +4031,6 @@ function renderDeParaPendentes(dateStr){
   const mapa = deParaMap();
   const chavesSalvas = Object.keys(mapa);
   const temConfirmacoes = ((state.confirmacoes||{})[dateStr]||[]).length > 0;
-  if(!temConfirmacoes && chavesSalvas.length === 0){ block.style.display = 'none'; return; }
   block.style.display = 'block';
 
   const pend = temConfirmacoes ? pendentesDaData(dateStr) : [];
@@ -4029,7 +4038,7 @@ function renderDeParaPendentes(dateStr){
   const opcoes = ativos.map(p=>`<option value="${escapeAttr(p.nome)}">${escapeHtml(p.apelido ? p.nome+' ('+p.apelido+')' : p.nome)}</option>`).join('');
 
   hint.textContent = !temConfirmacoes
-    ? 'Importe o CSV desta data para ver os nomes pendentes. Os vínculos já salvos aparecem abaixo.'
+    ? 'Importe o CSV desta data para ver os nomes pendentes, ou inclua manualmente um filho que não respondeu o formulário.'
     : (pend.length
         ? `${pend.length} nome(s) do formulário não casaram com o cadastro. Indique o filho correto e vincule: ele entra na lista de disponíveis e o vínculo vale também para as próximas giras.`
         : 'Nenhum nome pendente nesta data.');
@@ -4062,6 +4071,79 @@ function renderDeParaPendentes(dateStr){
         if(!sel || !sel.value){ alert('Selecione o filho do cadastro para vincular.'); return; }
         deParaMap()[chave] = sel.value;
         sincronizarCorpoConfirmados(dateStr);
+        await persist();
+        renderCalendarDayDetail(dateStr);
+        renderAtendimento();
+      });
+    });
+  }
+
+  // Inclusão manual de filho que não respondeu o formulário
+  const formEl = document.getElementById('cal-manual-form');
+  const manualEl = document.getElementById('cal-manual-lista');
+  if(manualAbertoCal){
+    const r = resolverConfirmadosDia(dateStr);
+    const jaNaLista = new Set([...r.mediuns, ...r.disponiveis].map(x=>x.p.nome));
+    const candidatos = ativos.filter(p=> !jaNaLista.has(p.nome));
+    formEl.style.display = 'block';
+    formEl.innerHTML = `
+      <div class="atend-row1"><span class="atend-title" style="font-size:15px;">Incluir filho manualmente</span></div>
+      <div class="atend-row2" style="align-items:flex-end;">
+        <span style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <select id="cal-manual-sel" style="padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13px;min-width:240px;">
+            <option value="">Selecione o filho do cadastro…</option>
+            ${candidatos.map(p=>`<option value="${escapeAttr(p.nome)}">${escapeHtml(p.apelido ? p.nome+' ('+p.apelido+')' : p.nome)}</option>`).join('')}
+          </select>
+          <input type="text" id="cal-manual-ent" placeholder="Entidade (só se for médium de atendimento)" style="padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13px;min-width:250px;">
+        </span>
+        <span class="atend-actions">
+          <button type="button" class="btn btn-primary btn-small" id="btn-cal-manual-ok">Incluir</button>
+          <button type="button" class="btn btn-ghost btn-small" id="btn-cal-manual-cancel">Cancelar</button>
+        </span>
+      </div>
+      ${candidatos.length ? '' : '<div style="font-size:12px;color:var(--ink-soft);margin-top:6px;">Todos os filhos ativos já estão na lista desta data.</div>'}`;
+    document.getElementById('btn-cal-manual-cancel').addEventListener('click', ()=>{ manualAbertoCal = false; renderDeParaPendentes(dateStr); });
+    document.getElementById('btn-cal-manual-ok').addEventListener('click', async ()=>{
+      const nome = document.getElementById('cal-manual-sel').value;
+      const entidade = document.getElementById('cal-manual-ent').value.trim();
+      if(!nome){ alert('Selecione o filho que será incluído.'); return; }
+      if(!state.confirmacoes) state.confirmacoes = {};
+      if(!state.confirmacoes[dateStr]) state.confirmacoes[dateStr] = [];
+      state.confirmacoes[dateStr].push({nome, comparecera:'Sim', entidade, manual:true});
+      sincronizarCorpoConfirmados(dateStr);
+      manualAbertoCal = false;
+      await persist();
+      renderCalendarDayDetail(dateStr);
+      renderAtendimento();
+    });
+  } else {
+    formEl.style.display = 'none';
+    formEl.innerHTML = '';
+  }
+
+  const manuais = ((state.confirmacoes||{})[dateStr]||[]).filter(r=>r.manual);
+  if(manuais.length === 0){
+    manualEl.innerHTML = '';
+  } else {
+    manualEl.innerHTML = `<div style="font-size:12.5px;font-weight:600;color:var(--brand-dark);margin-bottom:6px;">Incluídos manualmente (${manuais.length})</div>` +
+      manuais.map(r=>{
+        const p = state.pessoas.find(x=>x.nome===r.nome);
+        return `<div class="atend-card" style="padding:9px 12px;">
+          <div class="atend-row2" style="margin:0;">
+            <span><strong>${escapeHtml(p ? (p.apelido || p.nome) : r.nome)}</strong>${r.entidade ? ' · '+escapeHtml(r.entidade) : ''}</span>
+            <span class="atend-actions"><button type="button" class="btn-danger-text" data-rem-manual="${escapeAttr(r.nome)}">remover</button></span>
+          </div>
+        </div>`;
+      }).join('');
+    manualEl.querySelectorAll('[data-rem-manual]').forEach(b=>{
+      b.addEventListener('click', async ()=>{
+        const nome = b.dataset.remManual;
+        const dia = ensureAtendDia(dateStr);
+        if(consulenteAtualDoMedium(dia, nome)){ alert('Esse médium está atendendo agora e não pode ser removido.'); return; }
+        state.confirmacoes[dateStr] = state.confirmacoes[dateStr].filter(r=> !(r.manual && r.nome===nome));
+        dia.corpo = dia.corpo.filter(c=>c.medium!==nome);
+        dia.apoio = ensureApoio(dia).map(n=> n===nome ? '' : n);
+        dia.corpo.forEach(c=>{ c.cambones = (c.cambones||[]).filter(n=>n!==nome); });
         await persist();
         renderCalendarDayDetail(dateStr);
         renderAtendimento();
@@ -4252,7 +4334,9 @@ async function importarConfirmacoesArquivo(file, dateStr){
     })).filter(r=>r.nome);
 
     if(!state.confirmacoes) state.confirmacoes = {};
-    state.confirmacoes[dateStr] = lista;
+    const manuaisAnteriores = ((state.confirmacoes[dateStr]||[]).filter(r=>r.manual))
+      .filter(m=> !lista.some(r=> normalizeNomeComp(r.nome) === normalizeNomeComp(m.nome)));
+    state.confirmacoes[dateStr] = lista.concat(manuaisAnteriores);
     sincronizarCorpoConfirmados(dateStr);
     await persist();
     renderConfirmados(dateStr);
@@ -4304,6 +4388,11 @@ function renderConfirmados(dateStr){
     const info = ultimaAtividadeInfo(p.nome);
     return {p, entidade: r.entidade, ...info};
   }).filter(Boolean);
+
+  const jaVisto = new Set();
+  for(let i=linhas.length-1;i>=0;i--){
+    if(jaVisto.has(linhas[i].p.nome)) linhas.splice(i,1); else jaVisto.add(linhas[i].p.nome);
+  }
 
   linhas.sort((a,b)=>{
     if(a.dias===null && b.dias===null) return a.p.nome.localeCompare(b.p.nome,'pt-BR');
