@@ -326,6 +326,21 @@
   .bloco-depara .cal-bloco-titulo{color:#46286e;}
   .bloco-depara .atend-card{background:#f8f4fd;border-color:#c1abdf;}
   @media (max-width:640px){ .cal-bloco{padding:12px 12px 14px;} .cal-bloco-titulo{font-size:19px !important;} }
+  .sug-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border:1.5px dashed #0e8a7d;border-radius:12px;font-size:12px;font-weight:700;color:#0e5851;background:#fff;}
+  .passo-oculto{display:none !important;}
+  .tab.passo .passo-num{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border-radius:50%;
+    background:var(--brand);color:#fff;font-size:12px;font-weight:800;margin-right:7px;}
+  .tab.passo.active .passo-num{background:var(--brand-dark);}
+  .tab.passo.feito::after{content:'✔';color:#2f8a52;margin-left:7px;font-weight:800;}
+  #tab-painel{margin-left:16px;}
+  .bloco-importar{background:#f6dfe3;border-color:#e2b5be;}
+  .bloco-importar .cal-bloco-titulo{color:#7a2a3a;}
+  .bloco-importar .atend-card{background:#fff6f7;border-color:#e2b5be;}
+  .imp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;}
+  .imp-tile{background:#fff;border:1px solid #e2b5be;border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:2px;}
+  .imp-tile b{font-size:15.5px;color:var(--ink);}
+  .imp-tile span{font-size:12px;color:var(--ink-soft);}
+  .passos-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:22px;flex-wrap:wrap;}
   .cal-nome-fixa{display:inline-block;min-width:140px;}
   .cal-nome-col{flex:0 0 150px;min-width:0;font-size:17px;}
   /* mesmo espaçamento entre cartões em todos os blocos do dia (igual ao da Recepção) */
@@ -676,7 +691,11 @@
   <p class="storage-status" id="storage-status"></p>
 
   <nav class="tabs">
-    <button class="tab active" data-tab="calendario" id="tab-calendario">Calendário</button>
+    <button class="tab passo active" data-tab="calendario" data-step="1" id="tab-passo1"><span class="passo-num">1</span>Cadastro das Giras</button>
+    <button class="tab passo" data-tab="calendario" data-step="2" id="tab-passo2"><span class="passo-num">2</span>Importar Lista de Filhos</button>
+    <button class="tab passo" data-tab="calendario" data-step="3" id="tab-passo3"><span class="passo-num">3</span>Cadastro da Limpeza</button>
+    <button class="tab passo" data-tab="calendario" data-step="4" id="tab-passo4"><span class="passo-num">4</span>Cadastro Recepção</button>
+    <button class="tab passo" data-tab="calendario" data-step="5" id="tab-passo5"><span class="passo-num">5</span>Corpo Mediúnico</button>
     <button class="tab" data-tab="painel" id="tab-painel">Painel</button>
     <button class="tab" data-tab="atendimento" id="tab-atendimento">Atendimento</button>
     <button class="tab" data-tab="cambones" id="tab-cambones">Cambones</button>
@@ -689,7 +708,7 @@
 
     <!-- CALENDÁRIO -->
     <section id="view-calendario" class="view active">
-      <div class="cal-bloco bloco-calendario" style="margin-top:0;">
+      <div class="cal-bloco bloco-calendario" data-passo="1" style="margin-top:0;">
       <h2 class="section-title cal-bloco-titulo">Calendário de giras</h2>
       <p class="section-hint">Toque numa data para trabalhar nela: escala, confirmados, corpo mediúnico, recepção e relatórios ficam todos nessa data.</p>
 
@@ -714,24 +733,37 @@
       <div id="cal-day-detail" class="cal-day-detail" style="display:none;">
         <h3 id="cal-detail-title" class="section-title" style="font-size:15px;margin-bottom:2px;"></h3>
         <p id="cal-detail-gira" class="cal-gira-name"></p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px;">
-          <button type="button" class="btn btn-primary btn-small" id="btn-cal-rel-atividades">📄 Relatório das atividades</button>
-          <button type="button" class="btn btn-primary btn-small" id="btn-cal-rel-corpo">📄 Relatório do atendimento (corpo mediúnico)</button>
+        <div data-passo="3,5" style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px;">
+          <button type="button" class="btn btn-primary btn-small" data-passo="3" id="btn-cal-rel-atividades">📄 Relatório das atividades</button>
+          <button type="button" class="btn btn-primary btn-small" data-passo="5" id="btn-cal-rel-corpo">📄 Relatório do atendimento (corpo mediúnico)</button>
         </div>
-        <div class="cal-bloco bloco-limpeza">
+
+        <div id="cal-importar-block" class="cal-bloco bloco-importar" data-passo="2" style="margin-top:8px;">
+          <h3 class="section-title cal-bloco-titulo">Importar Lista de Filhos</h3>
+          <p class="section-hint" style="margin:0 0 10px;">Importe o CSV (ou o .zip) do formulário de confirmação desta gira. Os filhos reconhecidos aparecem abaixo; os que não forem reconhecidos ficam em "Pendentes de importação", logo depois, para você indicar quem são.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+            <input type="file" id="cal-confirmacoes-file" accept=".csv,.zip" style="display:none;">
+            <button type="button" class="btn btn-primary" id="btn-importar-confirmacoes">📥 Importar confirmações (CSV)</button>
+            <span id="cal-importar-resumo" style="font-size:13px;color:var(--ink-soft);"></span>
+          </div>
+          <h4 class="section-title" style="font-size:15px;margin:0 0 8px;">Filhos importados com sucesso <span id="cal-importados-count" class="mono" style="font-weight:400;color:var(--ink-soft);"></span></h4>
+          <div id="cal-importados-lista"></div>
+        </div>
+
+        <div class="cal-bloco bloco-limpeza" data-passo="3">
         <h3 class="section-title cal-bloco-titulo" style="margin-top:6px;">Cadastro Limpeza</h3>
         <div class="atend-card-list" id="cal-detail-tbody"></div>
         </div>
-        <div id="cal-confirmados-block" class="cal-bloco bloco-historico" style="margin-top:28px;">
+        <div id="cal-confirmados-block" class="cal-bloco bloco-historico" data-passo="3" style="margin-top:28px;">
           <h3 class="section-title cal-bloco-titulo">Histórico de Atividades</h3>
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px;">
             <div>
               <h3 class="section-title" style="font-size:14px;margin-bottom:2px;">Confirmados na gira (formulário)</h3>
               <p class="section-hint" id="cal-confirmados-hint" style="margin:0;">Importe o CSV de confirmação de presença desse dia para ver a lista de quem confirmou "Sim".</p>
             </div>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <input type="file" id="cal-confirmacoes-file" accept=".csv,.zip" style="display:none;">
-              <button type="button" class="btn btn-ghost btn-small" id="btn-importar-confirmacoes">📥 Importar confirmações (CSV)</button>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <button type="button" class="btn btn-ghost btn-small" id="btn-previa-gerar" title="Refaz as sugestões de atividade, começando por quem está há mais tempo sem atividade">↻ Gerar prévia</button>
+              <button type="button" class="btn btn-primary btn-small" id="btn-previa-confirmar" style="display:none;">✔ Confirmar prévia</button>
             </div>
           </div>
           <div class="atend-card-list" id="tbody-cal-confirmados" style="margin-top:10px;"></div>
@@ -739,7 +771,7 @@
         </div>
 
         <!-- MONTAGEM A PARTIR DA LISTA DE CONFIRMAÇÃO -->
-        <div id="corpo-conf-block" class="cal-bloco bloco-mediunico" style="margin-top:28px;">
+        <div id="corpo-conf-block" class="cal-bloco bloco-mediunico" data-passo="5" style="margin-top:28px;">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
             <div style="flex:1;min-width:220px;">
               <h3 class="section-title cal-bloco-titulo">Cadastro Atendimento Mediúnico</h3>
@@ -747,8 +779,10 @@
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
               <button type="button" class="btn btn-ghost btn-small" id="btn-corpo-incluir-todos" style="display:none;">Incluir todos os médiuns</button>
+              <button type="button" class="btn btn-primary btn-small" id="btn-associar-cambones" style="display:none;" title="Distribui os cambones entre os médiuns respeitando o rodízio mensal e a regra dos menores de 18 anos">🤝 Associar cambones</button>
             </div>
           </div>
+          <div id="corpo-assoc-resumo" style="display:none;margin:8px 0 4px;"></div>
           <div id="corpo-conf-vazio" class="empty-state" style="display:none;"></div>
           <div class="atend-card-list" id="corpo-mediuns-wrap" style="margin-top:10px;display:none;">
             <div id="tbody-corpo-mediuns"></div>
@@ -757,14 +791,14 @@
 
         </div>
 
-          <div id="corpo-apoio-block" class="cal-bloco bloco-recepcao" style="display:none;margin-top:28px;">
+          <div id="corpo-apoio-block" class="cal-bloco bloco-recepcao" data-passo="4" style="display:none;margin-top:28px;">
             <h3 class="section-title cal-bloco-titulo">Recepção <span id="corpo-apoio-count" class="mono" style="font-weight:400;font-size:13px;opacity:.8;"></span></h3>
             <p class="section-hint" style="margin:0 0 10px;">Escolha até 5 filhos, entre os confirmados que não são médiuns de atendimento, para trabalhar na Recepção.</p>
             <div id="corpo-apoio-slots" class="atend-card-list" style="display:flex;flex-direction:column;gap:9px;"></div>
             <div id="corpo-apoio-avulso" style="margin-top:12px;"></div>
           </div>
 
-        <div id="cal-depara-block" class="cal-bloco bloco-depara" style="display:none;margin-top:28px;">
+        <div id="cal-depara-block" class="cal-bloco bloco-depara" data-passo="2" style="display:none;margin-top:28px;">
           <h3 class="section-title cal-bloco-titulo">Pendentes de importação — DE/PARA</h3>
           <p class="section-hint" id="cal-depara-hint" style="margin:0 0 10px;"></p>
           <div style="margin:0 0 10px;"><button type="button" class="btn btn-primary btn-small" id="btn-cal-manual">+ Incluir filho manualmente</button></div>
@@ -776,6 +810,19 @@
             <div id="cal-depara-salvos-lista" style="margin-top:8px;"></div>
           </details>
         </div>
+      </div>
+
+      <div id="cal-sem-data" class="atend-card passo-oculto" style="margin-top:14px;">
+        <div class="atend-row1"><span class="atend-title" style="font-size:16px;">Nenhuma gira selecionada</span></div>
+        <div class="atend-row2" style="flex-direction:column;align-items:flex-start;gap:8px;">
+          <span style="font-size:13.5px;color:var(--ink-soft);">Escolha primeiro a data da gira no passo 1.</span>
+          <button type="button" class="btn btn-primary btn-small" id="btn-ir-passo1">Ir para o passo 1 — Cadastro das Giras</button>
+        </div>
+      </div>
+
+      <div class="passos-nav" id="cal-passos-nav">
+        <button type="button" class="btn btn-ghost" id="btn-passo-anterior">← Passo anterior</button>
+        <button type="button" class="btn btn-primary" id="btn-passo-proximo">Próximo passo →</button>
       </div>
     </section>
 
@@ -1418,10 +1465,84 @@ function atividadesPermitidasDe(nomePessoa){
   return state.atividades.filter(a=> atividadePermitida(p, a.atividade))
     .sort((a,b)=> a.atividade.localeCompare(b.atividade,'pt-BR'));
 }
-function opcoesAtividadesHtml(nomePessoa){
+function opcoesAtividadesHtml(nomePessoa, selecionada){
   const lista = atividadesPermitidasDe(nomePessoa);
   if(lista.length === 0) return '<option value="">Sem atividade liberada</option>';
-  return lista.map(a=>`<option value="${escapeAttr(a.atividade)}">${escapeHtml(a.atividade)}</option>`).join('');
+  return lista.map(a=>`<option value="${escapeAttr(a.atividade)}"${a.atividade===selecionada?' selected':''}>${escapeHtml(a.atividade)}</option>`).join('');
+}
+
+/* ---------- PRÉVIA DE ATIVIDADES DA GIRA ----------
+   Para cada confirmado, sugere uma atividade que ele possa executar. A ordem parte de quem está há mais
+   tempo sem atividade (quem nunca teve vem primeiro). Para escolher a atividade, equilibra a quantidade
+   entre as atividades e, no empate, prefere a que o filho executou há mais tempo (ou nunca executou). */
+function previaDoDia(dateStr){
+  if(!state.previaAtividades || typeof state.previaAtividades !== 'object') state.previaAtividades = {};
+  if(!state.previaAtividades[dateStr]) state.previaAtividades[dateStr] = {};
+  return state.previaAtividades[dateStr];
+}
+
+function gerarPreviaAtividades(dateStr, refazer){
+  const prev = previaDoDia(dateStr);
+  if(refazer) Object.keys(prev).forEach(k=> delete prev[k]);
+
+  const ativos = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo');
+  const vistos = new Set();
+  const confirmados = [];
+  (((state.confirmacoes||{})[dateStr])||[]).forEach(r=>{
+    if(normalizeNomeComp(r.comparecera) !== 'sim') return;
+    const res = acharPessoaConfirmada(r.nome, ativos);
+    if(res.status !== 'ok' || vistos.has(res.p.nome)) return;
+    vistos.add(res.p.nome);
+    confirmados.push(res.p);
+  });
+
+  const ref = new Date(dateStr+'T00:00:00');
+  const diasAte = (d)=> Math.floor((ref - new Date(d+'T00:00:00')) / 86400000);
+  const sim = state.escalas.filter(e=> e.executado==='SIM' && e.data < dateStr);
+  const ultimaGeral = {}, ultimaPorAtiv = {};
+  sim.forEach(e=>{
+    if(!ultimaGeral[e.pessoa] || e.data > ultimaGeral[e.pessoa]) ultimaGeral[e.pessoa] = e.data;
+    const k = e.pessoa+'||'+e.atividade;
+    if(!ultimaPorAtiv[k] || e.data > ultimaPorAtiv[k]) ultimaPorAtiv[k] = e.data;
+  });
+  const inatividade = (nome)=> ultimaGeral[nome] ? diasAte(ultimaGeral[nome]) : Infinity;
+  const desdeAtiv = (nome, a)=>{ const d = ultimaPorAtiv[nome+'||'+a]; return d ? diasAte(d) : Infinity; };
+
+  // mantém sugestões válidas já existentes e ignora quem já tem atividade lançada neste dia
+  const comEscala = new Set(state.escalas.filter(e=>e.data===dateStr).map(e=>e.pessoa));
+  const contagem = {};
+  state.escalas.filter(e=>e.data===dateStr).forEach(e=>{ contagem[e.atividade] = (contagem[e.atividade]||0) + 1; });
+  Object.keys(prev).forEach(nome=>{
+    const p = state.pessoas.find(x=>x.nome===nome);
+    if(!vistos.has(nome) || comEscala.has(nome) || !p || !atividadePermitida(p, prev[nome]) || !state.atividades.some(a=>a.atividade===prev[nome])){
+      delete prev[nome];
+    } else {
+      contagem[prev[nome]] = (contagem[prev[nome]]||0) + 1;
+    }
+  });
+
+  const fila = confirmados.filter(p=> !comEscala.has(p.nome) && !prev[p.nome])
+    .sort((a,b)=>{
+      const ia = inatividade(a.nome), ib = inatividade(b.nome);
+      if(ia === ib) return (a.apelido||a.nome).localeCompare(b.apelido||b.nome,'pt-BR');
+      return ib - ia;
+    });
+
+  fila.forEach(p=>{
+    const permitidas = atividadesPermitidasDe(p.nome);
+    if(permitidas.length === 0) return;
+    let melhor = null;
+    permitidas.forEach(a=>{
+      const c = contagem[a.atividade] || 0;
+      const d = desdeAtiv(p.nome, a.atividade);
+      if(!melhor || c < melhor.c || (c === melhor.c && d > melhor.d)){
+        melhor = {a:a.atividade, c, d};
+      }
+    });
+    prev[p.nome] = melhor.a;
+    contagem[melhor.a] = (contagem[melhor.a]||0) + 1;
+  });
+  return prev;
 }
 function renderAtividadesPermitidasForm(p){
   const box = document.getElementById('f-atividades-pessoa');
@@ -1587,6 +1708,7 @@ function setupTabs(){
       btn.classList.add('active');
       document.getElementById('view-'+btn.dataset.tab).classList.add('active');
       if(btn.dataset.tab === 'painel') renderPainel();
+      if(btn.dataset.step) setCalStep(parseInt(btn.dataset.step,10));
       if(btn.dataset.tab === 'calendario') renderCalendar();
       if(btn.dataset.tab === 'usuarios') renderUsuariosTable();
       if(btn.dataset.tab === 'atendimento') renderAtendimento();
@@ -2748,6 +2870,257 @@ function finalizarAtendimento(dia, consulenteId){
   persist(); renderAtendimento();
 }
 
+/* ---------- ASSOCIAÇÃO DE CAMBONES AOS MÉDIUNS ----------
+   Regras:
+   - cada médium da gira precisa de pelo menos 1 cambone;
+   - menor de 18 anos só cambona acompanhado de um cambone adulto no mesmo médium;
+   - o cambone fica com o mesmo médium o mês todo (vínculo mensal) e no mês seguinte troca de médium,
+     preferindo médiuns que ele ainda não acompanhou;
+   - quem está na Recepção não entra como cambone. */
+let resumoAssociacao = null;
+
+function idadeEm(p, dateStr){
+  if(!p || !p.aniversario) return null;
+  const [y,m,d] = String(p.aniversario).split('-').map(n=>parseInt(n,10));
+  if(!y || !m || !d) return null;
+  const ref = new Date(dateStr+'T00:00:00');
+  let idade = ref.getFullYear() - y;
+  if(ref.getMonth()+1 < m || (ref.getMonth()+1 === m && ref.getDate() < d)) idade--;
+  return idade;
+}
+function ehMenorEm(p, dateStr){
+  const i = idadeEm(p, dateStr);
+  return i !== null && i < 18;
+}
+function pessoaPorNome(nome){ return state.pessoas.find(x=>x.nome===nome) || null; }
+function mesDe(dateStr){ return dateStr.slice(0,7); }
+function mapaMensal(mes){
+  if(!state.cambonesMensal || typeof state.cambonesMensal !== 'object') state.cambonesMensal = {};
+  if(!state.cambonesMensal[mes]) state.cambonesMensal[mes] = {};
+  return state.cambonesMensal[mes];
+}
+// Com quem o cambone já está no mês: vínculo salvo ou, se não houver, o médium de outra gira do mesmo mês.
+function vinculoDoMes(nome, dateStr){
+  const mapa = mapaMensal(mesDe(dateStr));
+  if(mapa[nome]) return mapa[nome];
+  const mes = mesDe(dateStr);
+  const datas = Object.keys(state.atendimentos||{}).filter(d=> d.startsWith(mes) && d !== dateStr).sort().reverse();
+  for(const d of datas){
+    const item = ((state.atendimentos[d]||{}).corpo||[]).find(c=> (c.cambones||[]).includes(nome));
+    if(item){ mapa[nome] = item.medium; return item.medium; }
+  }
+  return null;
+}
+function temCambonesAdulto(item, dateStr){
+  return (item.cambones||[]).some(n=> !ehMenorEm(pessoaPorNome(n), dateStr));
+}
+
+function associarCambones(dateStr){
+  const dia = ensureAtendDia(dateStr);
+  const apoio = ensureApoio(dia);
+  sincronizarCorpoConfirmados(dateStr);
+  const r = resolverConfirmadosDia(dateStr);
+  const mesAtual = mesDe(dateStr);
+  const mapa = mapaMensal(mesAtual);
+  const mediuns = dia.corpo.map(c=>c.medium).sort((a,b)=> apelidoDe(a).localeCompare(apelidoDe(b),'pt-BR'));
+  const apoioSet = new Set(apoio.filter(Boolean));
+  const pool = r.disponiveis.map(x=>x.p).filter(p=> !apoioSet.has(p.nome) && !mediuns.includes(p.nome));
+  const menor = (p)=> ehMenorEm(p, dateStr);
+
+  // histórico (meses anteriores) para o rodízio
+  const {porCambone} = coletarCambonagens();
+  const histDe = (nome)=>{
+    const meses = porCambone[nome] || {};
+    const ks = Object.keys(meses).filter(k=>k<mesAtual).sort();
+    const cont = {};
+    ks.forEach(k=> Object.keys(meses[k]).forEach(m=>{ cont[m] = (cont[m]||0) + 1; }));
+    const ultimo = ks.length ? new Set(Object.keys(meses[ks[ks.length-1]])) : new Set();
+    return {cont, ultimo};
+  };
+  const hist = {};
+  pool.forEach(p=>{ hist[p.nome] = histDe(p.nome); });
+
+  const atrib = {}; mediuns.forEach(m=>{ atrib[m] = []; });
+  const pontuar = (cambone, m)=>{
+    const h = hist[cambone.nome] || {cont:{}, ultimo:new Set()};
+    return (h.ultimo.has(m) ? 1000 : 0) + (atrib[m].length * 50) + ((h.cont[m]||0) * 10);
+  };
+  const melhorMedium = (cambone, candidatos)=>{
+    return candidatos.slice().sort((a,b)=> pontuar(cambone,a) - pontuar(cambone,b) || apelidoDe(a).localeCompare(apelidoDe(b),'pt-BR'))[0];
+  };
+
+  const substitutos = [];
+  const livres = [];
+  pool.forEach(p=>{
+    const vinc = vinculoDoMes(p.nome, dateStr);
+    if(vinc && atrib[vinc]) atrib[vinc].push({p, vinc});
+    else livres.push({p, vinc});
+  });
+  const colocar = (l, m)=>{
+    atrib[m].push({p:l.p, vinc:l.vinc});
+    if(l.vinc && l.vinc !== m){ substitutos.push(l.p.nome); }   // médium do mês ausente: cobre só hoje
+    else mapa[l.p.nome] = m;                                      // vínculo do mês
+  };
+  const temAdulto = (m)=> atrib[m].some(x=> !menor(x.p));
+
+  // 1) todo médium precisa de pelo menos um cambone adulto
+  mediuns.filter(m=>!temAdulto(m)).forEach(m=>{
+    const cand = livres.filter(l=> !menor(l.p));
+    if(!cand.length) return;
+    cand.sort((a,b)=> pontuar(a.p,m) - pontuar(b.p,m) || apelidoDe(a.p.nome).localeCompare(apelidoDe(b.p.nome),'pt-BR'));
+    const esc = cand[0];
+    livres.splice(livres.indexOf(esc),1);
+    colocar(esc, m);
+  });
+  // 2) demais adultos livres: equilibra entre os médiuns respeitando o rodízio
+  livres.filter(l=>!menor(l.p)).forEach(l=>{
+    livres.splice(livres.indexOf(l),1);
+    if(mediuns.length) colocar(l, melhorMedium(l.p, mediuns));
+  });
+  // 3) menores: só ficam em médium que tenha cambone adulto
+  const orfaos = [];
+  mediuns.forEach(m=>{
+    if(!temAdulto(m)){
+      atrib[m] = atrib[m].filter(x=>{ if(menor(x.p)){ orfaos.push({p:x.p, vinc:x.vinc}); return false; } return true; });
+    }
+  });
+  const menoresLivres = livres.concat(orfaos).filter(l=>menor(l.p));
+  const medComAdulto = mediuns.filter(temAdulto);
+  const menoresSemLugar = [];
+  menoresLivres.forEach(l=>{
+    if(!medComAdulto.length){ menoresSemLugar.push(l.p.nome); return; }
+    // menor que já tinha médium no mês com adulto presente volta para ele (já tratado); os demais vão para o rodízio
+    colocar(l, melhorMedium(l.p, medComAdulto));
+  });
+
+  // grava no corpo mediúnico do dia
+  dia.corpo.forEach(c=>{ c.cambones = (atrib[c.medium]||[]).map(x=>x.p.nome); });
+
+  const semCambone = mediuns.filter(m=> (atrib[m]||[]).length === 0);
+  const semDataNasc = pool.filter(p=> idadeEm(p, dateStr) === null).length;
+  resumoAssociacao = {
+    data: dateStr,
+    totalCambones: pool.length - menoresSemLugar.length,
+    totalMediuns: mediuns.length,
+    semCambone: semCambone.map(apelidoDe),
+    menoresSemLugar: menoresSemLugar.map(apelidoDe),
+    substitutos: substitutos.map(apelidoDe),
+    semDataNasc,
+    sobraramPoucos: pool.length === 0
+  };
+  return resumoAssociacao;
+}
+
+function renderResumoAssociacao(dateStr){
+  const box = document.getElementById('corpo-assoc-resumo');
+  if(!box) return;
+  const r = resumoAssociacao;
+  if(!r || r.data !== dateStr){ box.style.display = 'none'; box.innerHTML = ''; return; }
+  const linhas = [];
+  linhas.push(`<strong>Associação feita:</strong> ${r.totalCambones} cambone(s) distribuído(s) entre ${r.totalMediuns} médium(ns).`);
+  if(r.semCambone.length) linhas.push(`<span style="color:var(--danger);font-weight:700;">⚠ Médium(ns) sem cambone: ${escapeHtml(r.semCambone.join(', '))}.</span> Não há cambones suficientes — inclua alguém manualmente.`);
+  if(r.menoresSemLugar.length) linhas.push(`<span style="color:var(--danger);font-weight:700;">⚠ Menor(es) sem cambone adulto para acompanhar: ${escapeHtml(r.menoresSemLugar.join(', '))}.</span>`);
+  if(r.substitutos.length) linhas.push(`Cobrindo outro médium só hoje (o médium do mês não veio): ${escapeHtml(r.substitutos.join(', '))}.`);
+  if(r.semDataNasc) linhas.push(`${r.semDataNasc} cambone(s) sem data de nascimento no cadastro foram tratados como adultos.`);
+  box.style.display = 'block';
+  box.innerHTML = `<div class="atend-card" style="padding:10px 14px;font-size:13px;line-height:1.5;">${linhas.join('<br>')}</div>`;
+}
+
+/* ---------- PASSOS NUMERADOS (1 a 5) ---------- */
+let calStep = 1;
+const NOMES_PASSOS = {1:'Cadastro das Giras', 2:'Importar Lista de Filhos', 3:'Cadastro da Limpeza', 4:'Cadastro Recepção', 5:'Corpo Mediúnico'};
+
+function setCalStep(n){
+  calStep = n;
+  applyCalStep();
+}
+
+function applyCalStep(){
+  document.querySelectorAll('#view-calendario [data-passo]').forEach(el=>{
+    const passos = el.dataset.passo.split(',');
+    el.classList.toggle('passo-oculto', !passos.includes(String(calStep)));
+  });
+  const semData = document.getElementById('cal-sem-data');
+  if(semData) semData.classList.toggle('passo-oculto', calStep === 1 || !!calSelectedDate);
+  const ant = document.getElementById('btn-passo-anterior');
+  const prox = document.getElementById('btn-passo-proximo');
+  if(ant){
+    ant.style.visibility = calStep > 1 ? 'visible' : 'hidden';
+    ant.textContent = calStep > 1 ? `← ${calStep-1} · ${NOMES_PASSOS[calStep-1]}` : '← Passo anterior';
+  }
+  if(prox){
+    prox.style.visibility = calStep < 5 ? 'visible' : 'hidden';
+    prox.textContent = calStep < 5 ? `Próximo: ${calStep+1} · ${NOMES_PASSOS[calStep+1]} →` : 'Próximo passo →';
+  }
+}
+
+function irParaPasso(n){
+  if(n > 1 && !calSelectedDate){ alert('Selecione primeiro a data da gira no passo 1.'); return; }
+  document.getElementById('tab-passo'+n).click();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// Marca com ✔ os passos já concluídos para a data selecionada.
+function atualizarPassos(){
+  const marcar = (n, ok)=>{ const b = document.getElementById('tab-passo'+n); if(b) b.classList.toggle('feito', !!ok); };
+  const d = calSelectedDate;
+  if(!d){ [1,2,3,4,5].forEach(n=>marcar(n,false)); return; }
+  marcar(1, !!(giraDatesMap()[d]));
+  const temConf = (((state.confirmacoes||{})[d])||[]).length > 0;
+  marcar(2, temConf && pendentesDaData(d).length === 0);
+  const r = temConf ? resolverConfirmadosDia(d) : null;
+  const todos = r ? r.mediuns.concat(r.disponiveis).map(x=>x.p) : [];
+  const comEscala = new Set(state.escalas.filter(e=>e.data===d).map(e=>e.pessoa));
+  const semAtividade = todos.filter(p=> !comEscala.has(p.nome) && atividadesPermitidasDe(p.nome).length > 0);
+  marcar(3, todos.length > 0 && semAtividade.length === 0);
+  const dia = (state.atendimentos||{})[d];
+  marcar(4, !!(dia && Array.isArray(dia.apoio) && dia.apoio.some(Boolean)));
+  marcar(5, !!(dia && Array.isArray(dia.corpo) && dia.corpo.length > 0 && dia.corpo.every(c=> temCambonesAdulto(c, d))));
+}
+
+// Passo 2: lista dos filhos reconhecidos na importação
+function renderImportadosOk(dateStr){
+  const lista = document.getElementById('cal-importados-lista');
+  if(!lista) return;
+  const rows = (((state.confirmacoes||{})[dateStr])||[]).filter(r=> normalizeNomeComp(r.comparecera)==='sim');
+  const ativos = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo');
+  const vistos = new Set();
+  const itens = [];
+  rows.forEach(r=>{
+    const res = acharPessoaConfirmada(r.nome, ativos);
+    if(res.status !== 'ok' || vistos.has(res.p.nome)) return;
+    vistos.add(res.p.nome);
+    const vinculado = !!deParaMap()[normalizeNomeComp(r.nome)];
+    itens.push({p:res.p, entidade:(r.entidade||'').trim(), manual:!!r.manual, vinculado});
+  });
+  itens.sort((a,b)=> (a.p.apelido||a.p.nome).localeCompare(b.p.apelido||b.p.nome,'pt-BR'));
+  const pend = rows.length ? pendentesDaData(dateStr).length : 0;
+  document.getElementById('cal-importados-count').textContent = rows.length ? `(${itens.length})` : '';
+  document.getElementById('cal-importar-resumo').innerHTML = rows.length
+    ? `✔ <strong>${itens.length}</strong> reconhecido(s)` + (pend ? ` · <span style="color:var(--danger);font-weight:700;">⚠ ${pend} pendente(s)</span> — resolva no bloco abaixo` : '')
+    : 'Nenhuma confirmação importada para esta data ainda.';
+  if(!itens.length){
+    lista.innerHTML = rows.length
+      ? '<div class="empty-state">Nenhum filho foi reconhecido. Use "Pendentes de importação" abaixo para vincular os nomes.</div>'
+      : '<div class="empty-state">Importe o CSV para ver aqui os filhos reconhecidos.</div>';
+    return;
+  }
+  lista.innerHTML = '<div class="imp-grid">' + itens.map(x=>{
+    const tags = [];
+    if(x.entidade) tags.push('Médium · '+escapeHtml(x.entidade));
+    if(x.vinculado) tags.push('vínculo manual');
+    if(x.manual) tags.push('incluído manualmente');
+    return `<div class="imp-tile"><b>${escapeHtml(x.p.apelido || x.p.nome)}</b>${tags.length ? `<span>${tags.join(' · ')}</span>` : ''}</div>`;
+  }).join('') + '</div>';
+}
+
+function setupPassos(){
+  document.getElementById('btn-passo-anterior').addEventListener('click', ()=>{ if(calStep > 1) irParaPasso(calStep-1); });
+  document.getElementById('btn-passo-proximo').addEventListener('click', ()=>{ if(calStep < 5) irParaPasso(calStep+1); });
+  document.getElementById('btn-ir-passo1').addEventListener('click', ()=> irParaPasso(1));
+  applyCalStep();
+}
+
 /* ---------- ABA CAMBONES ---------- */
 let cambSelecionado = null;
 let cambAno = null;
@@ -3357,7 +3730,11 @@ function renderCorpoConfirmados(dateParam){
   apoio.forEach(n=>{ if(n) ocupados.add(n); });
   const livres = disponiveis.filter(x=> !ocupados.has(x.p.nome));
   const nomeCurto = (nome)=>{ const p = state.pessoas.find(x=>x.nome===nome); return p ? (p.apelido || primeiroNome(p.nome)) : nome; };
-  const optionsLivres = livres.map(x=>`<option value="${escapeAttr(x.p.nome)}">${escapeHtml(x.p.apelido || x.p.nome)}</option>`).join('');
+  const optionsLivres = livres.map(x=>`<option value="${escapeAttr(x.p.nome)}">${escapeHtml(x.p.apelido || x.p.nome)}${ehMenorEm(x.p, dateStr) ? ' (menor)' : ''}</option>`).join('');
+
+  const btnAssoc = document.getElementById('btn-associar-cambones');
+  if(btnAssoc) btnAssoc.style.display = dia.corpo.length ? 'inline-block' : 'none';
+  renderResumoAssociacao(dateStr);
 
   const faltamNoCorpo = mediuns.some(x=> !dia.corpo.some(c=>c.medium===x.p.nome));
   btnTodos.style.display = faltamNoCorpo ? 'inline-block' : 'none';
@@ -3374,7 +3751,7 @@ function renderCorpoConfirmados(dateParam){
       const atual = noCorpo ? consulenteAtualDoMedium(dia, p.nome) : null;
       const chips = noCorpo ? (item.cambones||[]).map((n,i)=>`
         <span style="display:inline-flex;align-items:center;gap:5px;background:var(--brand-soft);color:var(--brand-dark);padding:3px 6px 3px 10px;border-radius:20px;font-size:12.5px;">
-          ${escapeHtml(nomeCurto(n))}
+          ${escapeHtml(nomeCurto(n))}${ehMenorEm(pessoaPorNome(n), dateStr) ? ' <small>(menor)</small>' : ''}
           <a href="#" data-remcamb="${escapeAttr(p.nome)}" data-idx="${i}" style="color:var(--danger);text-decoration:none;font-weight:700;padding:0 3px;">×</a>
         </span>`).join('') : '';
       const select = noCorpo
@@ -3383,9 +3760,12 @@ function renderCorpoConfirmados(dateParam){
            </select>`
         : `<span>Marque "Atende" para escolher o cambone.</span>`;
       const entTxt = entidade || (item && item.entidade) || '';
-      const pill = !noCorpo
+      const avisoCamb = !noCorpo ? '' :
+        ((item.cambones||[]).length === 0 ? ' <span class="pill pill-no" title="Todo médium precisa de pelo menos um cambone">Sem cambone</span>'
+          : (!temCambonesAdulto(item, dateStr) ? ' <span class="pill pill-no" title="Menor de 18 anos não cambona sozinho">Falta cambone adulto</span>' : ''));
+      const pill = (!noCorpo
         ? '<span class="pill" style="background:var(--surface);color:var(--ink-soft);border:1px solid var(--line);">Fora do corpo</span>'
-        : `<span class="pill ${atual?'pill-no':'pill-ok'}">${atual?'Atendendo':'Livre'}</span>`;
+        : `<span class="pill ${atual?'pill-no':'pill-ok'}">${atual?'Atendendo':'Livre'}</span>`) + avisoCamb;
       return `
       <div class="atend-card cal-medium-card"${noCorpo ? '' : ' style="opacity:.65;"'}>
         <div class="cal-medium-esq">
@@ -3406,7 +3786,12 @@ function renderCorpoConfirmados(dateParam){
         const nome = sel.value;
         const item = dia.corpo.find(c=>c.medium===sel.dataset.medium);
         if(!nome || !item) return;
+        if(ehMenorEm(pessoaPorNome(nome), dateStr) && !temCambonesAdulto(item, dateStr)){
+          alert('Menor de 18 anos não pode cambonar sozinho. Adicione primeiro um cambone adulto a este médium.');
+          sel.value = ''; return;
+        }
         if(!item.cambones.includes(nome)) item.cambones.push(nome);
+        mapaMensal(mesDe(dateStr))[nome] = item.medium;
         persist(); renderAtendimento();
       });
     });
@@ -3415,7 +3800,14 @@ function renderCorpoConfirmados(dateParam){
         ev.preventDefault();
         const item = dia.corpo.find(c=>c.medium===a.dataset.remcamb);
         if(!item) return;
-        item.cambones.splice(parseInt(a.dataset.idx,10), 1);
+        const removido = item.cambones[parseInt(a.dataset.idx,10)];
+        const restantes = item.cambones.filter((n,i)=> i !== parseInt(a.dataset.idx,10));
+        const restamMenores = restantes.some(n=> ehMenorEm(pessoaPorNome(n), dateStr));
+        const restamAdultos = restantes.some(n=> !ehMenorEm(pessoaPorNome(n), dateStr));
+        if(restamMenores && !restamAdultos && !confirm('Sem um cambone adulto, os menores deste médium ficam sozinhos. Remover mesmo assim?')) return;
+        item.cambones = restantes;
+        const mapa = mapaMensal(mesDe(dateStr));
+        if(mapa[removido] === item.medium) delete mapa[removido];
         persist(); renderAtendimento();
       });
     });
@@ -3909,15 +4301,49 @@ function setupAtendimento(){
   });
 
   document.getElementById('btn-relatorio-corpo').addEventListener('click', ()=> gerarRelatorioCorpoMediunico());
+  document.getElementById('btn-associar-cambones').addEventListener('click', ()=>{
+    const date = corpoDateKey();
+    const dia = ensureAtendDia(date);
+    if(dia.corpo.some(c=>(c.cambones||[]).length) &&
+       !confirm('Já existem cambones definidos neste dia. Refazer a associação (os atuais serão redistribuídos respeitando o vínculo do mês)?')) return;
+    associarCambones(date);
+    persist(); renderAtendimento();
+  });
   document.getElementById('btn-corpo-incluir-todos').addEventListener('click', ()=>{
     sincronizarCorpoConfirmados(corpoDateKey());
     persist(); renderAtendimento();
   });
   document.getElementById('btn-ir-calendario-corpo').addEventListener('click', ()=>{
     selectCalendarDay(atendDateKey());
-    document.getElementById('tab-calendario').click();
+    document.getElementById('tab-passo5').click();
     const bloco = document.getElementById('corpo-conf-block');
     if(bloco) bloco.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+  document.getElementById('btn-previa-gerar').addEventListener('click', async ()=>{
+    if(!calSelectedDate){ alert('Selecione um dia no calendário.'); return; }
+    if(!(((state.confirmacoes||{})[calSelectedDate])||[]).length){ alert('Importe as confirmações desta data antes de gerar a prévia.'); return; }
+    gerarPreviaAtividades(calSelectedDate, true);
+    await persist();
+    renderCalendarDayDetail(calSelectedDate);
+  });
+  document.getElementById('btn-previa-confirmar').addEventListener('click', async ()=>{
+    const date = calSelectedDate;
+    if(!date) return;
+    const prev = previaDoDia(date);
+    const gira = (Array.from(giraDatesMap()[date] || []))[0] || '';
+    let n = 0;
+    Object.keys(prev).forEach(nome=>{
+      const at = prev[nome];
+      const p = state.pessoas.find(x=>x.nome===nome);
+      delete prev[nome];
+      if(!at || !p || !atividadePermitida(p, at)) return;
+      if(state.escalas.some(e=>e.data===date && e.pessoa===nome)) return;
+      state.escalas.push({id: nextEscalaId(), data: date, gira, pessoa: nome, atividade: at, executado:'SIM'});
+      n++;
+    });
+    await persist();
+    renderPessoasTable(); renderAtividadesTable(); renderGirasTable(); renderPainel();
+    renderCalendarDayDetail(date);
   });
   document.getElementById('btn-cal-manual').addEventListener('click', ()=>{
     if(!calSelectedDate){ alert('Selecione um dia no calendário.'); return; }
@@ -4114,6 +4540,8 @@ function renderCalendar(){
     renderCalendarDayDetail(calSelectedDate);
   } else {
     document.getElementById('cal-day-detail').style.display = 'none';
+    applyCalStep();
+    atualizarPassos();
   }
 }
 
@@ -4133,6 +4561,12 @@ function selectCalendarDay(dateStr){
   const mudou = (document.getElementById('atend-data').value !== dateStr);
   sincronizarDataAtiva(dateStr);
   if(mudou) exitCorpoEditMode();
+  const hoje = new Date().toISOString().slice(0,10);
+  const temConf = (((state.confirmacoes||{})[dateStr])||[]).length > 0;
+  if(dateStr >= hoje && temConf && !(state.previaAtividades && state.previaAtividades[dateStr])){
+    gerarPreviaAtividades(dateStr, false);
+    persist();
+  }
   renderCalendar();
   renderAtendimento();
 }
@@ -4325,6 +4759,7 @@ function renderDeParaPendentes(dateStr){
         if(!sel || !sel.value){ alert('Selecione o filho do cadastro para vincular.'); return; }
         deParaMap()[chave] = sel.value;
         sincronizarCorpoConfirmados(dateStr);
+        gerarPreviaAtividades(dateStr, false);
         await persist();
         renderCalendarDayDetail(dateStr);
         renderAtendimento();
@@ -4365,6 +4800,7 @@ function renderDeParaPendentes(dateStr){
       if(!state.confirmacoes[dateStr]) state.confirmacoes[dateStr] = [];
       state.confirmacoes[dateStr].push({nome, comparecera:'Sim', entidade, manual:true});
       sincronizarCorpoConfirmados(dateStr);
+      gerarPreviaAtividades(dateStr, false);
       manualAbertoCal = false;
       await persist();
       renderCalendarDayDetail(dateStr);
@@ -4395,6 +4831,7 @@ function renderDeParaPendentes(dateStr){
         const dia = ensureAtendDia(dateStr);
         if(consulenteAtualDoMedium(dia, nome)){ alert('Esse médium está atendendo agora e não pode ser removido.'); return; }
         state.confirmacoes[dateStr] = state.confirmacoes[dateStr].filter(r=> !(r.manual && r.nome===nome));
+        delete previaDoDia(dateStr)[nome];
         dia.corpo = dia.corpo.filter(c=>c.medium!==nome);
         dia.apoio = ensureApoio(dia).map(n=> n===nome ? '' : n);
         dia.corpo.forEach(c=>{ c.cambones = (c.cambones||[]).filter(n=>n!==nome); });
@@ -4484,6 +4921,9 @@ function renderCalendarDayDetail(dateStr){
   renderConfirmados(dateStr);
   renderCorpoConfirmados(dateStr);
   renderDeParaPendentes(dateStr);
+  renderImportadosOk(dateStr);
+  applyCalStep();
+  atualizarPassos();
 }
 
 /* ---------- CONFIRMAÇÕES DE PRESENÇA (CSV do formulário) ---------- */
@@ -4592,9 +5032,10 @@ async function importarConfirmacoesArquivo(file, dateStr){
       .filter(m=> !lista.some(r=> normalizeNomeComp(r.nome) === normalizeNomeComp(m.nome)));
     state.confirmacoes[dateStr] = lista.concat(manuaisAnteriores);
     sincronizarCorpoConfirmados(dateStr);
+    gerarPreviaAtividades(dateStr, true);
     await persist();
     renderConfirmados(dateStr);
-    if(calSelectedDate === dateStr) renderDeParaPendentes(dateStr);
+    if(calSelectedDate === dateStr){ renderDeParaPendentes(dateStr); renderImportadosOk(dateStr); atualizarPassos(); }
     if(typeof renderAtendimento === 'function') renderAtendimento();
     flash('Confirmações importadas');
   }catch(e){
@@ -4655,13 +5096,22 @@ function renderConfirmados(dateStr){
     return b.dias - a.dias;
   });
 
-  hintEl.textContent = `${linhas.length} filho(s) confirmado(s) para esse dia.`;
+  const pendentesPrevia = linhas.filter(l=> !state.escalas.some(e=>e.data===dateStr && e.pessoa===l.p.nome) && ((state.previaAtividades||{})[dateStr]||{})[l.p.nome]).length;
+  hintEl.textContent = `${linhas.length} filho(s) confirmado(s) para esse dia.` + (pendentesPrevia ? ` Prévia: ${pendentesPrevia} sugestão(ões) aguardando confirmação.` : '');
+  const btnConf = document.getElementById('btn-previa-confirmar');
+  if(btnConf){
+    btnConf.style.display = pendentesPrevia ? 'inline-block' : 'none';
+    btnConf.textContent = `✔ Confirmar prévia (${pendentesPrevia})`;
+  }
 
   if(linhas.length === 0){
     tbody.innerHTML = `<div class="empty-state">Nenhum confirmado localizado no cadastro.</div>`;
   } else {
+    const previaDia = (state.previaAtividades && state.previaAtividades[dateStr]) || {};
     tbody.innerHTML = linhas.map(({p,entidade,lastDate,dias})=>{
-      const atividadeOptions = opcoesAtividadesHtml(p.nome);
+      const jaTem = state.escalas.some(e=>e.data===dateStr && e.pessoa===p.nome);
+      const sugestao = !jaTem ? (previaDia[p.nome] || '') : '';
+      const atividadeOptions = opcoesAtividadesHtml(p.nome, sugestao);
       let pillClass = 'pill-ok';
       if(dias===null || dias>30) pillClass = 'pill-no';
       const jaAtribuidas = state.escalas.filter(e=>e.data===dateStr && e.pessoa===p.nome);
@@ -4676,6 +5126,7 @@ function renderConfirmados(dateStr){
             <span class="pill ${pillClass} cal-dias" title="Dias sem atividade">${dias===null?'sem registro':(dias===1?'1 dia':dias+' dias')}</span></div>
           <div class="cal-medium-ent" style="font-weight:400;">
             <span class="mono" style="font-size:12.5px;">Última atividade: ${lastDate ? formatDateBR(lastDate) : 'sem registro'}</span>
+            ${sugestao ? `<span class="sug-chip" title="Sugestão da prévia — confirme com + Atribuir">💡 ${escapeHtml(sugestao)}</span>` : ''}
             ${chips}
           </div>
         </div>
@@ -4698,6 +5149,13 @@ function renderConfirmados(dateStr){
   tbody.querySelectorAll('[data-person]').forEach(el=>{
     el.addEventListener('click', ()=> showPersonActivities(el.dataset.person));
   });
+  tbody.querySelectorAll('.cal-confirm-atividade').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const prev = previaDoDia(dateStr);
+      if(sel.value) prev[sel.dataset.pessoa] = sel.value; else delete prev[sel.dataset.pessoa];
+      persist();
+    });
+  });
   tbody.querySelectorAll('.btn-atribuir-confirmado').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const nome = btn.dataset.pessoa;
@@ -4708,6 +5166,7 @@ function renderConfirmados(dateStr){
       const girasDia = Array.from(giraDatesMap()[dateStr] || []);
       const gira = girasDia[0] || '';
       state.escalas.push({id: nextEscalaId(), data: dateStr, gira, pessoa: nome, atividade, executado:'SIM'});
+      delete previaDoDia(dateStr)[nome];
       await persist();
       renderPessoasTable();
       renderAtividadesTable();
@@ -4917,7 +5376,7 @@ function applyUserUI(user){
   if(tabUsuarios) tabUsuarios.style.display = user.papel === 'admin' ? '' : 'none';
 
   const isAtendente = user.papel === 'atendente';
-  ['tab-calendario','tab-painel','tab-cadastros','tab-cambones'].forEach(id=>{
+  ['tab-passo1','tab-passo2','tab-passo3','tab-passo4','tab-passo5','tab-painel','tab-cadastros','tab-cambones'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.style.display = isAtendente ? 'none' : '';
   });
@@ -5124,6 +5583,7 @@ async function initApp(){
   setupAtendimento();
   setupCadConsulentes();
   setupCambones();
+  setupPassos();
   if(calSelectedDate) sincronizarDataAtiva(calSelectedDate);
   renderPessoasTable();
   renderAtividadesTable();
