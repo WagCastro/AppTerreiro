@@ -328,6 +328,18 @@
   @media (max-width:640px){ .cal-bloco{padding:12px 12px 14px;} .cal-bloco-titulo{font-size:19px !important;} }
   .sug-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border:1.5px dashed #0e8a7d;border-radius:12px;font-size:12px;font-weight:700;color:#0e5851;background:#fff;}
   .passo-oculto{display:none !important;}
+  .contador-central{background:linear-gradient(135deg,var(--brand-soft),#fff);border:2px solid var(--brand);border-radius:18px;
+    text-align:center;padding:18px 14px 16px;margin:4px 0 18px;}
+  .contador-rotulo{font-size:15px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--brand-dark);}
+  .contador-numero{font-size:112px;line-height:1.02;font-weight:900;color:var(--brand-dark);font-variant-numeric:tabular-nums;}
+  .contador-sub{font-size:14px;color:var(--ink-soft);margin-top:4px;}
+  .contador-duplo{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:4px 0 18px;}
+  .contador-duplo .contador-central{margin:0;}
+  .contador-faltam{border-color:#c27a0b;background:linear-gradient(135deg,#fdf0d4,#fff);}
+  .contador-faltam .contador-rotulo,.contador-faltam .contador-numero{color:#74440a;}
+  .contador-feitos{border-color:#2f8a52;background:linear-gradient(135deg,#d9eddf,#fff);}
+  .contador-feitos .contador-rotulo,.contador-feitos .contador-numero{color:#17502d;}
+  @media (max-width:640px){ .contador-numero{font-size:80px;} .contador-duplo{grid-template-columns:1fr;} }
   .tab.passo .passo-num{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border-radius:50%;
     background:var(--brand);color:#fff;font-size:12px;font-weight:800;margin-right:7px;}
   .tab.passo.active .passo-num{background:var(--brand-dark);}
@@ -696,8 +708,8 @@
     <button class="tab passo" data-tab="calendario" data-step="3" id="tab-passo3"><span class="passo-num">3</span>Cadastro da Limpeza</button>
     <button class="tab passo" data-tab="calendario" data-step="4" id="tab-passo4"><span class="passo-num">4</span>Cadastro Recepção</button>
     <button class="tab passo" data-tab="calendario" data-step="5" id="tab-passo5"><span class="passo-num">5</span>Corpo Mediúnico</button>
+    <button class="tab passo" data-tab="atendimento" id="tab-atendimento"><span class="passo-num">6</span>Atendimento</button>
     <button class="tab" data-tab="painel" id="tab-painel">Painel</button>
-    <button class="tab" data-tab="atendimento" id="tab-atendimento">Atendimento</button>
     <button class="tab" data-tab="cambones" id="tab-cambones">Cambones</button>
     <button class="tab" data-tab="cadastros" id="tab-cadastros">Cadastros</button>
     <button class="tab" data-tab="usuarios" id="tab-usuarios" style="display:none;">Administração</button>
@@ -889,7 +901,8 @@
       <!-- PAIS/MÃE -->
       <div id="sub-cad-pais-maes" class="subview">
         <h2 class="section-title" style="font-size:15px;">Pais e Mães</h2>
-        <p class="section-hint">Filhos com classificação de Pai de Santo, Mãe de Santo, Pai Pequeno ou Mãe Pequena. Para incluir alguém aqui, marque essa classificação no cadastro em "Filhos".</p>
+        <p class="section-hint">Filhos com classificação de Pai de Santo, Mãe de Santo, Pai Pequeno ou Mãe Pequena.</p>
+        <div style="margin:0 0 12px;"><button type="button" class="btn btn-primary" id="btn-add-pai-mae">+ Incluir Pai/Mãe</button></div>
         <div class="table-wrap scroll-y table-cards">
           <table>
             <thead><tr><th style="width:140px;">Apelido</th><th>Nome</th><th style="width:160px;">Classificação</th><th style="width:100px;">Status</th><th></th></tr></thead>
@@ -1028,14 +1041,22 @@
     <!-- ATENDIMENTO -->
     <section id="view-atendimento" class="view">
       <h2 class="section-title">Atendimento da gira</h2>
-      <p class="section-hint">Monte o corpo mediúnico, registre os consulentes na recepção conforme chegam, acompanhe a lista de espera e quem está em atendimento — tudo com registro de horário.</p>
+      <p class="section-hint">É aqui que a gira acontece: registre os consulentes na recepção conforme chegam, acompanhe a lista de espera e quem está em atendimento — tudo com registro de horário. A gira é sempre a escolhida no passo 1.</p>
 
+      <div id="atend-sem-gira" class="atend-card passo-oculto" style="margin-top:14px;">
+        <div class="atend-row1"><span class="atend-title" style="font-size:16px;">Nenhuma gira selecionada</span></div>
+        <div class="atend-row2" style="flex-direction:column;align-items:flex-start;gap:8px;">
+          <span style="font-size:13.5px;color:var(--ink-soft);">Escolha a data da gira no passo 1 — Cadastro das Giras.</span>
+          <button type="button" class="btn btn-primary btn-small" id="btn-atend-ir-passo1">Ir para o passo 1</button>
+        </div>
+      </div>
+
+      <div id="atend-conteudo">
       <div class="toolbar">
         <div class="filters">
-          <span style="display:flex;align-items:center;gap:6px;">
-            <label for="atend-data" style="font-size:12px;color:var(--ink-soft);">Data da gira</label>
-            <input type="date" id="atend-data" style="padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:12.5px;font-family:var(--body);">
-          </span>
+          <span id="atend-gira-banner" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:15px;font-weight:700;color:var(--brand-dark);"></span>
+          <input type="date" id="atend-data" style="display:none;">
+          <button type="button" class="btn btn-ghost btn-small" id="btn-atend-trocar-gira">Trocar gira (passo 1)</button>
         </div>
         <div class="filters">
           <label style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink);cursor:pointer;">
@@ -1057,8 +1078,7 @@
       </div>
 
       <nav class="subtabs">
-        <button class="subtab active" data-sub="atend-corpo">Corpo Mediúnico</button>
-        <button class="subtab" data-sub="atend-lancamento">Recepção</button>
+        <button class="subtab active" data-sub="atend-lancamento">Recepção</button>
         <button class="subtab" data-sub="atend-consulentes">Consulentes</button>
         <button class="subtab" data-sub="atend-espera">Lista de Espera</button>
         <button class="subtab" data-sub="atend-em-atendimento">Em Atendimento</button>
@@ -1066,7 +1086,7 @@
       </nav>
 
       <!-- CORPO MEDIÚNICO -->
-      <div id="sub-atend-corpo" class="subview active">
+      <div id="sub-atend-corpo" class="subview" style="display:none !important;">
         <div class="atend-card" style="margin-bottom:16px;">
           <div class="atend-row1"><span class="atend-title" style="font-size:14.5px;">Composição do corpo mediúnico</span></div>
           <div class="atend-row2" style="flex-direction:column;align-items:flex-start;gap:8px;">
@@ -1104,7 +1124,7 @@
       </div>
 
       <!-- LANÇAMENTO -->
-      <div id="sub-atend-lancamento" class="subview">
+      <div id="sub-atend-lancamento" class="subview active">
         <h2 class="section-title" style="font-size:14px;">Recepção — registrar chegada de consulente</h2>
         <p class="section-hint" style="margin-top:-8px;">Digite o nome para localizar um consulente já cadastrado; se for a primeira vez dele, o cadastro é criado ao registrar a chegada. Depois de registrado, ele aparece na aba "Lista de Espera".</p>
         <div class="form-grid cols-3 atend-form">
@@ -1203,6 +1223,11 @@
 
       <!-- LISTA DE ESPERA -->
       <div id="sub-atend-espera" class="subview">
+        <div class="contador-central" id="cont-chegaram-box">
+          <div class="contador-rotulo">Consulentes que já chegaram</div>
+          <div class="contador-numero" id="cont-chegaram">0</div>
+          <div class="contador-sub" id="cont-chegaram-sub"></div>
+        </div>
         <h2 class="section-title" style="font-size:14px;">Fila de espera <span id="fila-count" class="mono" style="font-weight:400;color:var(--ink-soft);"></span></h2>
         <p class="section-hint" style="margin-top:-8px;">Associados são chamados primeiro, depois os preferenciais e por fim os demais. Use o campo "Atribuir médium" em cada linha para escolher quem vai atender — se o médium escolhido já estiver ocupado, o atendimento anterior é encerrado automaticamente.</p>
         <div class="fila-wrap scroll-y" style="max-height:560px;" id="tbody-fila"></div>
@@ -1210,6 +1235,18 @@
 
       <!-- EM ATENDIMENTO -->
       <div id="sub-atend-em-atendimento" class="subview">
+        <div class="contador-duplo">
+          <div class="contador-central contador-faltam">
+            <div class="contador-rotulo">Faltam ser atendidos</div>
+            <div class="contador-numero" id="cont-faltam">0</div>
+            <div class="contador-sub" id="cont-faltam-sub"></div>
+          </div>
+          <div class="contador-central contador-feitos">
+            <div class="contador-rotulo">Já atendidos</div>
+            <div class="contador-numero" id="cont-atendidos">0</div>
+            <div class="contador-sub" id="cont-atendidos-sub"></div>
+          </div>
+        </div>
         <h2 class="section-title" style="font-size:14px;">Em atendimento</h2>
         <p class="section-hint" style="margin-top:-8px;">Quem está com cada médium agora. Finalize quando o atendimento acabar.</p>
         <div class="atend-card-list scroll-y" style="max-height:560px;" id="tbody-em-atendimento"></div>
@@ -1222,6 +1259,7 @@
         <div class="atend-card-list" style="margin-bottom:22px;" id="tbody-atend-por-medium"></div>
         <h2 class="section-title" style="font-size:14px;">Atendidos</h2>
         <div class="atend-card-list scroll-y" style="max-height:440px;" id="tbody-atendidos"></div>
+      </div>
       </div>
     </section>
   </main>
@@ -1907,6 +1945,7 @@ function renderPessoasTable(){
   if(pessoaSearchTerm) rows = rows.filter(p => p.nome.toLowerCase().includes(pessoaSearchTerm));
   if(rows.length === 0){
     tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">${pessoaSearchTerm ? 'Nenhum filho encontrado com esse nome.' : (pessoaStatusFilter==='Inativo' ? 'Nenhum filho inativo.' : 'Nenhum filho cadastrado ainda.')}</div></td></tr>`;
+    renderPaisMaesTable();
     return;
   }
   tbody.innerHTML = rows.map(p=>{
@@ -3118,6 +3157,13 @@ function setupPassos(){
   document.getElementById('btn-passo-anterior').addEventListener('click', ()=>{ if(calStep > 1) irParaPasso(calStep-1); });
   document.getElementById('btn-passo-proximo').addEventListener('click', ()=>{ if(calStep < 5) irParaPasso(calStep+1); });
   document.getElementById('btn-ir-passo1').addEventListener('click', ()=> irParaPasso(1));
+  document.getElementById('btn-atend-ir-passo1').addEventListener('click', ()=> irParaPasso(1));
+  document.getElementById('btn-atend-trocar-gira').addEventListener('click', ()=> irParaPasso(1));
+  document.getElementById('btn-add-pai-mae').addEventListener('click', ()=>{
+    openPessoaModal(null);
+    document.getElementById('pessoa-modal-title').textContent = 'Incluir Pai/Mãe';
+    document.getElementById('f-classificacao-pessoa').value = 'Pai de Santo';
+  });
   applyCalStep();
 }
 
@@ -4193,8 +4239,44 @@ function renderHistoricoAtendimento(){
   });
 }
 
+const SEMANA_LONGA = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+
+// A aba Atendimento usa a gira escolhida no passo 1: mostra o banner da data ou pede para escolher.
+function renderBannerGiraAtendimento(){
+  const semGira = !calSelectedDate;
+  const aviso = document.getElementById('atend-sem-gira');
+  const conteudo = document.getElementById('atend-conteudo');
+  if(aviso) aviso.classList.toggle('passo-oculto', !semGira);
+  if(conteudo) conteudo.style.display = semGira ? 'none' : '';
+  const banner = document.getElementById('atend-gira-banner');
+  if(!banner || semGira) return;
+  const [y,m,d] = calSelectedDate.split('-').map(n=>parseInt(n,10));
+  const sem = SEMANA_LONGA[new Date(y, m-1, d).getDay()];
+  const giras = Array.from(giraDatesMap()[calSelectedDate] || []);
+  banner.innerHTML = `📅 ${escapeHtml(giras.length ? giras.join(' / ') : 'Sem gira cadastrada')} <span style="font-weight:500;color:var(--ink-soft);">· ${sem}, ${formatDateBR(calSelectedDate)}</span>`;
+  const btn = document.getElementById('btn-atend-trocar-gira');
+  if(btn) btn.style.display = (currentUser && currentUser.papel === 'atendente') ? 'none' : '';
+}
+
+// Contadores grandes: quem chegou, quantos faltam e quantos já foram atendidos.
+function renderContadoresAtendimento(dia){
+  const lista = Array.isArray(dia.consulentes) ? dia.consulentes : [];
+  const aguardando = lista.filter(c=>c.status==='aguardando').length;
+  const em = lista.filter(c=>c.status==='em_atendimento').length;
+  const atendidos = lista.filter(c=>c.status==='atendido').length;
+  const set = (id,v)=>{ const el = document.getElementById(id); if(el) el.textContent = v; };
+  set('cont-chegaram', lista.length);
+  set('cont-chegaram-sub', `${aguardando} aguardando · ${em} em atendimento · ${atendidos} atendido(s)`);
+  set('cont-faltam', aguardando + em);
+  set('cont-faltam-sub', `${aguardando} aguardando · ${em} em atendimento agora`);
+  set('cont-atendidos', atendidos);
+  set('cont-atendidos-sub', lista.length ? `de ${lista.length} que chegaram` : 'ninguém chegou ainda');
+}
+
 function renderAtendimento(){
   const dia = ensureAtendDia(atendDateKey());
+  renderBannerGiraAtendimento();
+  renderContadoresAtendimento(dia);
   document.getElementById('atend-cobranca').checked = !!dia.cobranca;
   renderCorpoSelects();
   renderCorpoConfirmados();
