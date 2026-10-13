@@ -1078,8 +1078,8 @@
       </div>
 
       <nav class="subtabs">
-        <button class="subtab active" data-sub="atend-lancamento">Recepção</button>
-        <button class="subtab" data-sub="atend-consulentes">Consulentes</button>
+        <button class="subtab active" data-sub="atend-consulentes">Cadastro Consulente</button>
+        <button class="subtab" data-sub="atend-lancamento">Recepção</button>
         <button class="subtab" data-sub="atend-espera">Lista de Espera</button>
         <button class="subtab" data-sub="atend-em-atendimento">Em Atendimento</button>
         <button class="subtab" data-sub="atend-historico">Atendidos &amp; Estatísticas</button>
@@ -1124,9 +1124,10 @@
       </div>
 
       <!-- LANÇAMENTO -->
-      <div id="sub-atend-lancamento" class="subview active">
+      <div id="sub-atend-lancamento" class="subview">
         <h2 class="section-title" style="font-size:14px;">Recepção — registrar chegada de consulente</h2>
         <p class="section-hint" style="margin-top:-8px;">Digite o nome para localizar um consulente já cadastrado; se for a primeira vez dele, o cadastro é criado ao registrar a chegada. Depois de registrado, ele aparece na aba "Lista de Espera".</p>
+        <div id="recepcao-alerta-pref" style="display:none;margin:0 0 14px;padding:12px 16px;border-radius:10px;background:#fdf0d4;border:2px solid #c27a0b;color:#74440a;font-size:14.5px;font-weight:600;line-height:1.45;"></div>
         <div class="form-grid cols-3 atend-form">
           <div class="field" style="grid-column:1/-1;">
             <label for="f-consulente-nome">Consulente</label>
@@ -1135,7 +1136,7 @@
             <div id="recepcao-selecionado" style="display:none;margin-top:8px;font-size:12.5px;"></div>
           </div>
           <div class="field"><label for="f-consulente-whatsapp">WhatsApp</label><input type="text" id="f-consulente-whatsapp" placeholder="(00) 00000-0000"></div>
-          <div class="field"><label for="f-consulente-aniversario">Data de aniversário</label><input type="date" id="f-consulente-aniversario"></div>
+          <div class="field"><label for="f-consulente-aniversario">Data de aniversário</label><input type="date" id="f-consulente-aniversario"><div id="recepcao-idade" style="font-size:12.5px;color:var(--ink-soft);margin-top:4px;"></div></div>
           <div class="field"></div>
           <div class="field">
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);margin-top:8px;cursor:pointer;">
@@ -1151,6 +1152,15 @@
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);margin-top:8px;cursor:pointer;">
               <input type="checkbox" id="f-consulente-primeira-vez" style="width:16px;height:16px;"> 1ª Vez
             </label>
+          </div>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);margin-top:8px;cursor:pointer;">
+              <input type="checkbox" id="f-consulente-acompanhado" style="width:16px;height:16px;"> Está acompanhado(a)
+            </label>
+          </div>
+          <div class="field" id="campo-acompanhante" style="display:none;grid-column:span 2;">
+            <label for="f-consulente-acompanhante">Nome do acompanhante</label>
+            <input type="text" id="f-consulente-acompanhante" placeholder="O acompanhante será registrado junto, também como preferencial">
           </div>
           <div class="field" id="campo-motivo-preferencial" style="display:none;">
             <label for="f-consulente-motivo">Motivo (idade / condição física)</label>
@@ -1169,7 +1179,7 @@
       </div>
 
       <!-- CADASTRO DE CONSULENTES -->
-      <div id="sub-atend-consulentes" class="subview">
+      <div id="sub-atend-consulentes" class="subview active">
         <h2 class="section-title" style="font-size:14px;">🎂 Aniversariantes do mês</h2>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
           <label for="cad-aniv-mes" style="font-size:12px;color:var(--ink-soft);">Mês</label>
@@ -2859,16 +2869,22 @@ function consulenteReservadoDoMedium(dia, medium){
 function atribuirMedium(dia, consulenteId, medium){
   const c = dia.consulentes.find(x=>x.id===consulenteId);
   if(!c || !medium) return;
-  const atual = consulenteAtualDoMedium(dia, medium);
-  if(atual && atual.id !== c.id){
-    atual.status = 'atendido';
-    atual.tsFim = Date.now();
-    atual.horaFim = nowHMS();
-  }
-  c.status = 'em_atendimento';
-  c.medium = medium;
-  c.tsChamada = Date.now();
-  c.horaChamada = nowHMS();
+  const grupo = membrosDoGrupo(dia, c);
+  const idsGrupo = new Set([c.id, ...grupo.map(g=>g.id)]);
+  // encerra quem estiver com esse médium (o grupo todo, se for o caso), exceto o próprio grupo
+  dia.consulentes.filter(x=> x.status==='em_atendimento' && x.medium===medium && !idsGrupo.has(x.id)).forEach(x=>{
+    x.status = 'atendido';
+    x.tsFim = Date.now();
+    x.horaFim = nowHMS();
+  });
+  const agora = Date.now(), hora = nowHMS();
+  [c, ...grupo].forEach(x=>{
+    if(x.status === 'atendido') return;
+    x.status = 'em_atendimento';
+    x.medium = medium;
+    x.tsChamada = agora;
+    x.horaChamada = hora;
+  });
   persist(); renderAtendimento();
 }
 
@@ -2877,14 +2893,14 @@ function atribuirMedium(dia, consulenteId, medium){
 function reservarMedium(dia, consulenteId, medium){
   const c = dia.consulentes.find(x=>x.id===consulenteId);
   if(!c || !medium) return;
-  c.medium = medium;
+  [c, ...membrosDoGrupo(dia, c)].forEach(x=>{ if(x.status==='aguardando') x.medium = medium; });
   persist(); renderAtendimento();
 }
 
 function cancelarReserva(dia, consulenteId){
   const c = dia.consulentes.find(x=>x.id===consulenteId);
   if(!c) return;
-  c.medium = '';
+  [c, ...membrosDoGrupo(dia, c)].forEach(x=>{ if(x.status==='aguardando') x.medium = ''; });
   persist(); renderAtendimento();
 }
 
@@ -2893,18 +2909,26 @@ function cancelarReserva(dia, consulenteId){
 function promoverReservado(dia, medium){
   const reservado = consulenteReservadoDoMedium(dia, medium);
   if(!reservado) return;
-  reservado.status = 'em_atendimento';
-  reservado.tsChamada = Date.now();
-  reservado.horaChamada = nowHMS();
+  [reservado, ...membrosDoGrupo(dia, reservado)].forEach(x=>{
+    if(x.status === 'atendido') return;
+    x.status = 'em_atendimento';
+    x.medium = medium;
+    x.tsChamada = Date.now();
+    x.horaChamada = nowHMS();
+  });
 }
 
 function finalizarAtendimento(dia, consulenteId){
   const c = dia.consulentes.find(x=>x.id===consulenteId);
   if(!c) return;
   const medium = c.medium;
-  c.status = 'atendido';
-  c.tsFim = Date.now();
-  c.horaFim = nowHMS();
+  const agora = Date.now(), hora = nowHMS();
+  [c, ...membrosDoGrupo(dia, c)].forEach(x=>{
+    if(x.status === 'atendido') return;
+    x.status = 'atendido';
+    x.tsFim = agora;
+    x.horaFim = hora;
+  });
   promoverReservado(dia, medium);
   persist(); renderAtendimento();
 }
@@ -3294,6 +3318,46 @@ function setupCambones(){
   document.getElementById('camb-busca').addEventListener('input', renderCambones);
 }
 
+/* ---------- PREFERENCIAL POR IDADE E ACOMPANHANTE ---------- */
+const IDADE_PREFERENCIAL = 60;
+
+function atualizarAlertaPreferencial(){
+  const box = document.getElementById('recepcao-alerta-pref');
+  if(!box) return;
+  const pref = document.getElementById('f-consulente-preferencial').checked;
+  const acomp = document.getElementById('f-consulente-acompanhado').checked;
+  if(!pref){ box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.style.display = 'block';
+  box.innerHTML = acomp
+    ? '✔ Consulente <strong>preferencial</strong> com acompanhante. O acompanhante será registrado também como preferencial, e os dois serão atendidos e finalizados juntos.'
+    : '⚠ <strong>ATENÇÃO — consulente preferencial.</strong> Pergunte se está acompanhado(a). O acompanhante também deve ser marcado como preferencial para que os dois sejam atendidos e finalizem o atendimento juntos. Marque "Está acompanhado(a)" e informe o nome.';
+}
+
+function atualizarPreferencialPorIdade(){
+  const aniv = document.getElementById('f-consulente-aniversario').value;
+  const idade = idadeEm({aniversario: aniv}, atendDateKey());
+  const info = document.getElementById('recepcao-idade');
+  if(idade === null){ info.innerHTML = ''; }
+  else info.innerHTML = `${idade} ano(s)` + (idade >= IDADE_PREFERENCIAL ? ' — <strong style="color:#74440a;">preferencial por idade</strong>' : '');
+  if(idade !== null && idade >= IDADE_PREFERENCIAL){
+    const chk = document.getElementById('f-consulente-preferencial');
+    if(!chk.checked){ chk.checked = true; chk.dispatchEvent(new Event('change')); }
+    const mot = document.getElementById('f-consulente-motivo');
+    if(!mot.value.trim()) mot.value = `Idoso (${idade} anos)`;
+  }
+  atualizarAlertaPreferencial();
+}
+
+// Consulentes que chegaram juntos: atendidos pelo mesmo médium e finalizados juntos.
+function membrosDoGrupo(dia, c){
+  return c && c.grupoId ? dia.consulentes.filter(x=> x.grupoId === c.grupoId && x.id !== c.id) : [];
+}
+function grupoTag(dia, c){
+  const m = membrosDoGrupo(dia, c);
+  if(!m.length) return '';
+  return ` <span class="pill pill-special" title="Atendidos e finalizados juntos">👥 junto com ${escapeHtml(m.map(nomeConsulente).join(', '))}</span>`;
+}
+
 /* ---------- CADASTRO DE CONSULENTES ---------- */
 let editingCadConsulenteId = null;
 let recepcaoSelecionadoId = null;
@@ -3354,7 +3418,7 @@ function migrarConsulentesLegado(){
     const dia = state.atendimentos[dataKey];
     if(!dia || !Array.isArray(dia.consulentes)) return;
     dia.consulentes.forEach(c=>{
-      if(c.cadastroId) return;
+      if(c.cadastroId || c.acompanhante) return;
       const nome = nomeConsulente(c);
       if(!nome) return;
       const existentes = cadConsultentesPorNomeExato(nome);
@@ -3401,6 +3465,7 @@ function selecionarConsulenteRecepcao(cad){
   document.getElementById('campo-medium-preferido').style.display = assoc.checked ? 'block' : 'none';
   document.getElementById('recepcao-sugestoes').style.display = 'none';
   mostrarSelecaoRecepcao(cad);
+  atualizarPreferencialPorIdade();
 }
 function renderSugestoesRecepcao(){
   const box = document.getElementById('recepcao-sugestoes');
@@ -3503,7 +3568,7 @@ function renderCadConsulentes(){
   tbody.innerHTML = lista.map(c=>{
     const r = resumoVisitas(c.id);
     return `<tr style="${c.associado ? 'background:var(--ok-soft);' : ''}">
-      <td data-label="Consulente"><span style="font-weight:600;">${c.associado ? '★ ' : ''}${escapeHtml(c.nome)}</span></td>
+      <td data-label="Consulente"><span style="font-weight:600;">${c.associado ? '★ ' : ''}${escapeHtml(c.nome)}</span>${(()=>{ const i = idadeEm(c, new Date().toISOString().slice(0,10)); return i !== null && i >= IDADE_PREFERENCIAL ? ` <span class="pill pill-no" title="${i} anos">Preferencial</span>` : ''; })()}</td>
       <td data-label="Associado"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;white-space:nowrap;">
         <input type="checkbox" data-assoc-cad="${c.id}" ${c.associado ? 'checked' : ''} style="width:16px;height:16px;"> ${c.associado ? '<strong style="color:var(--ok);">Associado</strong>' : 'Não'}
       </label></td>
@@ -3571,6 +3636,13 @@ function setupCadConsulentes(){
   document.getElementById('cad-consulente-busca').addEventListener('input', renderCadConsulentes);
   document.getElementById('cad-consulente-filtro-assoc').addEventListener('change', renderCadConsulentes);
   document.getElementById('cad-aniv-mes').addEventListener('change', renderAniversariantesConsulentes);
+  document.getElementById('f-consulente-aniversario').addEventListener('change', atualizarPreferencialPorIdade);
+  document.getElementById('f-consulente-aniversario').addEventListener('input', atualizarPreferencialPorIdade);
+  document.getElementById('f-consulente-preferencial').addEventListener('change', atualizarAlertaPreferencial);
+  document.getElementById('f-consulente-acompanhado').addEventListener('change', (ev)=>{
+    document.getElementById('campo-acompanhante').style.display = ev.target.checked ? 'block' : 'none';
+    atualizarAlertaPreferencial();
+  });
   const nomeInput = document.getElementById('f-consulente-nome');
   nomeInput.addEventListener('input', ()=>{
     if(recepcaoSelecionadoId){
@@ -4090,7 +4162,7 @@ function renderFila(){
         <span class="pill ${categoriaPillClass(c)}" style="${categoriaPillStyle(c)}">${categoriaLabel(c)}</span>
       </div>
       <div class="fila-row2">
-        <span class="mono">${c.horaChegada}${motivoTag}${prefTag}</span>${primeiraVezTag}
+        <span class="mono">${c.horaChegada}${motivoTag}${prefTag}</span>${primeiraVezTag}${grupoTag(dia,c)}
         <span class="fila-actions">${acaoHtml} <button class="btn-danger-text" data-remconsulente="${c.id}">remover</button></span>
       </div>
     </div>`;
@@ -4159,7 +4231,7 @@ function renderEmAtendimento(){
         <span class="pill pill-no">${escapeHtml(c.medium)}</span>
       </div>
       <div class="atend-row2">
-        <span class="mono">desde ${c.horaChamada} · cambone: ${cambones}</span>
+        <span class="mono">desde ${c.horaChamada} · cambone: ${cambones}</span>${grupoTag(dia,c)}
         <span class="atend-actions"><button class="btn btn-primary btn-small" data-finalizar="${c.id}">✔ Finalizar</button></span>
       </div>
     </div>`;
@@ -4459,11 +4531,35 @@ function setupAtendimento(){
     const whatsapp = document.getElementById('f-consulente-whatsapp').value.trim();
     const aniversario = document.getElementById('f-consulente-aniversario').value;
     const associado = document.getElementById('f-consulente-associado').checked;
-    const preferencial = document.getElementById('f-consulente-preferencial').checked;
+    let preferencial = document.getElementById('f-consulente-preferencial').checked;
     const primeiraVez = document.getElementById('f-consulente-primeira-vez').checked;
-    const motivo = document.getElementById('f-consulente-motivo').value.trim();
+    let motivo = document.getElementById('f-consulente-motivo').value.trim();
     const medium_preferido = associado ? document.getElementById('f-consulente-medium-preferido').value : '';
     if(!nome){ alert('Informe o nome do consulente.'); return; }
+
+    // Preferencial por idade (a partir da data de aniversário) e aviso sobre acompanhante
+    const idade = idadeEm({aniversario}, atendDateKey());
+    if(idade !== null && idade >= IDADE_PREFERENCIAL){
+      preferencial = true;
+      if(!motivo) motivo = `Idoso (${idade} anos)`;
+    }
+    const acompanhado = document.getElementById('f-consulente-acompanhado').checked;
+    const nomeAcomp = document.getElementById('f-consulente-acompanhante').value.trim().replace(/\s+/g,' ');
+    if(preferencial && !acompanhado){
+      const sim = confirm(`⚠ ATENÇÃO: ${nome} é consulente PREFERENCIAL${motivo ? ' ('+motivo+')' : ''}.\n\nEle(a) está acompanhado(a)?\nSe estiver, o acompanhante também deve ser registrado como preferencial, para os dois serem atendidos e finalizarem juntos.\n\nOK = SIM, está acompanhado(a) (informar o acompanhante)\nCancelar = NÃO, veio sozinho(a)`);
+      if(sim){
+        const chk = document.getElementById('f-consulente-acompanhado');
+        chk.checked = true; chk.dispatchEvent(new Event('change'));
+        document.getElementById('f-consulente-preferencial').checked = true;
+        document.getElementById('f-consulente-acompanhante').focus();
+        return;
+      }
+    }
+    if(acompanhado && !nomeAcomp){
+      alert('Informe o nome do acompanhante.');
+      document.getElementById('f-consulente-acompanhante').focus();
+      return;
+    }
 
     // Identifica o cadastro: selecionado na busca, ou mesmo nome já cadastrado, ou novo.
     let cad = recepcaoSelecionadoId ? cadConsulentePorId(recepcaoSelecionadoId) : null;
@@ -4489,14 +4585,25 @@ function setupAtendimento(){
       cadConsulentes().push(cad);
     }
 
-    dia.consulentes.push({
+    const principal = {
       id: nextConsulenteId(dia), cadastroId: cad.id, nome: cad.nome, sobrenome: '', whatsapp: cad.whatsapp || whatsapp, associado, preferencial, primeiraVez, motivo, medium_preferido,
       status: 'aguardando',
       tsChegada: Date.now(), horaChegada: nowHMS(),
       medium: medium_preferido || '', tsChamada: null, horaChamada: '',
       tsFim: null, horaFim: '',
       pago: false
-    });
+    };
+    dia.consulentes.push(principal);
+    if(acompanhado && nomeAcomp){
+      // o acompanhante entra junto, também como preferencial, e é atendido/finalizado com o consulente
+      principal.grupoId = principal.id;
+      dia.consulentes.push({
+        id: nextConsulenteId(dia), nome: nomeAcomp, sobrenome: '', whatsapp: '', associado: false, preferencial, primeiraVez: false,
+        motivo: `Acompanhante de ${cad.nome}`, medium_preferido: '', acompanhante: true, grupoId: principal.id,
+        status: 'aguardando', tsChegada: Date.now()+1, horaChegada: nowHMS(),
+        medium: medium_preferido || '', tsChamada: null, horaChamada: '', tsFim: null, horaFim: '', pago: false
+      });
+    }
     document.getElementById('f-consulente-nome').value = '';
     document.getElementById('f-consulente-whatsapp').value = '';
     document.getElementById('f-consulente-aniversario').value = '';
@@ -4504,6 +4611,11 @@ function setupAtendimento(){
     document.getElementById('f-consulente-preferencial').checked = false;
     document.getElementById('f-consulente-primeira-vez').checked = false;
     document.getElementById('f-consulente-motivo').value = '';
+    document.getElementById('f-consulente-acompanhado').checked = false;
+    document.getElementById('f-consulente-acompanhante').value = '';
+    document.getElementById('campo-acompanhante').style.display = 'none';
+    document.getElementById('recepcao-idade').innerHTML = '';
+    document.getElementById('recepcao-alerta-pref').style.display = 'none';
     document.getElementById('f-consulente-medium-preferido').value = '';
     document.getElementById('campo-motivo-preferencial').style.display = 'none';
     document.getElementById('campo-medium-preferido').style.display = 'none';
