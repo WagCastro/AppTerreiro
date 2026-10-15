@@ -376,6 +376,39 @@
     .aniv-chip,.aniv-mais{display:none;}
     .aniv-bolinha{display:block;}
   }
+  /* ---------- TELA INICIAL ---------- */
+  .tab-fora{display:none !important;}
+  .home{display:none;max-width:1000px;margin:0 auto;padding:6px 6px 36px;text-align:center;}
+  #app-root.modo-inicio .home{display:block;}
+  #app-root.modo-inicio nav.tabs, #app-root.modo-inicio main.board, #app-root.modo-inicio #barra-secao, #app-root.modo-inicio .brand-card{display:none !important;}
+  .barra-secao{display:flex;align-items:center;gap:12px;margin:6px 0 12px;}
+  .secao-titulo{font-family:var(--display);font-size:20px;font-weight:800;color:var(--brand-dark);}
+  .home-topo{display:flex;align-items:center;justify-content:center;gap:16px;margin:2px 0 20px;text-align:left;}
+  .home-topo img{width:72px;height:auto;flex:0 0 auto;display:block;}
+  .home-topo h1{font-family:var(--display);font-size:28px;line-height:1.15;margin:0;color:var(--brand-dark);}
+  .home-topo p{margin:4px 0 0;color:var(--ink-soft);font-size:14.5px;}
+  .home-grid{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;}
+  .home-icone{flex:0 0 calc(33.333% - 12px);display:flex;flex-direction:column;align-items:center;gap:8px;padding:28px 14px 24px;
+    border-radius:24px;border:2px solid;cursor:pointer;font-family:var(--body);box-shadow:0 6px 18px rgba(0,0,0,.08);transition:transform .15s,box-shadow .15s;}
+  .home-icone:hover,.home-icone:focus-visible{transform:translateY(-5px);box-shadow:0 14px 28px rgba(0,0,0,.16);outline:none;}
+  .home-emoji{font-size:70px;line-height:1;}
+  .home-titulo{font-size:20px;font-weight:900;letter-spacing:.09em;}
+  .home-sub{font-size:12.5px;font-weight:600;opacity:.85;line-height:1.35;}
+  .home-icone[data-secao="gira"]{background:#d2ebd9;border-color:#2f8a52;color:#17502d;}
+  .home-icone[data-secao="cambones"]{background:#c6d7ef;border-color:#1d4a87;color:#12335f;}
+  .home-icone[data-secao="cadastros"]{background:#f8e2b2;border-color:#c27a0b;color:#74440a;}
+  .home-icone[data-secao="painel"]{background:#dfd2f0;border-color:#7a55a8;color:#46286e;}
+  .home-icone[data-secao="admin"]{background:#dde3e8;border-color:#4f6d7a;color:#27393f;}
+  @media (max-width:760px){
+    .home-topo{gap:10px;margin-bottom:14px;}
+    .home-topo img{width:50px;}
+    .home-topo h1{font-size:19px;}
+    .home-topo p{font-size:13px;}
+    .home-grid{gap:12px;}
+    .home-icone{flex-basis:calc(50% - 6px);padding:20px 8px 18px;border-radius:20px;}
+    .home-emoji{font-size:54px;}
+    .home-titulo{font-size:16px;}
+  }
   .passo-oculto{display:none !important;}
   .contador-central{background:linear-gradient(135deg,var(--brand-soft),#fff);border:2px solid var(--brand);border-radius:18px;
     text-align:center;padding:18px 14px 16px;margin:4px 0 18px;}
@@ -751,17 +784,54 @@
   </header>
   <p class="storage-status" id="storage-status"></p>
 
+  <div id="barra-secao" class="barra-secao">
+    <button type="button" class="btn btn-ghost" id="btn-inicio">🏠 Início</button>
+    <span id="secao-titulo" class="secao-titulo"></span>
+  </div>
+
+  <section id="home-screen" class="home">
+    <div class="home-topo">
+      <img id="home-logo" alt="Templo Iemanjá e Cabocla Jurema">
+      <div class="home-topo-texto">
+        <h1>Templo Iemanjá e Cabocla Jurema</h1>
+        <p>Escolha por onde começar</p>
+      </div>
+    </div>
+    <div class="home-grid">
+      <button type="button" class="home-icone" data-secao="gira">
+        <span class="home-emoji">🕯️</span><span class="home-titulo">GIRA</span>
+        <span class="home-sub" id="home-sub-gira">Passos 1 a 6: da gira ao atendimento</span>
+      </button>
+      <button type="button" class="home-icone" data-secao="cambones">
+        <span class="home-emoji">🤝</span><span class="home-titulo">CAMBONES</span>
+        <span class="home-sub">Rodízio mensal de cambones e médiuns</span>
+      </button>
+      <button type="button" class="home-icone" data-secao="cadastros">
+        <span class="home-emoji">📋</span><span class="home-titulo">CADASTROS</span>
+        <span class="home-sub">Filhos, atividades, giras e consulentes</span>
+      </button>
+      <button type="button" class="home-icone" data-secao="painel">
+        <span class="home-emoji">📊</span><span class="home-titulo">PAINEL</span>
+        <span class="home-sub">Gráficos, dias sem atividade e aniversários</span>
+      </button>
+      <button type="button" class="home-icone" data-secao="admin">
+        <span class="home-emoji">⚙️</span><span class="home-titulo">ADMINISTRAÇÃO</span>
+        <span class="home-sub">Usuários e acessos</span>
+      </button>
+    </div>
+  </section>
+
   <nav class="tabs">
-    <button class="tab passo active" data-tab="calendario" data-step="1" id="tab-passo1"><span class="passo-num">1</span>Cadastro das Giras</button>
-    <button class="tab passo" data-tab="calendario" data-step="2" id="tab-passo2"><span class="passo-num">2</span>Importar Lista de Filhos</button>
-    <button class="tab passo" data-tab="calendario" data-step="3" id="tab-passo3"><span class="passo-num">3</span>Cadastro da Limpeza</button>
-    <button class="tab passo" data-tab="calendario" data-step="4" id="tab-passo4"><span class="passo-num">4</span>Cadastro Recepção</button>
-    <button class="tab passo" data-tab="calendario" data-step="5" id="tab-passo5"><span class="passo-num">5</span>Corpo Mediúnico</button>
-    <button class="tab passo" data-tab="atendimento" id="tab-atendimento"><span class="passo-num">6</span>Atendimento</button>
-    <button class="tab" data-tab="painel" id="tab-painel">Painel</button>
-    <button class="tab" data-tab="cambones" id="tab-cambones">Cambones</button>
-    <button class="tab" data-tab="cadastros" id="tab-cadastros">Cadastros</button>
-    <button class="tab" data-tab="usuarios" id="tab-usuarios" style="display:none;">Administração</button>
+    <button class="tab passo active" data-tab="calendario" data-step="1" data-secao="gira" id="tab-passo1"><span class="passo-num">1</span>Cadastro das Giras</button>
+    <button class="tab passo" data-tab="calendario" data-step="2" data-secao="gira" id="tab-passo2"><span class="passo-num">2</span>Importar Lista de Filhos</button>
+    <button class="tab passo" data-tab="calendario" data-step="3" data-secao="gira" id="tab-passo3"><span class="passo-num">3</span>Cadastro da Limpeza</button>
+    <button class="tab passo" data-tab="calendario" data-step="4" data-secao="gira" id="tab-passo4"><span class="passo-num">4</span>Cadastro Recepção</button>
+    <button class="tab passo" data-tab="calendario" data-step="5" data-secao="gira" id="tab-passo5"><span class="passo-num">5</span>Corpo Mediúnico</button>
+    <button class="tab passo" data-tab="atendimento" data-secao="gira" id="tab-atendimento"><span class="passo-num">6</span>Atendimento</button>
+    <button class="tab" data-tab="painel" data-secao="painel" id="tab-painel">Painel</button>
+    <button class="tab" data-tab="cambones" data-secao="cambones" id="tab-cambones">Cambones</button>
+    <button class="tab" data-tab="cadastros" data-secao="cadastros" id="tab-cadastros">Cadastros</button>
+    <button class="tab" data-tab="usuarios" data-secao="admin" id="tab-usuarios" style="display:none;">Administração</button>
   </nav>
 
   <main class="board">
@@ -3700,6 +3770,73 @@ function renderResumoAssociacao(dateStr){
   box.innerHTML = `<div class="atend-card" style="padding:10px 14px;font-size:13px;line-height:1.5;">${linhas.join('<br>')}</div>`;
 }
 
+/* ---------- TELA INICIAL ---------- */
+const SECOES = {
+  gira:{titulo:'🕯️ Gira'}, cambones:{titulo:'🤝 Cambones'}, cadastros:{titulo:'📋 Cadastros'},
+  painel:{titulo:'📊 Painel'}, admin:{titulo:'⚙️ Administração'}
+};
+
+function atualizarHome(){
+  const papel = currentUser ? currentUser.papel : '';
+  document.querySelectorAll('#home-screen .home-icone').forEach(b=>{
+    const sec = b.dataset.secao;
+    let ver = true;
+    if(papel === 'atendente') ver = (sec === 'gira');
+    if(sec === 'admin' && papel !== 'admin') ver = false;
+    b.style.display = ver ? '' : 'none';
+  });
+  const logo = document.getElementById('home-logo');
+  const orig = document.querySelector('.brand-mark img');
+  if(logo && orig && !logo.getAttribute('src')) logo.setAttribute('src', orig.getAttribute('src'));
+  const sub = document.getElementById('home-sub-gira');
+  if(sub){
+    sub.textContent = calSelectedDate
+      ? `📅 ${formatDateBR(calSelectedDate)} · ${Array.from(giraDatesMap()[calSelectedDate] || []).join(' / ') || 'gira não cadastrada'}`
+      : 'Passos 1 a 6: da gira ao atendimento';
+  }
+}
+
+function mostrarInicio(){
+  const root = document.getElementById('app-root');
+  root.classList.add('modo-inicio');
+  root.removeAttribute('data-secao');
+  atualizarHome();
+  window.scrollTo({top:0});
+}
+
+function abrirSecao(secao){
+  const root = document.getElementById('app-root');
+  root.classList.remove('modo-inicio');
+  root.dataset.secao = secao;
+  const tabs = Array.from(document.querySelectorAll('.tab'));
+  let visiveis = 0;
+  tabs.forEach(t=>{
+    const dentro = t.dataset.secao === secao;
+    t.classList.toggle('tab-fora', !dentro);
+    if(dentro && t.style.display !== 'none') visiveis++;
+  });
+  document.querySelector('nav.tabs').style.display = visiveis > 1 ? '' : 'none';
+  document.getElementById('secao-titulo').textContent = (SECOES[secao] || {}).titulo || '';
+  const sair = document.getElementById('btn-inicio');
+  if(sair) sair.style.display = (currentUser && currentUser.papel === 'atendente') ? 'none' : '';
+  const alvo = tabs.find(t=> t.dataset.secao === secao && t.style.display !== 'none');
+  if(alvo) alvo.click();
+  window.scrollTo({top:0});
+}
+
+function entrarNaTelaInicial(user){
+  if(user && user.papel === 'atendente') abrirSecao('gira');
+  else mostrarInicio();
+}
+
+function setupHome(){
+  document.querySelectorAll('#home-screen .home-icone').forEach(b=>{
+    b.addEventListener('click', ()=> abrirSecao(b.dataset.secao));
+  });
+  document.getElementById('btn-inicio').addEventListener('click', mostrarInicio);
+  atualizarHome();
+}
+
 /* ---------- PASSOS NUMERADOS (1 a 5) ---------- */
 let calStep = 1;
 const NOMES_PASSOS = {1:'Cadastro das Giras', 2:'Importar Lista de Filhos', 3:'Cadastro da Limpeza', 4:'Cadastro Recepção', 5:'Corpo Mediúnico'};
@@ -6204,6 +6341,7 @@ async function showApp(user){
     window.__appInitialized = true;
     await initApp();
   }
+  entrarNaTelaInicial(user);
   if(user.papel === 'admin') renderUsuariosTable();
 }
 
@@ -6390,6 +6528,7 @@ async function initApp(){
   setupCadConsulentes();
   setupCambones();
   setupPassos();
+  setupHome();
   if(calSelectedDate) sincronizarDataAtiva(calSelectedDate);
   renderPessoasTable();
   renderAtividadesTable();
