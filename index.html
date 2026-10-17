@@ -883,6 +883,7 @@
 
         <div class="cal-bloco bloco-limpeza" data-passo="3">
         <h3 class="section-title cal-bloco-titulo" style="margin-top:6px;">Cadastro Limpeza</h3>
+        <div id="cal-cobertura" style="margin:0 0 14px;"></div>
         <div class="atend-card-list" id="cal-detail-tbody"></div>
         </div>
         <div id="cal-confirmados-block" class="cal-bloco bloco-historico" data-passo="3" style="margin-top:28px;">
@@ -1036,6 +1037,8 @@
         <p class="section-hint">Tarefas que compõem a escala da casa.</p>
         <div class="form-grid cols-2">
           <div class="field"><label for="f-nome-atividade">Descrição</label><input type="text" id="f-nome-atividade" placeholder="Descrição da atividade"></div>
+          <div class="field"><label for="f-vagas-atividade">Pessoas necessárias na gira</label>
+            <select id="f-vagas-atividade"><option value="1">1 pessoa</option><option value="2">2 pessoas</option><option value="3">3 pessoas</option><option value="4">4 pessoas</option><option value="5">5 pessoas</option><option value="6">6 pessoas</option></select></div>
           <div class="field">
             <button class="btn btn-primary" id="btn-add-atividade">+ Adicionar</button>
           </div>
@@ -1045,7 +1048,7 @@
         </div>
         <div class="table-wrap scroll-y table-cards">
           <table>
-            <thead><tr><th style="width:90px;">Código</th><th>Atividade</th><th style="width:110px;">Execuções</th><th></th></tr></thead>
+            <thead><tr><th style="width:90px;">Código</th><th>Atividade</th><th style="width:90px;">Pessoas</th><th style="width:110px;">Execuções</th><th></th></tr></thead>
             <tbody id="tbody-atividades"></tbody>
           </table>
         </div>
@@ -1713,7 +1716,7 @@ function atividadePermitida(p, atividade){
 }
 function atividadesPermitidasDe(nomePessoa){
   const p = state.pessoas.find(x=>x.nome===nomePessoa);
-  return state.atividades.filter(a=> atividadePermitida(p, a.atividade))
+  return state.atividades.filter(a=> !a.inativa && atividadePermitida(p, a.atividade))
     .sort((a,b)=> a.atividade.localeCompare(b.atividade,'pt-BR'));
 }
 function opcoesAtividadesHtml(nomePessoa, selecionada){
@@ -1732,9 +1735,25 @@ function previaDoDia(dateStr){
   return state.previaAtividades[dateStr];
 }
 
+function previaManualDoDia(dateStr){
+  if(!state.previaManual || typeof state.previaManual !== 'object') state.previaManual = {};
+  if(!state.previaManual[dateStr]) state.previaManual[dateStr] = {};
+  return state.previaManual[dateStr];
+}
+
+/* Regra: o total de vagas da gira (soma das "Pessoas necessárias" das atividades ativas) é o limite de
+   sugestões. Entram na prévia SOMENTE os confirmados que estão há mais tempo sem atividade, na ordem do
+   ranking. Um filho só é pulado se, por causa das atividades bloqueadas no cadastro dele, não houver como
+   encaixá-lo sem tirar a vaga de alguém que está há mais tempo parado. Escolhas feitas à mão na prévia
+   são preservadas; as automáticas são sempre recalculadas. */
 function gerarPreviaAtividades(dateStr, refazer){
   const prev = previaDoDia(dateStr);
-  if(refazer) Object.keys(prev).forEach(k=> delete prev[k]);
+  const manual = previaManualDoDia(dateStr);
+  if(refazer){
+    Object.keys(prev).forEach(k=> delete prev[k]);
+    Object.keys(manual).forEach(k=> delete manual[k]);
+  }
+  Object.keys(manual).forEach(k=>{ if(!(k in prev)) delete manual[k]; });
 
   const ativos = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo');
   const vistos = new Set();
@@ -1759,19 +1778,21 @@ function gerarPreviaAtividades(dateStr, refazer){
   const inatividade = (nome)=> ultimaGeral[nome] ? diasAte(ultimaGeral[nome]) : Infinity;
   const desdeAtiv = (nome, a)=>{ const d = ultimaPorAtiv[nome+'||'+a]; return d ? diasAte(d) : Infinity; };
 
-  // mantém sugestões válidas já existentes e ignora quem já tem atividade lançada neste dia
+  // vagas já ocupadas por atividades lançadas neste dia
   const comEscala = new Set(state.escalas.filter(e=>e.data===dateStr).map(e=>e.pessoa));
   const contagem = {};
   state.escalas.filter(e=>e.data===dateStr).forEach(e=>{ contagem[e.atividade] = (contagem[e.atividade]||0) + 1; });
+
+  // mantém apenas escolhas manuais ainda válidas; as sugestões automáticas são recalculadas do zero
   Object.keys(prev).forEach(nome=>{
     const p = state.pessoas.find(x=>x.nome===nome);
-    if(!vistos.has(nome) || comEscala.has(nome) || !p || !atividadePermitida(p, prev[nome]) || !state.atividades.some(a=>a.atividade===prev[nome])){
-      delete prev[nome];
-    } else {
-      contagem[prev[nome]] = (contagem[prev[nome]]||0) + 1;
-    }
+    const valida = manual[nome] && vistos.has(nome) && !comEscala.has(nome) && p
+      && atividadePermitida(p, prev[nome]) && state.atividades.some(a=>a.atividade===prev[nome] && !a.inativa);
+    if(!valida){ delete prev[nome]; delete manual[nome]; }
+    else contagem[prev[nome]] = (contagem[prev[nome]]||0) + 1;
   });
 
+  // ranking: quem está há mais tempo sem atividade vem primeiro (quem nunca teve, antes de todos)
   const fila = confirmados.filter(p=> !comEscala.has(p.nome) && !prev[p.nome])
     .sort((a,b)=>{
       const ia = inatividade(a.nome), ib = inatividade(b.nome);
@@ -1779,25 +1800,81 @@ function gerarPreviaAtividades(dateStr, refazer){
       return ib - ia;
     });
 
-  fila.forEach(p=>{
-    const permitidas = atividadesPermitidasDe(p.nome);
-    if(permitidas.length === 0) return;
-    let melhor = null;
-    permitidas.forEach(a=>{
-      const c = contagem[a.atividade] || 0;
-      const d = desdeAtiv(p.nome, a.atividade);
-      if(!melhor || c < melhor.c || (c === melhor.c && d > melhor.d)){
-        melhor = {a:a.atividade, c, d};
-      }
-    });
-    prev[p.nome] = melhor.a;
-    contagem[melhor.a] = (contagem[melhor.a]||0) + 1;
+  // uma "vaga" por pessoa necessária em cada atividade ativa que ainda não está completa
+  const slots = [];
+  state.atividades.filter(a=>!a.inativa).forEach(a=>{
+    const total = a.vagas||1;
+    for(let j=(contagem[a.atividade]||0); j<total; j++){
+      slots.push({i:slots.length, atividade:a.atividade, ratio:j/total, dono:null});
+    }
   });
+  if(slots.length === 0) return prev;
+
+  // para cada filho, vagas permitidas: primeiro equilibra as atividades, depois prefere a que ele fez há mais tempo
+  const opcoes = new Map();
+  const opcoesDe = (p, lista)=> (lista||slots).filter(s=> atividadePermitida(p, s.atividade)).sort((x,y)=>{
+    if(x.ratio !== y.ratio) return x.ratio - y.ratio;
+    const dx = desdeAtiv(p.nome, x.atividade), dy = desdeAtiv(p.nome, y.atividade);
+    if(dx !== dy) return dy > dx ? 1 : -1;
+    return x.i - y.i;
+  });
+  // caminho aumentante: encaixa o filho, remanejando quem já entrou, sem nunca tirar ninguém da prévia
+  const encaixar = (p, visitadas)=>{
+    for(const s of opcoes.get(p.nome)){
+      if(visitadas.has(s)) continue;
+      visitadas.add(s);
+      if(!s.dono || encaixar(s.dono, visitadas)){ s.dono = p; return true; }
+    }
+    return false;
+  };
+
+  let livres = slots.length;
+  for(const p of fila){
+    if(livres <= 0) break;
+    opcoes.set(p.nome, opcoesDe(p));
+    if(encaixar(p, new Set())) livres--;
+  }
+  // StandBy só é assumido se alguém faltar: fica com o filho MENOS parado entre os escolhidos
+  const ehStandBy = (a)=> /stand ?by/.test(normalizeNomeComp(a||''));
+  const resultado1 = slots.filter(s=>s.dono).map(s=>[s.dono.nome, s.atividade]);
+  const sbSlots = slots.filter(s=> ehStandBy(s.atividade));
+  const escolhidosSB = [];
+  if(sbSlots.length && resultado1.length){
+    const nomesEscolhidos = new Set(resultado1.map(r=>r[0]));
+    const S = fila.filter(x=> nomesEscolhidos.has(x.nome));            // escolhidos, na ordem do ranking
+    const outros = slots.filter(s=> !ehStandBy(s.atividade));
+    const casar = (pessoas)=>{
+      outros.forEach(s=>{ s.dono = null; });
+      for(const x of pessoas){
+        opcoes.set(x.nome, opcoesDe(x, outros));
+        if(!encaixar(x, new Set())) return false;
+      }
+      return true;
+    };
+    const menosParados = S.slice().sort((x,y)=>{
+      const ix = inatividade(x.nome), iy = inatividade(y.nome);
+      if(ix === iy) return 0;
+      return ix < iy ? -1 : 1;
+    });
+    for(const c of menosParados){
+      if(escolhidosSB.length >= sbSlots.length) break;
+      if(!atividadePermitida(c, sbSlots[0].atividade)) continue;
+      const resto = S.filter(x=> x !== c && !escolhidosSB.includes(x));
+      if(casar(resto)) escolhidosSB.push(c);
+    }
+    if(escolhidosSB.length){
+      casar(S.filter(x=> !escolhidosSB.includes(x)));
+      escolhidosSB.forEach(c=>{ prev[c.nome] = sbSlots[0].atividade; });
+      outros.forEach(s=>{ if(s.dono) prev[s.dono.nome] = s.atividade; });
+      return prev;
+    }
+  }
+  resultado1.forEach(([nome, atividade])=>{ prev[nome] = atividade; });
   return prev;
 }
 function renderAtividadesPermitidasForm(p){
   const box = document.getElementById('f-atividades-pessoa');
-  const lista = state.atividades.slice().sort((a,b)=>a.atividade.localeCompare(b.atividade,'pt-BR'));
+  const lista = state.atividades.filter(a=>!a.inativa).sort((a,b)=>a.atividade.localeCompare(b.atividade,'pt-BR'));
   if(lista.length === 0){
     box.innerHTML = '<span style="font-size:12.5px;color:var(--ink-soft);">Nenhuma atividade cadastrada ainda.</span>';
     return;
@@ -2550,23 +2627,33 @@ function renderAtividadesTable(){
   const tbody = document.getElementById('tbody-atividades');
   const counts = {};
   state.escalas.forEach(e=>{ if(e.executado==='SIM') counts[e.atividade] = (counts[e.atividade]||0)+1; });
-  const rows = state.atividades.slice().sort((a,b)=>a.atividade.localeCompare(b.atividade,'pt-BR'));
+  const rows = state.atividades.slice().sort((a,b)=> (a.inativa?1:0)-(b.inativa?1:0) || a.atividade.localeCompare(b.atividade,'pt-BR'));
   tbody.innerHTML = rows.map(a=>`
-    <tr>
+    <tr${a.inativa ? ' style="opacity:.6;"' : ''}>
       <td class="mono td-code" data-label="Código">${a.codigo}</td>
-      <td data-label="Atividade">${escapeHtml(a.atividade)}</td>
+      <td data-label="Atividade">${escapeHtml(a.atividade)}${a.inativa ? ' <span class="pill pill-no">Desativada</span>' : ''}</td>
+      <td class="mono" data-label="Pessoas">${a.vagas||1}</td>
       <td class="mono" data-label="Execuções">${counts[a.atividade]||0}</td>
       <td class="td-actions" data-label="Ações">
         <button class="btn-danger-text" data-edita="${a.codigo}" style="color:var(--brand);margin-right:10px;">editar</button>
+        <button class="btn-danger-text" data-toga="${a.codigo}" style="color:var(--brand);margin-right:10px;">${a.inativa ? 'reativar' : 'desativar'}</button>
         <button class="btn-danger-text" data-dela="${a.codigo}">excluir</button>
       </td>
     </tr>
   `).join('');
+  tbody.querySelectorAll('[data-toga]').forEach(b=>b.addEventListener('click', ()=>{
+    const a = state.atividades.find(x=>x.codigo===b.dataset.toga);
+    if(!a) return;
+    if(!a.inativa && !confirm(`Desativar "${a.atividade}"? Ela deixa de aparecer na atribuição de todos os filhos e na prévia. O histórico continua.`)) return;
+    a.inativa = !a.inativa;
+    persist(); renderAtividadesTable(); renderPainel();
+  }));
   tbody.querySelectorAll('[data-edita]').forEach(b=>b.addEventListener('click', ()=>{
     const a = state.atividades.find(x=>x.codigo===b.dataset.edita);
     if(!a) return;
     editingAtividadeCodigo = a.codigo;
     document.getElementById('f-nome-atividade').value = a.atividade;
+    document.getElementById('f-vagas-atividade').value = String(a.vagas || 1);
     document.getElementById('atividade-edit-tag').style.display = 'inline';
     document.getElementById('atividade-edit-label').textContent = a.atividade;
     document.getElementById('btn-add-atividade').textContent = 'Salvar edição';
@@ -2600,6 +2687,7 @@ function setupAtividadesForm(){
         if(dupe){ alert('Já existe outra atividade com essa descrição.'); return; }
         const oldDesc = a.atividade;
         a.atividade = desc;
+        a.vagas = parseInt(document.getElementById('f-vagas-atividade').value,10) || 1;
         if(oldDesc !== desc){
           state.escalas.forEach(e=>{ if(e.atividade===oldDesc) e.atividade = desc; });
           state.pessoas.forEach(p=>{
@@ -2611,8 +2699,9 @@ function setupAtividadesForm(){
         if(state.atividades.some(a=>a.atividade.toLowerCase()===desc.toLowerCase())){
           alert('Essa atividade já está cadastrada.'); return;
         }
-        state.atividades.push({codigo: nextAtividadeCodigo(), atividade: desc});
+        state.atividades.push({codigo: nextAtividadeCodigo(), atividade: desc, vagas: parseInt(document.getElementById('f-vagas-atividade').value,10) || 1, inativa: false});
         input.value = '';
+        document.getElementById('f-vagas-atividade').value = '1';
       }
       persist(); renderAtividadesTable(); renderPainel();
     }catch(e){
@@ -2630,6 +2719,7 @@ function setupAtividadesForm(){
 function exitAtividadeEditMode(){
   editingAtividadeCodigo = null;
   document.getElementById('f-nome-atividade').value = '';
+  document.getElementById('f-vagas-atividade').value = '1';
   document.getElementById('atividade-edit-tag').style.display = 'none';
   document.getElementById('btn-add-atividade').textContent = '+ Adicionar';
 }
@@ -4066,6 +4156,76 @@ function setupCambones(){
   document.getElementById('camb-busca').addEventListener('input', renderCambones);
 }
 
+/* ---------- VAGAS POR ATIVIDADE ---------- */
+// Define quantas pessoas cada atividade precisa e desativa as atividades encerradas (uma única vez).
+function migrarAtividadesVagas(){
+  let mudou = false;
+  const hoje = new Date().toISOString().slice(0,10);
+  state.atividades.forEach(a=>{
+    const n = normalizeNomeComp(a.atividade);
+    if(a.vagas === undefined){
+      let v = 1;
+      if(/^conga/.test(n)) v = 2;
+      else if(/^cozinha/.test(n)) v = 2;                    // Cozinha (lavar...) e Cozinha e Corredor
+      else if(/lavar b\w*heiro de baixo/.test(n)) v = 2;   // lado da loja e lado da mãe
+      else if(/lavar b\w*heiro de cima/.test(n)) v = 1;
+      else if(/tirar os lixos/.test(n)) v = 1;
+      else if(/stand ?by/.test(n)) v = 1;
+      a.vagas = v; mudou = true;
+    }
+    if(a.inativa === undefined){
+      a.inativa = /^recolher mesa da feijoada/.test(n) || /^quintal dos fundos/.test(n);
+      mudou = true;
+      if(a.inativa){
+        // desatribui de quem ainda estava escalado de hoje em diante (o histórico anterior fica)
+        const antes = state.escalas.length;
+        state.escalas = state.escalas.filter(e=> !(e.atividade === a.atividade && e.data >= hoje));
+        if(state.previaAtividades) Object.keys(state.previaAtividades).forEach(d=>{
+          Object.keys(state.previaAtividades[d]).forEach(nome=>{ if(state.previaAtividades[d][nome] === a.atividade) delete state.previaAtividades[d][nome]; });
+        });
+      }
+    }
+  });
+  return mudou;
+}
+
+// Uma única vez: descarta as prévias geradas pela regra antiga e refaz as de hoje em diante pelo ranking
+// (só os filhos há mais tempo sem atividade, limitado ao total de vagas).
+function migrarPreviaRanking(){
+  if(state.previaVersao === 2) return false;
+  state.previaVersao = 2;
+  state.previaAtividades = {};
+  state.previaManual = {};
+  const hoje = new Date().toISOString().slice(0,10);
+  Object.keys(state.confirmacoes||{}).forEach(d=>{
+    if(d >= hoje && (state.confirmacoes[d]||[]).length) gerarPreviaAtividades(d, true);
+  });
+  return true;
+}
+
+// Cobertura: quantas pessoas cada atividade já tem na gira em relação ao que precisa.
+function renderCoberturaAtividades(dateStr){
+  const box = document.getElementById('cal-cobertura');
+  if(!box) return;
+  const ativas = state.atividades.filter(a=>!a.inativa).sort((a,b)=>a.atividade.localeCompare(b.atividade,'pt-BR'));
+  if(!ativas.length){ box.innerHTML = ''; return; }
+  const prev = (state.previaAtividades && state.previaAtividades[dateStr]) || {};
+  const comEscala = new Set(state.escalas.filter(e=>e.data===dateStr).map(e=>e.pessoa));
+  let totalVagas = 0, totalOk = 0;
+  const chips = ativas.map(a=>{
+    const vagas = a.vagas || 1;
+    const conf = state.escalas.filter(e=>e.data===dateStr && e.atividade===a.atividade).length;
+    const sug = Object.keys(prev).filter(n=> prev[n]===a.atividade && !comEscala.has(n)).length;
+    totalVagas += vagas; totalOk += Math.min(conf, vagas);
+    let cor = '#fdf0d4', borda = '#e4c279', txt = '#74440a';
+    if(conf >= vagas){ cor = '#d2ebd9'; borda = '#a6d2b4'; txt = '#17502d'; }
+    else if(conf + sug >= vagas){ cor = '#f0faf9'; borda = '#98cfc8'; txt = '#0e5851'; }
+    else if(conf + sug === 0){ cor = '#fbe0e3'; borda = '#e8a9b1'; txt = '#7a1f2c'; }
+    return `<span title="${escapeAttr(a.atividade)}" style="display:inline-flex;gap:6px;align-items:center;padding:4px 11px;border-radius:14px;background:${cor};border:1.5px solid ${borda};color:${txt};font-size:12.5px;font-weight:700;">${escapeHtml(a.atividade.length>34 ? a.atividade.slice(0,32)+'…' : a.atividade)} <b>${conf}/${vagas}</b>${sug ? `<span style="font-weight:600;opacity:.8;">+${sug} prévia</span>` : ''}</span>`;
+  }).join('');
+  box.innerHTML = `<div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--brand-dark);">Vagas por atividade — ${totalOk} de ${totalVagas} preenchidas</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${chips}</div>`;
+}
+
 /* ---------- PREFERENCIAL POR IDADE E ACOMPANHANTE ---------- */
 const IDADE_PREFERENCIAL = 60;
 
@@ -5233,16 +5393,19 @@ function setupAtendimento(){
     if(!date) return;
     const prev = previaDoDia(date);
     const gira = (Array.from(giraDatesMap()[date] || []))[0] || '';
-    let n = 0;
+    let n = 0, puladas = 0;
     Object.keys(prev).forEach(nome=>{
       const at = prev[nome];
       const p = state.pessoas.find(x=>x.nome===nome);
       delete prev[nome];
       if(!at || !p || !atividadePermitida(p, at)) return;
       if(state.escalas.some(e=>e.data===date && e.pessoa===nome)) return;
+      const atvInfo = state.atividades.find(a=>a.atividade===at);
+      if(state.escalas.filter(e=>e.data===date && e.atividade===at).length >= (atvInfo ? (atvInfo.vagas||1) : 1)){ puladas++; return; }
       state.escalas.push({id: nextEscalaId(), data: date, gira, pessoa: nome, atividade: at, executado:'SIM'});
       n++;
     });
+    if(puladas) alert(`${puladas} sugestão(ões) não foi(ram) aplicada(s) porque a atividade já estava completa. Escolha outra atividade para ${puladas>1?'esses filhos':'esse filho'}.`);
     await persist();
     renderPessoasTable(); renderAtividadesTable(); renderGirasTable(); renderPainel();
     renderCalendarDayDetail(date);
@@ -5505,7 +5668,7 @@ function selectCalendarDay(dateStr){
   if(mudou) exitCorpoEditMode();
   const hoje = new Date().toISOString().slice(0,10);
   const temConf = (((state.confirmacoes||{})[dateStr])||[]).length > 0;
-  if(dateStr >= hoje && temConf && !(state.previaAtividades && state.previaAtividades[dateStr])){
+  if(dateStr >= hoje && temConf){
     gerarPreviaAtividades(dateStr, false);
     persist();
   }
@@ -5811,6 +5974,62 @@ function renderDeParaPendentes(dateStr){
   }
 }
 
+// Edição de uma atividade já atribuída (mesmo depois de finalizada): trocar a atividade, trocar a pessoa ou excluir.
+function abrirEdicaoEscala(dateStr, escalaId){
+  const e = state.escalas.find(x=> String(x.id) === String(escalaId));
+  const box = document.getElementById('cal-edit-escala-'+escalaId);
+  if(!e || !box) return;
+  if(box.style.display !== 'none'){ box.style.display = 'none'; box.innerHTML = ''; return; }
+  const ativos = state.pessoas.filter(p=> pessoaStatus(p)==='Ativo' || p.nome===e.pessoa)
+    .sort((a,b)=> (a.apelido||a.nome).localeCompare(b.apelido||b.nome,'pt-BR'));
+  const optsPessoa = ativos.map(p=>`<option value="${escapeAttr(p.nome)}"${p.nome===e.pessoa?' selected':''}>${escapeHtml(p.apelido||p.nome)}</option>`).join('');
+  const optsAtividade = (nomePessoa, sel)=>{
+    let html = opcoesAtividadesHtml(nomePessoa, sel);
+    if(sel && !html.includes('value="'+escapeAttr(sel)+'"')) html = `<option value="${escapeAttr(sel)}" selected>${escapeHtml(sel)}</option>` + html;
+    return html;
+  };
+  box.style.display = 'block';
+  box.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 0 4px;border-top:1px dashed var(--line);margin-top:8px;">
+      <select class="ed-pessoa" style="padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:12.5px;flex:1 1 150px;">${optsPessoa}</select>
+      <select class="ed-ativ" style="padding:6px 8px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:12.5px;flex:2 1 220px;">${optsAtividade(e.pessoa, e.atividade)}</select>
+      <button type="button" class="btn btn-primary btn-small ed-salvar">Salvar</button>
+      <button type="button" class="btn-danger-text ed-excluir">Excluir atividade</button>
+      <button type="button" class="btn-danger-text ed-cancelar" style="color:var(--ink-soft);">Cancelar</button>
+    </div>`;
+  const selP = box.querySelector('.ed-pessoa'), selA = box.querySelector('.ed-ativ');
+  selP.addEventListener('change', ()=>{ selA.innerHTML = optsAtividade(selP.value, selA.value); });
+  const atualizar = async ()=>{
+    await persist();
+    renderPessoasTable(); renderAtividadesTable(); renderGirasTable(); renderPainel(); renderCalendar();
+    renderCalendarDayDetail(dateStr);
+  };
+  box.querySelector('.ed-cancelar').addEventListener('click', ()=>{ box.style.display='none'; box.innerHTML=''; });
+  box.querySelector('.ed-excluir').addEventListener('click', async ()=>{
+    if(!confirm('Excluir a atividade "'+e.atividade+'" de '+(apelidoDe(e.pessoa))+' nesta gira?')) return;
+    const idx = state.escalas.findIndex(x=> String(x.id) === String(escalaId));
+    if(idx === -1) return;
+    state.escalas.splice(idx, 1);
+    await atualizar();
+  });
+  box.querySelector('.ed-salvar').addEventListener('click', async ()=>{
+    const novaPessoa = selP.value, novaAtiv = selA.value;
+    if(!novaPessoa || !novaAtiv){ alert('Escolha a pessoa e a atividade.'); return; }
+    if(novaPessoa === e.pessoa && novaAtiv === e.atividade){ box.style.display='none'; box.innerHTML=''; return; }
+    const pessoa = state.pessoas.find(x=>x.nome===novaPessoa);
+    if(!atividadePermitida(pessoa, novaAtiv)){ alert('Esse filho não pode executar essa atividade.'); return; }
+    if(novaPessoa !== e.pessoa && state.escalas.some(x=> x.data===dateStr && x.pessoa===novaPessoa && x !== e)
+       && !confirm(apelidoDe(novaPessoa)+' já tem atividade nesta gira. Atribuir mesmo assim?')) return;
+    const info = state.atividades.find(a=>a.atividade===novaAtiv);
+    const vagas = info ? (info.vagas||1) : 1;
+    const ocupadas = state.escalas.filter(x=> x.data===dateStr && x.atividade===novaAtiv && x !== e).length;
+    if(ocupadas >= vagas && !confirm('"'+novaAtiv+'" já tem '+ocupadas+'/'+vagas+' pessoa(s) nesta gira. Atribuir mesmo assim?')) return;
+    e.pessoa = novaPessoa;
+    e.atividade = novaAtiv;
+    delete previaDoDia(dateStr)[novaPessoa];
+    await atualizar();
+  });
+}
+
 function renderCalendarDayDetail(dateStr){
   const giraMap = giraDatesMap();
   const giras = giraMap[dateStr] ? Array.from(giraMap[dateStr]) : [];
@@ -5849,14 +6068,19 @@ function renderCalendarDayDetail(dateStr){
     tbody.innerHTML = `<div class="empty-state">Nenhum registro de escala para esse dia.</div>`;
   } else {
     tbody.innerHTML = recs.map(e=>`
-      <div class="atend-card cal-medium-card">
+      <div class="atend-card cal-medium-card" style="flex-wrap:wrap;">
         <div class="cal-medium-esq">
           <div class="cal-medium-nome">${escapeHtml(apelidoDe(e.pessoa))}</div>
           <div class="cal-medium-ent" style="font-weight:400;">${escapeHtml(e.atividade)}</div>
         </div>
-        <div class="cal-medium-dir"><span class="pill ${e.executado==='SIM'?'pill-ok':'pill-no'}">${e.executado==='SIM'?'Executado':'Não executado'}</span></div>
+        <div class="cal-medium-dir"><span class="pill ${e.executado==='SIM'?'pill-ok':'pill-no'}">${e.executado==='SIM'?'Executado':'Não executado'}</span>
+          <button type="button" class="btn btn-ghost btn-small btn-edit-escala" data-id="${e.id}">✎ Editar</button></div>
+        <div class="cal-edit-escala" id="cal-edit-escala-${e.id}" style="display:none;flex:0 0 100%;width:100%;"></div>
       </div>
     `).join('');
+    tbody.querySelectorAll('.btn-edit-escala').forEach(btn=>{
+      btn.addEventListener('click', ()=> abrirEdicaoEscala(dateStr, btn.dataset.id));
+    });
   }
   document.getElementById('cal-day-detail').style.display = 'block';
   sincronizarDataAtiva(dateStr);
@@ -5864,6 +6088,7 @@ function renderCalendarDayDetail(dateStr){
   renderCorpoConfirmados(dateStr);
   renderDeParaPendentes(dateStr);
   renderImportadosOk(dateStr);
+  renderCoberturaAtividades(dateStr);
   applyCalStep();
   atualizarPassos();
 }
@@ -6038,6 +6263,28 @@ function renderConfirmados(dateStr){
     return b.dias - a.dias;
   });
 
+  // agrupa quem tem a mesma atividade (já atribuída ou da prévia) em pares; StandBy depois; sem atividade no fim
+  const atividadeDoDia = (pp)=>{
+    const ja = state.escalas.find(e=>e.data===dateStr && e.pessoa===pp.nome);
+    return ja ? ja.atividade : (((state.previaAtividades||{})[dateStr]||{})[pp.nome] || '');
+  };
+  const ehSB = (a)=> /stand ?by/.test(normalizeNomeComp(a||''));
+  const grupos = new Map();
+  linhas.forEach(l=>{
+    l.atividadeGrupo = atividadeDoDia(l.p);
+    if(!grupos.has(l.atividadeGrupo)) grupos.set(l.atividadeGrupo, []);
+    grupos.get(l.atividadeGrupo).push(l);
+  });
+  const posOrig = new Map(linhas.map((l,i)=>[l,i]));
+  const peso = (k)=> k==='' ? 2 : (ehSB(k) ? 1 : 0);
+  const ordemGrupos = Array.from(grupos.keys()).sort((x,y)=>{
+    if(peso(x) !== peso(y)) return peso(x) - peso(y);
+    return posOrig.get(grupos.get(x)[0]) - posOrig.get(grupos.get(y)[0]);   // grupo com quem está há mais tempo parado primeiro
+  });
+  const reordenadas = [];
+  ordemGrupos.forEach(k=> reordenadas.push(...grupos.get(k)));
+  linhas.length = 0; reordenadas.forEach(l=> linhas.push(l));
+
   const pendentesPrevia = linhas.filter(l=> !state.escalas.some(e=>e.data===dateStr && e.pessoa===l.p.nome) && ((state.previaAtividades||{})[dateStr]||{})[l.p.nome]).length;
   hintEl.textContent = `${linhas.length} filho(s) confirmado(s) para esse dia.` + (pendentesPrevia ? ` Prévia: ${pendentesPrevia} sugestão(ões) aguardando confirmação.` : '');
   const btnConf = document.getElementById('btn-previa-confirmar');
@@ -6050,7 +6297,7 @@ function renderConfirmados(dateStr){
     tbody.innerHTML = `<div class="empty-state">Nenhum confirmado localizado no cadastro.</div>`;
   } else {
     const previaDia = (state.previaAtividades && state.previaAtividades[dateStr]) || {};
-    tbody.innerHTML = linhas.map(({p,entidade,lastDate,dias})=>{
+    tbody.innerHTML = linhas.map(({p,entidade,lastDate,dias,atividadeGrupo}, idx)=>{
       const jaTem = state.escalas.some(e=>e.data===dateStr && e.pessoa===p.nome);
       const sugestao = !jaTem ? (previaDia[p.nome] || '') : '';
       const atividadeOptions = opcoesAtividadesHtml(p.nome, sugestao);
@@ -6061,7 +6308,10 @@ function renderConfirmados(dateStr){
         ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px;">${jaAtribuidas.map(e=>`<span style="display:inline-block;background:var(--brand-soft);color:var(--brand-dark);padding:2px 8px;border-radius:20px;font-size:11.5px;">${escapeHtml(e.atividade)}</span>`).join('')}</div>`
         : '';
       const entidadeTxt = entidade ? `<div style="font-size:11.5px;color:var(--ink-soft);margin-top:2px;">Entidade: ${escapeHtml(entidade)}</div>` : '';
-      return `
+      const cabGrupo = (idx===0 || linhas[idx-1].atividadeGrupo !== atividadeGrupo)
+        ? `<div style="margin:${idx===0?'0':'12px'} 2px 6px;font-size:12.5px;font-weight:700;color:var(--brand-dark);">${atividadeGrupo ? escapeHtml(atividadeGrupo) : 'Sem atividade na prévia'} <span style="font-weight:600;opacity:.7;">· ${grupos.get(atividadeGrupo).length} ${grupos.get(atividadeGrupo).length===1?'pessoa':'pessoas'}</span></div>`
+        : '';
+      return `${cabGrupo}
       <div class="atend-card cal-medium-card">
         <div class="cal-medium-esq">
           <div class="cal-medium-nome"><span class="cal-nome-fixa"><span class="clickable" data-person="${escapeAttr(p.nome)}" style="color:var(--brand-dark);">${escapeHtml(p.apelido || p.nome)}</span></span>
@@ -6094,8 +6344,11 @@ function renderConfirmados(dateStr){
   tbody.querySelectorAll('.cal-confirm-atividade').forEach(sel=>{
     sel.addEventListener('change', ()=>{
       const prev = previaDoDia(dateStr);
-      if(sel.value) prev[sel.dataset.pessoa] = sel.value; else delete prev[sel.dataset.pessoa];
+      const manualDia = previaManualDoDia(dateStr);
+      if(sel.value){ prev[sel.dataset.pessoa] = sel.value; manualDia[sel.dataset.pessoa] = true; }
+      else { delete prev[sel.dataset.pessoa]; delete manualDia[sel.dataset.pessoa]; }
       persist();
+      renderCoberturaAtividades(dateStr);
     });
   });
   tbody.querySelectorAll('.btn-atribuir-confirmado').forEach(btn=>{
@@ -6105,6 +6358,10 @@ function renderConfirmados(dateStr){
       const atividade = select ? select.value : '';
       if(!atividade){ alert('Escolha uma atividade.'); return; }
       if(!atividadePermitida(state.pessoas.find(x=>x.nome===nome), atividade)){ alert('Esse filho não pode executar essa atividade.'); return; }
+      const atvInfo = state.atividades.find(a=>a.atividade===atividade);
+      const vagasAtv = atvInfo ? (atvInfo.vagas||1) : 1;
+      const jaNaAtv = state.escalas.filter(e=>e.data===dateStr && e.atividade===atividade).length;
+      if(jaNaAtv >= vagasAtv && !confirm(`"${atividade}" já tem ${jaNaAtv}/${vagasAtv} pessoa(s) nesta gira. Atribuir mesmo assim?`)) return;
       const girasDia = Array.from(giraDatesMap()[dateStr] || []);
       const gira = girasDia[0] || '';
       state.escalas.push({id: nextEscalaId(), data: dateStr, gira, pessoa: nome, atividade, executado:'SIM'});
@@ -6506,7 +6763,9 @@ async function initApp(){
   state = await loadState();
   const migrouApelidos = migrarApelidosPessoas();
   const migrouConsulentes = migrarConsulentesLegado();
-  if(migrouApelidos || migrouConsulentes){ await persist(); }
+  const migrouAtividades = migrarAtividadesVagas();
+  const migrouPrevia = migrarPreviaRanking();
+  if(migrouApelidos || migrouConsulentes || migrouAtividades || migrouPrevia){ await persist(); }
   updateStorageStatusLabel();
   setupTabs();
   setupModal();
