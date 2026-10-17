@@ -865,7 +865,7 @@
         <h3 id="cal-detail-title" class="section-title" style="font-size:15px;margin-bottom:2px;"></h3>
         <p id="cal-detail-gira" class="cal-gira-name"></p>
         <div data-passo="3,5" style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px;">
-          <button type="button" class="btn btn-primary btn-small" data-passo="3" id="btn-cal-rel-atividades">📄 Relatório das atividades</button>
+          <button type="button" class="btn btn-primary btn-small" data-passo="3" id="btn-cal-rel-atividades" title="Gera uma imagem PNG única, sem quebra de página, para enviar no WhatsApp">🖼️ Relatório das atividades (imagem)</button>
           <button type="button" class="btn btn-primary btn-small" data-passo="5" id="btn-cal-rel-corpo">📄 Relatório do atendimento (corpo mediúnico)</button>
         </div>
 
@@ -1039,6 +1039,14 @@
           <div class="field"><label for="f-nome-atividade">Descrição</label><input type="text" id="f-nome-atividade" placeholder="Descrição da atividade"></div>
           <div class="field"><label for="f-vagas-atividade">Pessoas necessárias na gira</label>
             <select id="f-vagas-atividade"><option value="1">1 pessoa</option><option value="2">2 pessoas</option><option value="3">3 pessoas</option><option value="4">4 pessoas</option><option value="5">5 pessoas</option><option value="6">6 pessoas</option></select></div>
+          <div class="field" style="grid-column:1/-1;">
+            <label for="f-instrucoes-atividade">O que fazer <span style="font-weight:400;color:var(--ink-soft);">(um passo por linha; aparece no relatório em PDF)</span></label>
+            <textarea id="f-instrucoes-atividade" rows="5" placeholder="Ex.: Varrer o Congá&#10;Tirar os pingos de vela&#10;Passar pano" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;"></textarea>
+          </div>
+          <div class="field" style="grid-column:1/-1;">
+            <label for="f-atencao-atividade">Atenção <span style="font-weight:400;color:var(--ink-soft);">(opcional; aparece em destaque no PDF)</span></label>
+            <textarea id="f-atencao-atividade" rows="2" placeholder="Ex.: Se não estiver sujo, lavar apenas o banheiro" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;"></textarea>
+          </div>
           <div class="field">
             <button class="btn btn-primary" id="btn-add-atividade">+ Adicionar</button>
           </div>
@@ -1124,7 +1132,7 @@
         </span>
         <span style="display:flex;align-items:center;gap:6px;">
           <input type="date" id="f-data-relatorio" title="Data do relatório" style="padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:12.5px;font-family:var(--body);">
-          <button class="btn btn-primary btn-small" id="btn-gerar-relatorio">📄 Relatório PDF</button>
+          <button class="btn btn-primary btn-small" id="btn-gerar-relatorio" title="Gera uma imagem PNG única, sem quebra de página, para enviar no WhatsApp">🖼️ Relatório (imagem)</button>
         </span>
       </div>
 
@@ -1612,6 +1620,13 @@
             <div><label for="f-celular-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Celular</label><input type="text" id="f-celular-pessoa" placeholder="(00) 00000-0000" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;"></div>
             <div><label for="f-aniversario-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Aniversário</label><input type="date" id="f-aniversario-pessoa" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;"></div>
           </div>
+          <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;">
+            <div><label for="f-familia-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Família</label><input type="text" id="f-familia-pessoa" list="lista-familias" placeholder="Nome da família" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;"><datalist id="lista-familias"></datalist>
+              <div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">Quem é da mesma família entra junto na escala.</div></div>
+            <div><label style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">EMCDO</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);cursor:pointer;padding:9px 0;"><input type="checkbox" id="f-emcdo-pessoa"> Emancipado</label>
+              <div style="font-size:11.5px;color:var(--ink-soft);">Permite cambonar sozinho e participar da limpeza.</div></div>
+          </div>
           <div class="field">
             <label for="f-cpf-pessoa" style="display:block;font-size:11.5px;font-weight:600;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">CPF</label>
             <input type="text" id="f-cpf-pessoa" placeholder="000.000.000-00" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:var(--body);font-size:13.5px;">
@@ -1793,7 +1808,7 @@ function gerarPreviaAtividades(dateStr, refazer){
   });
 
   // ranking: quem está há mais tempo sem atividade vem primeiro (quem nunca teve, antes de todos)
-  const fila = confirmados.filter(p=> !comEscala.has(p.nome) && !prev[p.nome])
+  const fila = confirmados.filter(p=> !comEscala.has(p.nome) && !prev[p.nome] && !ehMenorEm(p, dateStr))
     .sort((a,b)=>{
       const ia = inatividade(a.nome), ib = inatividade(b.nome);
       if(ia === ib) return (a.apelido||a.nome).localeCompare(b.apelido||b.nome,'pt-BR');
@@ -1810,60 +1825,102 @@ function gerarPreviaAtividades(dateStr, refazer){
   });
   if(slots.length === 0) return prev;
 
-  // para cada filho, vagas permitidas: primeiro equilibra as atividades, depois prefere a que ele fez há mais tempo
+  // Família: quem é da mesma família vai embora junto, então entra na prévia como um bloco (todos ou ninguém),
+  // de preferência na mesma atividade. O bloco é posicionado pelo membro que está há mais tempo sem atividade.
+  const chaveFam = (x)=> normalizeNomeComp(x.familia||'').trim();
+  const unidades = [];
+  const usados = new Set();
+  fila.forEach(x=>{
+    if(usados.has(x.nome)) return;
+    const k = chaveFam(x);
+    const membros = k ? fila.filter(q=> chaveFam(q) === k) : [x];
+    membros.forEach(m=> usados.add(m.nome));
+    unidades.push(membros);
+  });
+
+  const fixos = new Set();     // quem foi colocado junto com a família na mesma atividade não é remanejado
   const opcoes = new Map();
-  const opcoesDe = (p, lista)=> (lista||slots).filter(s=> atividadePermitida(p, s.atividade)).sort((x,y)=>{
-    if(x.ratio !== y.ratio) return x.ratio - y.ratio;
-    const dx = desdeAtiv(p.nome, x.atividade), dy = desdeAtiv(p.nome, y.atividade);
-    if(dx !== dy) return dy > dx ? 1 : -1;
-    return x.i - y.i;
+  // para cada filho, vagas permitidas: primeiro equilibra as atividades, depois prefere a que ele fez há mais tempo
+  const opcoesDe = (x, lista)=> (lista||slots).filter(s=> atividadePermitida(x, s.atividade)).sort((u,v)=>{
+    if(u.ratio !== v.ratio) return u.ratio - v.ratio;
+    const du = desdeAtiv(x.nome, u.atividade), dv = desdeAtiv(x.nome, v.atividade);
+    if(du !== dv) return dv > du ? 1 : -1;
+    return u.i - v.i;
   });
   // caminho aumentante: encaixa o filho, remanejando quem já entrou, sem nunca tirar ninguém da prévia
-  const encaixar = (p, visitadas)=>{
-    for(const s of opcoes.get(p.nome)){
+  const encaixar = (x, visitadas)=>{
+    for(const s of opcoes.get(x.nome)){
       if(visitadas.has(s)) continue;
+      if(s.dono && fixos.has(s.dono.nome)) continue;
       visitadas.add(s);
-      if(!s.dono || encaixar(s.dono, visitadas)){ s.dono = p; return true; }
+      if(!s.dono || encaixar(s.dono, visitadas)){ s.dono = x; return true; }
     }
     return false;
   };
+  // coloca uma unidade (um filho ou uma família); se não couber, desfaz e devolve false
+  const tentarUnidade = (u, lista)=>{
+    if(u.length > 1){
+      const porAtiv = new Map();
+      lista.forEach(s=>{ if(!s.dono){ if(!porAtiv.has(s.atividade)) porAtiv.set(s.atividade, []); porAtiv.get(s.atividade).push(s); } });
+      const candidatas = Array.from(porAtiv.entries())
+        .filter(([a, livresA])=> livresA.length >= u.length && u.every(m=> atividadePermitida(m, a)))
+        .sort((x,y)=> (x[1][0].ratio - y[1][0].ratio) || (x[1][0].i - y[1][0].i));
+      if(candidatas.length){
+        const livresA = candidatas[0][1];
+        u.forEach((m, idx)=>{ livresA[idx].dono = m; fixos.add(m.nome); });
+        return true;
+      }
+    }
+    const foto = lista.map(s=> s.dono);
+    for(const m of u){
+      opcoes.set(m.nome, opcoesDe(m, lista));
+      if(!encaixar(m, new Set())){ lista.forEach((s,i)=>{ s.dono = foto[i]; }); return false; }
+    }
+    return true;
+  };
 
-  let livres = slots.length;
-  for(const p of fila){
-    if(livres <= 0) break;
-    opcoes.set(p.nome, opcoesDe(p));
-    if(encaixar(p, new Set())) livres--;
+  const unidadesColocadas = [];
+  for(const u of unidades){
+    if(!slots.some(s=> !s.dono)) break;
+    if(tentarUnidade(u, slots)) unidadesColocadas.push(u);
   }
-  // StandBy só é assumido se alguém faltar: fica com o filho MENOS parado entre os escolhidos
+
+  // Os escolhidos já estão definidos; agora reposiciona colocando as famílias primeiro, para ficarem juntas na mesma atividade.
+  const porFamiliaPrimeiro = (unids)=> unids.slice().sort((x,y)=> (y.length>1) - (x.length>1) || y.length - x.length);
+  const donosFase1 = slots.map(s=> s.dono);
+  slots.forEach(s=>{ s.dono = null; });
+  fixos.clear();
+  let reposicionou = true;
+  for(const u of porFamiliaPrimeiro(unidadesColocadas)){ if(!tentarUnidade(u, slots)){ reposicionou = false; break; } }
+  if(!reposicionou) slots.forEach((s,i)=>{ s.dono = donosFase1[i]; });
+
+  // StandBy só é assumido se alguém faltar: fica com o filho MENOS parado entre os escolhidos (famílias não ficam de StandBy)
   const ehStandBy = (a)=> /stand ?by/.test(normalizeNomeComp(a||''));
   const resultado1 = slots.filter(s=>s.dono).map(s=>[s.dono.nome, s.atividade]);
   const sbSlots = slots.filter(s=> ehStandBy(s.atividade));
   const escolhidosSB = [];
-  if(sbSlots.length && resultado1.length){
-    const nomesEscolhidos = new Set(resultado1.map(r=>r[0]));
-    const S = fila.filter(x=> nomesEscolhidos.has(x.nome));            // escolhidos, na ordem do ranking
+  if(sbSlots.length && unidadesColocadas.length){
     const outros = slots.filter(s=> !ehStandBy(s.atividade));
-    const casar = (pessoas)=>{
+    const colocarTodas = (unids)=>{
       outros.forEach(s=>{ s.dono = null; });
-      for(const x of pessoas){
-        opcoes.set(x.nome, opcoesDe(x, outros));
-        if(!encaixar(x, new Set())) return false;
-      }
+      fixos.clear();
+      for(const u of porFamiliaPrimeiro(unids)){ if(!tentarUnidade(u, outros)) return false; }
       return true;
     };
-    const menosParados = S.slice().sort((x,y)=>{
+    const solo = (u, c)=> u.length === 1 && u[0] === c;
+    const candidatos = unidadesColocadas.filter(u=> u.length === 1).map(u=> u[0]).sort((x,y)=>{
       const ix = inatividade(x.nome), iy = inatividade(y.nome);
       if(ix === iy) return 0;
       return ix < iy ? -1 : 1;
     });
-    for(const c of menosParados){
+    for(const c of candidatos){
       if(escolhidosSB.length >= sbSlots.length) break;
       if(!atividadePermitida(c, sbSlots[0].atividade)) continue;
-      const resto = S.filter(x=> x !== c && !escolhidosSB.includes(x));
-      if(casar(resto)) escolhidosSB.push(c);
+      const resto = unidadesColocadas.filter(u=> !solo(u, c) && !escolhidosSB.some(e=> solo(u, e)));
+      if(colocarTodas(resto)) escolhidosSB.push(c);
     }
     if(escolhidosSB.length){
-      casar(S.filter(x=> !escolhidosSB.includes(x)));
+      colocarTodas(unidadesColocadas.filter(u=> !escolhidosSB.some(e=> solo(u, e))));
       escolhidosSB.forEach(c=>{ prev[c.nome] = sbSlots[0].atividade; });
       outros.forEach(s=>{ if(s.dono) prev[s.dono.nome] = s.atividade; });
       return prev;
@@ -2076,7 +2133,7 @@ function formatAniversario(iso){
 function setupRelatorioControls(){
   const today = new Date();
   document.getElementById('f-data-relatorio').value = today.toISOString().slice(0,10);
-  document.getElementById('btn-gerar-relatorio').addEventListener('click', gerarRelatorioPDF);
+  document.getElementById('btn-gerar-relatorio').addEventListener('click', gerarRelatorioImagem);
 }
 
 /* ---------- RELATÓRIO PDF ---------- */
@@ -2084,124 +2141,330 @@ function isStandBy(atividade){
   return String(atividade).trim().toLowerCase().replace(/\s+/g,'') === 'standby';
 }
 
-function gerarRelatorioPDF(){
-  const date = document.getElementById('f-data-relatorio').value;
-  if(!date){
-    alert('Selecione uma data para gerar o relatório.');
-    return;
-  }
-  const recs = state.escalas.filter(e=>e.data===date);
-  if(recs.length === 0){
-    alert('Nenhum registro encontrado para essa data.');
-    return;
-  }
-  if(!window.jspdf || !window.jspdf.jsPDF){
-    alert('Não foi possível carregar o gerador de PDF. Verifique sua conexão com a internet e tente novamente.');
-    return;
-  }
+function normTxt(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(); }
 
-  // Ordena os registros pela ordem de cadastro das atividades (mesma ordem da aba Atividades)
-  const ordemAtividade = {};
-  state.atividades.forEach((a,idx)=>{ ordemAtividade[a.atividade] = idx; });
-  const recsOrdenados = recs.slice().sort((a,b)=>{
-    const oa = ordemAtividade[a.atividade] ?? 9999;
-    const ob = ordemAtividade[b.atividade] ?? 9999;
-    if(oa !== ob) return oa - ob;
-    return 0;
+/* Instruções padrão de cada atividade (vêm do relatório em Word da casa). Podem ser editadas na aba
+   Atividades (campos "O que fazer" e "Atenção"); o que for salvo lá tem prioridade sobre este padrão. */
+const AVISO_BANHEIROS_BAIXO = 'As 4 pessoas que estiverem limpando os banheiros de baixo e as garagens devem, juntas, estender a limpeza até o portão e guardar as cadeiras embaixo da garagem do lado da sala da mãe.';
+function perfilAtividade(nome){
+  const n = normTxt(nome);
+  if(/stand ?by/.test(n)) return {icone:'standby', atencao:'', instrucoes:[
+    'Fique à disposição durante toda a limpeza.',
+    'Você só assume uma atividade se alguém escalado faltar.']};
+  if(/lixo/.test(n)) return {icone:'lixo', atencao:'', instrucoes:[
+    'Tirar os lixos dos banheiros de cima e de baixo, Congá, cozinha, quintal dos fundos e quintal de baixo.',
+    'Colocar saco de lixo limpo EM TUDO.',
+    'Lixinhos menores: sacolinha de supermercado.',
+    'Lixo do banheiro de cima e da cozinha: saco de lixo preto fino.',
+    'Lixo do quintal de baixo e do quintal dos fundos: saco de lixo preto grosso.',
+    'Lavar os lixos e as tampas, se necessário.',
+    'Tirar as bitucas de cigarro do cinzeiro grande do quintal.']};
+  if(/corredor/.test(n)) return {icone:'vassoura', atencao:'', instrucoes:[
+    'Varrer.', 'Passar pano.', 'Limpar e organizar as mesas.']};
+  if(/cozinha/.test(n)) return {icone:'cozinha', atencao:'', instrucoes:[
+    'Lavar a louça.', 'Secar e guardar a louça.', 'Limpar o fogão.']};
+  if(/conga/.test(n)) return {icone:'conga', atencao:'', instrucoes:[
+    'Varrer o Congá.', 'Tirar os pingos de vela.', 'Passar pano.']};
+  if(/banheiro de baixo|garagem/.test(n)){
+    const loja = /loja/.test(n);
+    return {icone:'chuveiro', atencao: AVISO_BANHEIROS_BAIXO, instrucoes: loja
+      ? ['Lavar o banheiro de baixo e a garagem do lado da loja.', 'Se a garagem não estiver suja, lave só o banheiro e varra a garagem.']
+      : ['Lavar o banheiro de baixo e a garagem do lado da sala da mãe.']};
+  }
+  if(/banheiro/.test(n)) return {icone:'banheiro', atencao:'', instrucoes:['Lavar o banheiro de cima.']};
+  if(/quintal/.test(n)) return {icone:'quintal', atencao:'', instrucoes:[]};
+  if(/mesa|feijoada/.test(n)) return {icone:'mesa', atencao:'', instrucoes:[]};
+  return {icone:'vassoura', atencao:'', instrucoes:[]};
+}
+// O que está cadastrado na atividade (aba Atividades) vale mais que o padrão acima.
+function instrucoesDaAtividade(nome){
+  const a = state.atividades.find(x=>x.atividade===nome) || {};
+  const base = perfilAtividade(nome);
+  const linhas = (t)=> String(t).split(/\r?\n/).map(l=>l.replace(/^\s*[-•*☐]\s*/,'').trim()).filter(Boolean);
+  return {
+    icone: base.icone,
+    instrucoes: typeof a.instrucoes === 'string' ? linhas(a.instrucoes) : base.instrucoes,
+    atencao: typeof a.atencao === 'string' ? a.atencao.trim() : base.atencao
+  };
+}
+
+/* Ilustrações próprias (SVG) de cada atividade; viram PNG na hora de montar o PDF. */
+const ICONES_SVG = (()=>{
+  const wrap = (bg, corpo)=> `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="${bg}"/>${corpo}</svg>`;
+  const brilho = (x,y,s,c)=> `<path d="M${x} ${y-s} L${x+s*0.28} ${y-s*0.28} L${x+s} ${y} L${x+s*0.28} ${y+s*0.28} L${x} ${y+s} L${x-s*0.28} ${y+s*0.28} L${x-s} ${y} L${x-s*0.28} ${y-s*0.28}Z" fill="${c}"/>`;
+  return {
+    lixo: wrap('#E3EFE7',
+      `<path d="M33 34 Q26 16 42 14 Q50 8 60 14 Q76 16 67 34Z" fill="#26302B"/>
+       <path d="M46 14 Q50 6 54 14" fill="none" stroke="#26302B" stroke-width="4" stroke-linecap="round"/>
+       <path d="M29 38 L71 38 L66 84 Q65.5 87 62.5 87 L37.5 87 Q34.5 87 34 84Z" fill="#4B7F63"/>
+       <rect x="25" y="32" width="50" height="8" rx="4" fill="#2F4A3E"/>
+       <rect x="41" y="48" width="3.5" height="30" rx="1.7" fill="#E3EFE7"/><rect x="48.2" y="48" width="3.5" height="30" rx="1.7" fill="#E3EFE7"/><rect x="55.5" y="48" width="3.5" height="30" rx="1.7" fill="#E3EFE7"/>
+       ${brilho(80,22,7,'#F2C94C')}${brilho(18,70,5,'#F2C94C')}`),
+    banheiro: wrap('#E4EEF7',
+      `<rect x="31" y="15" width="38" height="24" rx="5" fill="#fff" stroke="#3E6A94" stroke-width="3.5"/>
+       <rect x="45" y="10" width="10" height="6" rx="3" fill="#3E6A94"/>
+       <path d="M24 46 Q26 74 42 78 L58 78 Q74 74 76 46Z" fill="#fff" stroke="#3E6A94" stroke-width="3.5" stroke-linejoin="round"/>
+       <ellipse cx="50" cy="46" rx="27" ry="8" fill="#fff" stroke="#3E6A94" stroke-width="3.5"/>
+       <ellipse cx="50" cy="47" rx="17" ry="4" fill="#CFE3F3"/>
+       <rect x="40" y="78" width="20" height="10" rx="3" fill="#fff" stroke="#3E6A94" stroke-width="3.5"/>
+       ${brilho(82,26,7,'#F2C94C')}${brilho(16,60,5,'#F2C94C')}`),
+    chuveiro: wrap('#E4EEF7',
+      `<path d="M22 86 V34 Q22 20 36 20 H52" fill="none" stroke="#3E6A94" stroke-width="6" stroke-linecap="round"/>
+       <path d="M48 28 H80 Q78 44 64 44 Q50 44 48 28Z" fill="#3E6A94"/>
+       <path d="M54 52 L51 62 M64 52 V66 M74 52 L77 62 M59 70 L57 78 M70 70 L72 78" stroke="#6BA6D6" stroke-width="3.5" stroke-linecap="round"/>
+       <circle cx="34" cy="62" r="6" fill="none" stroke="#fff" stroke-width="3"/><circle cx="40" cy="78" r="4" fill="none" stroke="#fff" stroke-width="3"/>
+       ${brilho(82,70,6,'#F2C94C')}`),
+    conga: wrap('#F6ECDD',
+      `<path d="M50 10 Q63 26 50 39 Q37 26 50 10Z" fill="#F29B38"/><path d="M50 21 Q56 30 50 36 Q44 30 50 21Z" fill="#FFD66B"/>
+       <rect x="39" y="41" width="22" height="40" rx="4" fill="#F7E7C6" stroke="#B88A4A" stroke-width="3"/>
+       <path d="M39 50 Q45 62 46 52 Q50 68 54 52 Q57 60 61 50" fill="#fff" stroke="#B88A4A" stroke-width="2" stroke-linejoin="round"/>
+       <ellipse cx="50" cy="84" rx="28" ry="6" fill="#B88A4A"/><ellipse cx="50" cy="82" rx="24" ry="4.5" fill="#D9AE6C"/>
+       ${brilho(20,30,6,'#F2C94C')}${brilho(80,40,5,'#F2C94C')}`),
+    cozinha: wrap('#FBE9E0',
+      `<path d="M38 30 Q34 22 39 16 M50 30 Q46 20 51 12 M62 30 Q58 22 63 16" fill="none" stroke="#C7B2A8" stroke-width="3.5" stroke-linecap="round"/>
+       <path d="M24 50 Q50 28 76 50Z" fill="#B9533A"/><circle cx="50" cy="35" r="4" fill="#8F3E27"/>
+       <rect x="24" y="50" width="52" height="32" rx="7" fill="#D96B4A"/>
+       <rect x="12" y="56" width="14" height="7" rx="3.5" fill="#8F3E27"/><rect x="74" y="56" width="14" height="7" rx="3.5" fill="#8F3E27"/>
+       <circle cx="36" cy="68" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="50" cy="73" r="3.5" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="62" cy="66" r="4.5" fill="none" stroke="#fff" stroke-width="2.5"/>`),
+    vassoura: wrap('#EAF1DE',
+      `<rect x="47" y="8" width="6" height="50" rx="3" fill="#8A6A3E"/>
+       <rect x="36" y="56" width="28" height="8" rx="3" fill="#6E5430"/>
+       <path d="M36 64 H64 L74 90 H26Z" fill="#E1B54A"/>
+       <path d="M38 66 L33 88 M46 66 L43 88 M54 66 L57 88 M62 66 L67 88" stroke="#B58A24" stroke-width="2.2" stroke-linecap="round"/>
+       ${brilho(20,30,6,'#F2C94C')}${brilho(80,48,5,'#F2C94C')}`),
+    standby: wrap('#EDE6F3',
+      `<rect x="26" y="14" width="48" height="7" rx="3.5" fill="#6B4F8A"/><rect x="26" y="79" width="48" height="7" rx="3.5" fill="#6B4F8A"/>
+       <path d="M32 21 H68 Q68 42 53 50 Q68 58 68 79 H32 Q32 58 47 50 Q32 42 32 21Z" fill="#fff" stroke="#6B4F8A" stroke-width="3.5" stroke-linejoin="round"/>
+       <path d="M38 26 H62 Q60 38 50 44 Q40 38 38 26Z" fill="#E1B54A"/>
+       <path d="M37 76 Q41 64 50 61 Q59 64 63 76Z" fill="#E1B54A"/>
+       <rect x="48.6" y="46" width="2.8" height="14" fill="#E1B54A"/>`),
+    quintal: wrap('#E4F0DC',
+      `<rect x="45" y="52" width="10" height="32" rx="3" fill="#8A6A3E"/>
+       <circle cx="50" cy="36" r="20" fill="#4E9A58"/><circle cx="34" cy="48" r="14" fill="#5BAA65"/><circle cx="66" cy="48" r="14" fill="#5BAA65"/>
+       <path d="M16 86 H84" stroke="#4E9A58" stroke-width="5" stroke-linecap="round"/>`),
+    mesa: wrap('#F3E8DA',
+      `<rect x="14" y="40" width="72" height="9" rx="3" fill="#A57A47"/>
+       <rect x="22" y="49" width="7" height="34" rx="2" fill="#7E5A32"/><rect x="71" y="49" width="7" height="34" rx="2" fill="#7E5A32"/>
+       <ellipse cx="34" cy="38" rx="11" ry="3.5" fill="#fff" stroke="#C9B79F" stroke-width="2"/><ellipse cx="66" cy="38" rx="11" ry="3.5" fill="#fff" stroke="#C9B79F" stroke-width="2"/>
+       ${brilho(50,20,6,'#F2C94C')}`)
+  };
+})();
+const _iconeCache = {};
+function carregarIconePng(chave){
+  if(_iconeCache[chave]) return _iconeCache[chave];
+  _iconeCache[chave] = new Promise(resolve=>{
+    try{
+      const img = new Image();
+      img.onload = ()=>{
+        try{
+          const c = document.createElement('canvas'); c.width = 240; c.height = 240;
+          c.getContext('2d').drawImage(img, 0, 0, 240, 240);
+          resolve(c.toDataURL('image/png'));
+        }catch(e){ resolve(null); }
+      };
+      img.onerror = ()=> resolve(null);
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(ICONES_SVG[chave] || ICONES_SVG.vassoura);
+    }catch(e){ resolve(null); }
   });
+  return _iconeCache[chave];
+}
 
-  const principais = recsOrdenados.filter(e=>!isStandBy(e.atividade));
-  const standBy = recsOrdenados.filter(e=>isStandBy(e.atividade));
+function carregarIconeImg(chave){
+  return new Promise(resolve=>{
+    try{
+      const img = new Image();
+      img.onload = ()=> resolve(img);
+      img.onerror = ()=> resolve(null);
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(ICONES_SVG[chave] || ICONES_SVG.vassoura);
+    }catch(e){ resolve(null); }
+  });
+}
 
-  const girasSet = new Set(recs.map(e=>e.gira).filter(Boolean));
-  const giraLabel = girasSet.size === 1 ? [...girasSet][0] : (girasSet.size > 1 ? [...girasSet].join(' / ') : '—');
-
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({unit:'pt', format:'a4'});
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 50;
-
-  const brand = [47,74,62];
-  const ink = [31,42,36];
-  const inkSoft = [91,104,96];
-
-  let y = 56;
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(17);
-  doc.setTextColor(brand[0], brand[1], brand[2]);
-  doc.text('ESCALA LIMPEZA PÓS GIRA', pageWidth/2, y, {align:'center'});
-
-  y += 24;
-  doc.setFontSize(11.5);
-  doc.setFont('helvetica','bold');
-  doc.setTextColor(ink[0], ink[1], ink[2]);
-  doc.text(`GIRA: ${giraLabel}`, pageWidth/2, y, {align:'center'});
-
-  y += 18;
-  doc.text(`Data: ${formatDateBR(date)}`, pageWidth/2, y, {align:'center'});
-
-  y += 22;
-
-  if(principais.length > 0){
-    doc.autoTable({
-      startY: y,
-      head: [['Filhos', 'Atividade']],
-      body: principais.map(e=>[apelidoDe(e.pessoa), e.atividade]),
-      theme: 'grid',
-      margin: {left: margin, right: margin},
-      styles: {
-        font: 'helvetica', fontSize: 10.5, cellPadding: 7,
-        textColor: ink, lineColor: [221,227,217], lineWidth: 0.75, valign: 'middle'
-      },
-      headStyles: {
-        fillColor: brand, textColor: 255, fontStyle: 'bold', fontSize: 10.5, halign: 'left'
-      },
-      alternateRowStyles: { fillColor: [247,249,245] },
-      columnStyles: {
-        0: {cellWidth: 150, fontStyle: 'bold'},
-        1: {cellWidth: 'auto'}
-      }
+/* Relatório da escala de limpeza como UMA imagem PNG comprida (sem quebra de página), pronta para enviar no WhatsApp. */
+async function gerarRelatorioImagem(){
+  const date = document.getElementById('f-data-relatorio').value;
+  if(!date){ alert('Selecione uma data para gerar o relatório.'); return; }
+  const recs = state.escalas.filter(e=>e.data===date);
+  if(recs.length === 0){ alert('Nenhum registro encontrado para essa data.'); return; }
+  try{
+    // Agrupa por atividade, na ordem de cadastro das atividades; StandBy por último
+    const ordemAtividade = {};
+    state.atividades.forEach((a,idx)=>{ ordemAtividade[a.atividade] = idx; });
+    const grupos = new Map();
+    recs.forEach(e=>{
+      if(!grupos.has(e.atividade)) grupos.set(e.atividade, []);
+      grupos.get(e.atividade).push(apelidoDe(e.pessoa));
     });
-    y = doc.lastAutoTable.finalY + 30;
-  }
-
-  if(standBy.length > 0){
-    if(y > pageHeight - 130){ doc.addPage(); y = 56; }
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(12);
-    doc.setTextColor(brand[0], brand[1], brand[2]);
-    doc.text('Stand By', margin, y);
-    y += 10;
-
-    doc.autoTable({
-      startY: y,
-      head: [['Filhos', 'Atividade']],
-      body: standBy.map(e=>[apelidoDe(e.pessoa), e.atividade]),
-      theme: 'grid',
-      margin: {left: margin, right: margin},
-      styles: {
-        font: 'helvetica', fontSize: 10.5, cellPadding: 7,
-        textColor: ink, lineColor: [221,227,217], lineWidth: 0.75, valign: 'middle'
-      },
-      headStyles: {
-        fillColor: brand, textColor: 255, fontStyle: 'bold', fontSize: 10.5, halign: 'left'
-      },
-      alternateRowStyles: { fillColor: [247,249,245] },
-      columnStyles: {
-        0: {cellWidth: 150, fontStyle: 'bold'},
-        1: {cellWidth: 'auto'}
-      }
+    const atividadesDoDia = Array.from(grupos.keys()).sort((a,b)=>{
+      const sa = isStandBy(a) ? 1 : 0, sb = isStandBy(b) ? 1 : 0;
+      if(sa !== sb) return sa - sb;
+      return (ordemAtividade[a] ?? 9999) - (ordemAtividade[b] ?? 9999);
     });
-    y = doc.lastAutoTable.finalY + 20;
+    const cartoes = atividadesDoDia.map(nome=>{
+      const info = instrucoesDaAtividade(nome);
+      const curto = nome.replace(/\s*\([^)]*\)\s*/g,' ').replace(/\s+/g,' ').trim();
+      return {nome, titulo: isStandBy(nome) ? 'Stand By' : (curto || nome), pessoas: grupos.get(nome), ...info};
+    });
+    const imagens = await Promise.all(cartoes.map(c=> carregarIconeImg(c.icone)));
+
+    const girasSet = new Set(recs.map(e=>e.gira).filter(Boolean));
+    const giraLabel = girasSet.size === 1 ? [...girasSet][0] : (girasSet.size > 1 ? [...girasSet].join(' / ') : '—');
+
+    // medidas lógicas (px); a imagem final sai com 3x essa resolução. Layout em 2 colunas (blocos) com fontes maiores.
+    const W = 920, M = 18, GAPCOL = 16, CW = (W - M*2 - GAPCOL) / 2, ESC = 3, FONTE = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+    const cBrand = '#2F4A3E', cInk = '#1F2A24', cSoft = '#5B6860', cPill = '#DDEBE2';
+    const fonte = (peso, tam)=> `${peso} ${tam}px ${FONTE}`;
+    const medidor = document.createElement('canvas').getContext('2d');
+
+    const quebrar = (ctx, texto, larguraMax)=>{
+      const linhas = []; let atual = '';
+      String(texto).split(/\s+/).forEach(p=>{
+        const teste = atual ? atual + ' ' + p : p;
+        if(ctx.measureText(teste).width <= larguraMax || !atual) atual = teste;
+        else { linhas.push(atual); atual = p; }
+      });
+      if(atual) linhas.push(atual);
+      return linhas;
+    };
+    const retArredondado = (ctx, x, y, w, h, r)=>{
+      ctx.beginPath();
+      ctx.moveTo(x+r, y); ctx.arcTo(x+w, y, x+w, y+h, r); ctx.arcTo(x+w, y+h, x, y+h, r);
+      ctx.arcTo(x, y+h, x, y, r); ctx.arcTo(x, y, x+w, y, r); ctx.closePath();
+    };
+
+    // desenha (ou só mede, com draw=false) o cartão de uma atividade; devolve a altura
+    const cartao = (ctx, c, img, x, y, draw, hFixa)=>{
+      const pad = 14, icone = 48, gap = 12, tx = x + pad + icone + gap, tw = CW - (tx - x) - pad;
+      let cy = y + pad;
+
+      ctx.font = fonte('bold', 19);
+      const tl = quebrar(ctx, c.titulo, tw);
+      if(draw){ ctx.fillStyle = cBrand; ctx.textBaseline = 'alphabetic'; tl.forEach((l,i)=> ctx.fillText(l, tx, cy + 17 + i*23)); }
+      cy += tl.length * 23 + 8;
+
+      // nomes das pessoas: destaque forte (fundo verde escuro, texto branco, fonte grande)
+      ctx.font = fonte('bold', 17);
+      let px = tx, py = cy;
+      c.pessoas.forEach(nome=>{
+        const wv = ctx.measureText(nome).width + 26;
+        if(px + wv > tx + tw && px > tx){ px = tx; py += 38; }
+        if(draw){
+          ctx.fillStyle = cBrand; retArredondado(ctx, px, py, wv, 31, 15.5); ctx.fill();
+          ctx.fillStyle = '#FFFFFF'; ctx.fillText(nome, px + 13, py + 21.5);
+        }
+        px += wv + 8;
+      });
+      cy = py + 31 + 14;
+
+      if(c.instrucoes.length){
+        if(draw){ ctx.font = fonte('bold', 12); ctx.fillStyle = cSoft; ctx.fillText('O QUE FAZER', tx, cy + 10); }
+        cy += 22;
+        ctx.font = fonte('normal', 15);
+        c.instrucoes.forEach(passo=>{
+          const ls = quebrar(ctx, passo, tw - 26);
+          if(draw){
+            ctx.strokeStyle = cBrand; ctx.lineWidth = 1.6; retArredondado(ctx, tx + 0.8, cy + 3, 14, 14, 3); ctx.stroke();
+            ctx.fillStyle = cInk; ctx.font = fonte('normal', 15);
+            ls.forEach((l,i)=> ctx.fillText(l, tx + 26, cy + 15 + i*20));
+          }
+          cy += ls.length * 20 + 8;
+        });
+      }
+
+      if(c.atencao){
+        ctx.font = fonte('normal', 14);
+        const ls = quebrar(ctx, c.atencao, tw - 24);
+        const hAviso = 14 + 16 + ls.length * 19 + 8;
+        cy += 4;
+        if(draw){
+          ctx.fillStyle = '#FFF3E0'; retArredondado(ctx, tx, cy, tw, hAviso, 8); ctx.fill();
+          ctx.strokeStyle = '#ECB868'; ctx.lineWidth = 1; ctx.stroke();
+          ctx.fillStyle = '#7A460A'; ctx.font = fonte('bold', 12); ctx.fillText('ATENÇÃO', tx + 12, cy + 20);
+          ctx.font = fonte('normal', 14);
+          ls.forEach((l,i)=> ctx.fillText(l, tx + 12, cy + 40 + i*19));
+        }
+        cy += hAviso;
+      }
+
+      const altura = Math.max(cy + pad - y, icone + pad*2, hFixa || 0);
+      if(draw){
+        ctx.fillStyle = cBrand; ctx.fillRect(x, y + 10, 4, altura - 20);
+        if(img) ctx.drawImage(img, x + pad, y + pad, icone, icone);
+      }
+      return altura;
+    };
+
+    // ordem fixa dos blocos: coluna esquerda e direita, linha por linha
+    // Lixos | Congá / Cozinha | Cozinha e Corredor / Banheiro Mãe | Banheiro Loja / Banheiro Cima | Stand By
+    const semAcento = t=> String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    const posicao = (c, idx)=>{
+      const t = semAcento(c.nome + ' ' + c.titulo);
+      if(isStandBy(c.nome)) return 1000;
+      if(t.includes('lixo')) return 0;
+      if(t.includes('conga')) return 1;
+      if(t.includes('corredor')) return 3;
+      if(t.includes('cozinha')) return 2;
+      if(t.includes('banheiro') && t.includes('mae')) return 4;
+      if(t.includes('banheiro') && t.includes('loja')) return 5;
+      if(t.includes('banheiro') && t.includes('cima')) return 6;
+      return 100 + idx;
+    };
+    const ordem = cartoes.map((c,i)=> i).sort((i,j)=> posicao(cartoes[i], i) - posicao(cartoes[j], j));
+    const cartoesO = ordem.map(i=> cartoes[i]);
+    const imagensO = ordem.map(i=> imagens[i]);
+
+    // 1ª passada: mede; cada linha (par esquerda/direita) usa a altura do maior cartão
+    const alturaCabecalho = 124, gapCartoes = 14, rodape = 44;
+    const alturasO = cartoesO.map((c,i)=> cartao(medidor, c, imagensO[i], M, 0, false));
+    const nLinhas = Math.ceil(cartoesO.length / 2);
+    const alturaLinha = [];
+    for(let r = 0; r < nLinhas; r++){
+      alturaLinha.push(Math.max(alturasO[r*2] || 0, alturasO[r*2 + 1] || 0));
+    }
+    const H = alturaCabecalho + 16 + alturaLinha.reduce((t,h)=> t + h + gapCartoes, 0) + rodape;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W * ESC; canvas.height = Math.round(H * ESC);
+    const ctx = canvas.getContext('2d');
+    ctx.scale(ESC, ESC);
+    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H);
+
+    // cabeçalho colorido (degradê laranja -> rosa)
+    const grad = ctx.createLinearGradient(0, 0, W, alturaCabecalho);
+    grad.addColorStop(0, '#F2761B'); grad.addColorStop(1, '#D9317E');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, W, alturaCabecalho);
+    ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.font = fonte('bold', 28); ctx.fillText('ESCALA DE LIMPEZA PÓS GIRA', W/2, 46);
+    ctx.font = fonte('normal', 17); ctx.fillText(`Gira: ${giraLabel}   •   Data: ${formatDateBR(date)}`, W/2, 76);
+    ctx.font = fonte('normal', 15); ctx.fillText('Encontre o seu nome abaixo e siga o passo a passo da sua atividade.', W/2, 102);
+    ctx.textAlign = 'left';
+
+    let y = alturaCabecalho + 16;
+    for(let r = 0; r < nLinhas; r++){
+      [0, 1].forEach(col=>{
+        const i = r*2 + col;
+        if(i >= cartoesO.length) return;
+        const cx = M + col * (CW + GAPCOL);
+        ctx.fillStyle = '#FAFBF9'; retArredondado(ctx, cx, y, CW, alturaLinha[r], 10); ctx.fill();
+        ctx.strokeStyle = '#CDD8CF'; ctx.lineWidth = 1; ctx.stroke();
+        cartao(ctx, cartoesO[i], imagensO[i], cx, y, true, alturaLinha[r]);
+      });
+      y += alturaLinha[r] + gapCartoes;
+    }
+    ctx.fillStyle = cSoft; ctx.font = fonte('normal', 12); ctx.textAlign = 'center';
+    ctx.fillText('Gerado automaticamente pelo app Escala da Casa.', W/2, H - 18);
+
+    const blob = await new Promise(res=> canvas.toBlob(res, 'image/png'));
+    if(!blob) throw new Error('não foi possível criar a imagem');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `escala_${date}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=> URL.revokeObjectURL(url), 4000);
+  }catch(e){
+    console.error('Erro ao gerar relatório', e);
+    alert('Não foi possível gerar a imagem do relatório: ' + e.message);
   }
-
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(inkSoft[0], inkSoft[1], inkSoft[2]);
-  doc.text('Gerado automaticamente pelo app Escala da Casa.', margin, pageHeight - 30);
-
-  doc.save(`escala_${date}.pdf`);
 }
 
 /* ---------- PESSOAS VIEW ---------- */
@@ -2244,7 +2507,7 @@ function renderPessoasTable(){
     return `
     <tr>
       <td class="mono td-code" data-label="Código">${p.codigo}</td>
-      <td data-label="Apelido" style="font-weight:600;">${escapeHtml(p.apelido || primeiroNome(p.nome))}</td>
+      <td data-label="Apelido" style="font-weight:600;">${escapeHtml(p.apelido || primeiroNome(p.nome))}${p.familia ? ` <small style="font-weight:400;color:var(--ink-soft);">· ${escapeHtml(p.familia)}</small>` : ''}${p.emancipado ? ' <span class="pill pill-ok" style="font-size:10px;padding:1px 6px;">EMCDO</span>' : ''}</td>
       <td data-label="Nome"><a href="#" class="pessoa-nome-link" data-viewp="${p.codigo}" style="color:var(--brand-dark);text-decoration:none;">${escapeHtml(p.nome)}</a></td>
       <td class="mono" data-label="Celular">${escapeHtml(p.celular || '—')}</td>
       <td class="mono" data-label="Aniversário">${formatAniversario(p.aniversario)}</td>
@@ -2309,7 +2572,7 @@ function renderPaisMaesTable(){
     const status = pessoaStatus(p);
     return `
     <tr>
-      <td data-label="Apelido" style="font-weight:600;">${escapeHtml(p.apelido || primeiroNome(p.nome))}</td>
+      <td data-label="Apelido" style="font-weight:600;">${escapeHtml(p.apelido || primeiroNome(p.nome))}${p.familia ? ` <small style="font-weight:400;color:var(--ink-soft);">· ${escapeHtml(p.familia)}</small>` : ''}${p.emancipado ? ' <span class="pill pill-ok" style="font-size:10px;padding:1px 6px;">EMCDO</span>' : ''}</td>
       <td data-label="Nome"><a href="#" class="pessoa-nome-link" data-viewp="${p.codigo}" style="color:var(--brand-dark);text-decoration:none;">${escapeHtml(p.nome)}</a></td>
       <td data-label="Classificação"><span class="pill pill-special">${escapeHtml(p.classificacao)}</span></td>
       <td data-label="Status"><span class="pill ${status==='Ativo'?'pill-ok':'pill-no'}">${status}</span></td>
@@ -2388,6 +2651,10 @@ function openPessoaModal(p){
   document.getElementById('f-estado-pessoa').value = p ? (p.estado || '') : '';
   document.getElementById('f-celular-pessoa').value = p ? (p.celular || '') : '';
   document.getElementById('f-aniversario-pessoa').value = p ? (p.aniversario || '') : '';
+  document.getElementById('f-familia-pessoa').value = p ? (p.familia || '') : '';
+  document.getElementById('f-emcdo-pessoa').checked = p ? !!p.emancipado : false;
+  document.getElementById('lista-familias').innerHTML = Array.from(new Set(state.pessoas.map(x=>(x.familia||'').trim()).filter(Boolean)))
+    .sort((a,b)=>a.localeCompare(b,'pt-BR')).map(f=>`<option value="${escapeAttr(f)}"></option>`).join('');
   document.getElementById('f-cpf-pessoa').value = p ? (p.cpf || '') : '';
   document.getElementById('f-convenio-pessoa').checked = p ? !!p.convenioMedico : false;
   document.getElementById('f-convenio-nome-pessoa').value = p ? (p.convenioNome || '') : '';
@@ -2469,6 +2736,8 @@ function setupPessoasForm(){
       const emergenciaNome = document.getElementById('f-emergencia-nome-pessoa').value.trim();
       const emergenciaTelefone = document.getElementById('f-emergencia-telefone-pessoa').value.trim();
       const classificacao = document.getElementById('f-classificacao-pessoa').value;
+      const familia = document.getElementById('f-familia-pessoa').value.trim();
+      const emancipado = document.getElementById('f-emcdo-pessoa').checked;
       const entidades = pessoaEntidadesTemp.slice();
       const blocked = lerAtividadesBloqueadasForm();
       if(!nome) return;
@@ -2495,6 +2764,8 @@ function setupPessoasForm(){
         p.emergenciaNome = emergenciaNome;
         p.emergenciaTelefone = emergenciaTelefone;
         p.classificacao = classificacao;
+        p.familia = familia;
+        p.emancipado = emancipado;
         p.entidades = entidades;
         p.atividadesBloqueadas = blocked;
         if(oldNome !== nome){
@@ -2505,7 +2776,7 @@ function setupPessoasForm(){
         if(state.pessoas.some(p=>p.nome.toLowerCase()===nome.toLowerCase())){
           alert('Esse filho já está cadastrado.'); return;
         }
-        state.pessoas.push({codigo: nextPessoaCodigo(), atividadesBloqueadas: blocked, nome, apelido, endereco, numero, bairro, cidade, estado, celular, aniversario, cpf, convenioMedico, convenioNome, hospitalEmergencia, emergenciaNome, emergenciaTelefone, classificacao, entidades, status:'Ativo'});
+        state.pessoas.push({codigo: nextPessoaCodigo(), atividadesBloqueadas: blocked, familia, emancipado, nome, apelido, endereco, numero, bairro, cidade, estado, celular, aniversario, cpf, convenioMedico, convenioNome, hospitalEmergencia, emergenciaNome, emergenciaTelefone, classificacao, entidades, status:'Ativo'});
         closePessoaModal();
       }
       persist(); renderPessoasTable(); renderPainel();
@@ -2576,6 +2847,8 @@ function exitPessoaEditMode(){
   document.getElementById('f-estado-pessoa').value = '';
   document.getElementById('f-celular-pessoa').value = '';
   document.getElementById('f-aniversario-pessoa').value = '';
+  document.getElementById('f-familia-pessoa').value = '';
+  document.getElementById('f-emcdo-pessoa').checked = false;
   document.getElementById('f-cpf-pessoa').value = '';
   document.getElementById('f-convenio-pessoa').checked = false;
   document.getElementById('f-convenio-nome-pessoa').value = '';
@@ -2654,6 +2927,9 @@ function renderAtividadesTable(){
     editingAtividadeCodigo = a.codigo;
     document.getElementById('f-nome-atividade').value = a.atividade;
     document.getElementById('f-vagas-atividade').value = String(a.vagas || 1);
+    const padraoAtiv = perfilAtividade(a.atividade);
+    document.getElementById('f-instrucoes-atividade').value = typeof a.instrucoes === 'string' ? a.instrucoes : padraoAtiv.instrucoes.join('\n');
+    document.getElementById('f-atencao-atividade').value = typeof a.atencao === 'string' ? a.atencao : (padraoAtiv.atencao || '');
     document.getElementById('atividade-edit-tag').style.display = 'inline';
     document.getElementById('atividade-edit-label').textContent = a.atividade;
     document.getElementById('btn-add-atividade').textContent = 'Salvar edição';
@@ -2688,6 +2964,7 @@ function setupAtividadesForm(){
         const oldDesc = a.atividade;
         a.atividade = desc;
         a.vagas = parseInt(document.getElementById('f-vagas-atividade').value,10) || 1;
+        aplicarTextosAtividade(a);
         if(oldDesc !== desc){
           state.escalas.forEach(e=>{ if(e.atividade===oldDesc) e.atividade = desc; });
           state.pessoas.forEach(p=>{
@@ -2699,9 +2976,13 @@ function setupAtividadesForm(){
         if(state.atividades.some(a=>a.atividade.toLowerCase()===desc.toLowerCase())){
           alert('Essa atividade já está cadastrada.'); return;
         }
-        state.atividades.push({codigo: nextAtividadeCodigo(), atividade: desc, vagas: parseInt(document.getElementById('f-vagas-atividade').value,10) || 1, inativa: false});
+        const nova = {codigo: nextAtividadeCodigo(), atividade: desc, vagas: parseInt(document.getElementById('f-vagas-atividade').value,10) || 1, inativa: false};
+        state.atividades.push(nova);
+        aplicarTextosAtividade(nova);
         input.value = '';
         document.getElementById('f-vagas-atividade').value = '1';
+        document.getElementById('f-instrucoes-atividade').value = '';
+        document.getElementById('f-atencao-atividade').value = '';
       }
       persist(); renderAtividadesTable(); renderPainel();
     }catch(e){
@@ -2716,8 +2997,19 @@ function setupAtividadesForm(){
   });
 }
 
+// Guarda "O que fazer" e "Atenção" só se forem diferentes do padrão (ou se já havia texto salvo); assim a atividade continua acompanhando o padrão.
+function aplicarTextosAtividade(a){
+  const ins = document.getElementById('f-instrucoes-atividade').value.trim();
+  const ate = document.getElementById('f-atencao-atividade').value.trim();
+  const padrao = perfilAtividade(a.atividade);
+  if(ins !== padrao.instrucoes.join('\n') || typeof a.instrucoes === 'string') a.instrucoes = ins;
+  if(ate !== (padrao.atencao || '') || typeof a.atencao === 'string') a.atencao = ate;
+}
+
 function exitAtividadeEditMode(){
   editingAtividadeCodigo = null;
+  document.getElementById('f-instrucoes-atividade').value = '';
+  document.getElementById('f-atencao-atividade').value = '';
   document.getElementById('f-nome-atividade').value = '';
   document.getElementById('f-vagas-atividade').value = '1';
   document.getElementById('atividade-edit-tag').style.display = 'none';
@@ -3723,6 +4015,7 @@ function idadeEm(p, dateStr){
   return idade;
 }
 function ehMenorEm(p, dateStr){
+  if(p && p.emancipado) return false;   // EMCDO: emancipado, cambona sozinho e participa da limpeza
   const i = idadeEm(p, dateStr);
   return i !== null && i < 18;
 }
@@ -5418,7 +5711,7 @@ function setupAtendimento(){
   document.getElementById('btn-cal-rel-atividades').addEventListener('click', ()=>{
     if(!calSelectedDate){ alert('Selecione um dia no calendário.'); return; }
     document.getElementById('f-data-relatorio').value = calSelectedDate;
-    gerarRelatorioPDF();
+    gerarRelatorioImagem();
   });
   document.getElementById('btn-cal-rel-corpo').addEventListener('click', ()=>{
     if(!calSelectedDate){ alert('Selecione um dia no calendário.'); return; }
